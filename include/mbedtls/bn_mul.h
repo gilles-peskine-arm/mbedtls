@@ -884,7 +884,7 @@
 #endif /* C (longlong) */
 
 /* helper macro used by mpi_sqr_hlp */
-#if !defined(MUL_XY)
+#if defined(MBEDTLS_MPI_SQR) && !defined(MUL_XY)
 #if defined(MBEDTLS_HAVE_UDBL)
 
 #define MUL_XY(X, Y, r0, r1) \
@@ -924,6 +924,6 @@
 }
 
 #endif /* MBEDTLS_HAVE_UDBL */
-#endif /* MUL_XY */
+#endif /* MBEDTLS_MPI_SQR && !MUL_XY */
 
 #endif /* bn_mul.h */
