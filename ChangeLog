@@ -1,5 +1,11 @@
 mbed TLS ChangeLog (Sorted per branch, date)
 
+= mbed TLS 2.1.x branch released xxxx-xx-xx
+
+Bugfix
+   * Fix memory allocation corner cases in memory_buffer_alloc.c module. Found
+     by Guido Vranken. #639
+
 = mbed TLS 2.1.8 released 2017-06-21
 
 Security
