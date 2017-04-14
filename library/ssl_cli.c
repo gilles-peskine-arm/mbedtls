@@ -1360,12 +1360,13 @@ static int ssl_parse_certificate_types_ext( mbedtls_ssl_context *ssl,
                                             const unsigned char *buf,
                                             size_t len )
 {
-    if( len != 1 )
+    if( type_list == NULL )
     {
+        /* The server sent their choice of certificate type, but we
+           didn't send preferences, so the server violated the protocol. */
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server hello message" ) );
         return( MBEDTLS_ERR_SSL_BAD_HS_SERVER_HELLO );
     }
-
     if( len != 1 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server hello message" ) );
