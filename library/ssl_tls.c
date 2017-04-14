@@ -7792,42 +7792,4 @@ int mbedtls_ssl_set_calc_verify_md( mbedtls_ssl_context *ssl, int md )
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 }
 
-#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-/*
- * Check if a client certificate type proposed by the peer is in our list.
- * Return 0 if we're willing to use it, -1 otherwise.
- */
-int mbedtls_ssl_check_client_certificate_type( const mbedtls_ssl_context *ssl, int cert_type )
-{
-    const int *ctype;
-
-    if( ssl->conf->client_certificate_type_list == NULL )
-        return( -1 );
-
-    for( ctype = ssl->conf->client_certificate_type_list; *ctype != MBEDTLS_TLS_CERT_TYPE_NONE; ctype++ )
-        if( *ctype == cert_type )
-            return( 0 );
-
-    return( -1 );
-}
-
-/*
- * Check if a server certificate type proposed by the peer is in our list.
- * Return 0 if we're willing to use it, -1 otherwise.
- */
-int mbedtls_ssl_check_server_certificate_type( const mbedtls_ssl_context *ssl, int cert_type )
-{
-    const int *ctype;
-
-    if( ssl->conf->server_certificate_type_list == NULL )
-        return( -1 );
-
-    for( ctype = ssl->conf->server_certificate_type_list; *ctype != MBEDTLS_TLS_CERT_TYPE_NONE; ctype++ )
-        if( *ctype == cert_type )
-            return( 0 );
-
-    return( -1 );
-}
-#endif /* MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT */
-
 #endif /* MBEDTLS_SSL_TLS_C */
