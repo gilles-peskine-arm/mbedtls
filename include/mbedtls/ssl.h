@@ -345,7 +345,7 @@
 
 /**
  * TLS Certificate Types
- * See RFC 7250
+ * See RFC 6091, RFC 7250 and IANA TLS Extensions registry.
  */
 
 #define MBEDTLS_TLS_CERT_TYPE_NONE            -1
@@ -692,8 +692,8 @@ struct mbedtls_ssl_config
 #endif
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-    const int *client_certificate_type_list;
-    const int *server_certificate_type_list;
+    const int *client_certificate_type_list; /*!< allowed client certificate types; array terminated by MBEDTLS_TLS_CERT_TYPE_NONE */
+    const int *server_certificate_type_list; /*!< allowed server certificate types; array terminated by MBEDTLS_TLS_CERT_TYPE_NONE */
 #endif
 
     /*
@@ -1801,10 +1801,29 @@ void mbedtls_ssl_conf_sig_hashes( mbedtls_ssl_config *conf,
 #endif /* MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+/**
+ * \brief            Set the allowed client certificate types.
+ *
+ * \param conf       SSL configuration
+ * \param cert_types Ordered list of allowed certificate types,
+ *                   terminated by \c MBEDTLS_TLS_CERT_TYPE_NONE.
+ *                   This can be NULL (default) to indicate lack of support
+ *                   for the client_certificate_type extension..
+ */
 void mbedtls_ssl_conf_client_certificate_types( mbedtls_ssl_config *conf,
-                                  							const int *cert_types );
+                                                const int *cert_types );
+
+/**
+ * \brief            Set the allowed server certificate types.
+ *
+ * \param conf       SSL configuration
+ * \param cert_types Ordered list of allowed certificate types,
+ *                   terminated by \c MBEDTLS_TLS_CERT_TYPE_NONE.
+ *                   This can be NULL (default) to indicate lack of support
+ *                   for the server_certificate_type extension..
+ */
 void mbedtls_ssl_conf_server_certificate_types( mbedtls_ssl_config *conf,
-                                  							const int *cert_types );
+                                                const int *cert_types );
 #endif /* MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT */
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
