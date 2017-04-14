@@ -691,6 +691,11 @@ struct mbedtls_ssl_config
     const char **alpn_list;         /*!< ordered list of protocols          */
 #endif
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+    const int *client_certificate_type_list;
+    const int *server_certificate_type_list;
+#endif
+
     /*
      * Numerical settings (int then char)
      */
@@ -761,10 +766,6 @@ struct mbedtls_ssl_config
 #endif
 #if defined(MBEDTLS_SSL_FALLBACK_SCSV) && defined(MBEDTLS_SSL_CLI_C)
     unsigned int fallback : 1;      /*!< is this a fallback?                */
-#endif
-#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-    const int *server_certificate_type_list;
-    const int *client_certificate_type_list;
 #endif
 };
 
