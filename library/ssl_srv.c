@@ -353,43 +353,31 @@ static int ssl_parse_ecjpake_kkpp( mbedtls_ssl_context *ssl,
 #endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-static int ssl_parse_client_cert_ext( mbedtls_ssl_context *ssl,
-                                      const unsigned char *buf,
-                                      size_t len )
+/*
+ * Check if certificate type proposed by the peer is in our list.
+ * Return 0 if we're willing to use it, -1 otherwise.
+ */
+static int mbedtls_ssl_check_certificate_type( const int *type_list,
+                                               int cert_type )
 {
-    size_t list_size;
-    const unsigned char *p;
-
-    list_size = buf[0];
-    if( list_size + 1 != len )
-    {
-        MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad client hello message" ) );
-        return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO );
-    }
-
-    p = buf + 1;
-    while( list_size > 0 )
-    {
-        if ( mbedtls_ssl_check_client_certificate_type( ssl, p[0] ) == 0 )
-        {
-            ssl->handshake->client_cert_type = p[0];
-            MBEDTLS_SSL_DEBUG_MSG( 4, ( "%d client certificate type selected", p[0] ) );
+    for( ; *type_list != MBEDTLS_TLS_CERT_TYPE_NONE; type_list++ )
+        if( *type_list == cert_type )
             return( 0 );
-        }
 
-        list_size--;
-        p++;
-    }
-
-    mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
-                                     MBEDTLS_SSL_ALERT_MSG_UNSUPPORTED_CERT );
-
-    return( MBEDTLS_ERR_SSL_NO_CERTIFICATE_TYPE_CHOSEN );
+    return( -1 );
 }
 
-static int ssl_parse_server_cert_ext( mbedtls_ssl_context *ssl,
-                                      const unsigned char *buf,
-                                      size_t len )
+/*
+ * Parse a client_certificate_types or server_certificate_types
+ * extension sent by the client. Accept only one of the types in
+ * type_list (terminated by MBEDTLS_TLS_CERT_TYPE_NONE). Return the
+ * selection in *choice if client and server have a type in common.
+ */
+static int ssl_parse_certificate_types_ext( mbedtls_ssl_context *ssl,
+                                            const int *type_list,
+                                            int *choice,
+                                            const unsigned char *buf,
+                                            size_t len )
 {
     size_t list_size;
     const unsigned char *p;
@@ -404,10 +392,10 @@ static int ssl_parse_server_cert_ext( mbedtls_ssl_context *ssl,
     p = buf + 1;
     while( list_size > 0 )
     {
-        if( mbedtls_ssl_check_server_certificate_type( ssl, p[0] ) == 0 )
+        if ( mbedtls_ssl_check_certificate_type( type_list, p[0] ) == 0 )
         {
-            ssl->handshake->server_cert_type = p[0];
-            MBEDTLS_SSL_DEBUG_MSG( 4, ( "%d server certificate type selected", p[0] ) );
+            *choice = p[0];
+            MBEDTLS_SSL_DEBUG_MSG( 4, ( "%s certificate type selected: %d", choice == &ssl->handshake->server_cert_type ? "server" : choice == &ssl->handshake->client_cert_type ? "client" : "??", *choice ) );
             return( 0 );
         }
 
@@ -1754,18 +1742,34 @@ read_record_header:
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
             case MBEDTLS_TLS_EXT_CLIENT_CERTIFICATE_TYPE:
                 MBEDTLS_SSL_DEBUG_MSG( 3, ( "found client certificate type extension" ) );
-                ssl->handshake->cli_exts |= MBEDTLS_TLS_EXT_CLIENT_CERTIFICATE_TYPE_PRESENT;
+                if( ssl->conf->client_certificate_type_list == NULL )
+                {
+                    MBEDTLS_SSL_DEBUG_MSG( 4, ( "client certificate type extension ignored (not supported)" ) );
+                    break;
+                }
 
-                ret = ssl_parse_client_cert_ext( ssl, ext + 4, ext_size );
+                ssl->handshake->cli_exts |= MBEDTLS_TLS_EXT_CLIENT_CERTIFICATE_TYPE_PRESENT;
+                ret = ssl_parse_certificate_types_ext( ssl,
+                                                       ssl->conf->client_certificate_type_list,
+                                                       &ssl->handshake->client_cert_type,
+                                                       ext + 4, ext_size );
                 if( ret != 0 )
                     return( ret );
                 break;
 
             case MBEDTLS_TLS_EXT_SERVER_CERTIFICATE_TYPE:
                 MBEDTLS_SSL_DEBUG_MSG( 3, ( "found server certificate type extension" ) );
-                ssl->handshake->cli_exts |= MBEDTLS_TLS_EXT_SERVER_CERTIFICATE_TYPE_PRESENT;
+                if( ssl->conf->server_certificate_type_list == NULL )
+                {
+                    MBEDTLS_SSL_DEBUG_MSG( 4, ( "server certificate type extension ignored (not supported)" ) );
+                    break;
+                }
 
-                ret = ssl_parse_server_cert_ext( ssl, ext + 4, ext_size );
+                ssl->handshake->cli_exts |= MBEDTLS_TLS_EXT_SERVER_CERTIFICATE_TYPE_PRESENT;
+                ret = ssl_parse_certificate_types_ext( ssl,
+                                                       ssl->conf->server_certificate_type_list,
+                                                       &ssl->handshake->server_cert_type,
+                                                       ext + 4, ext_size );
                 if( ret != 0 )
                     return( ret );
                 break;
