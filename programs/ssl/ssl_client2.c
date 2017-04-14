@@ -107,6 +107,12 @@ int main( void )
 #define GET_REQUEST "GET %s HTTP/1.0\r\nExtra-header: "
 #define GET_REQUEST_END "\r\n\r\n"
 
+
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+typedef int *certificate_type_list_t;
+#define DFL_CERTIFICATE_TYPE_LIST NULL
+#endif
+
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 #if defined(MBEDTLS_FS_IO)
 #define USAGE_IO \
@@ -222,6 +228,16 @@ int main( void )
 #define USAGE_ECJPAKE ""
 #endif
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+#define USAGE_SSL_RAW_PUBLIC_KEY \
+    "    client_certificate_types=%%d,%%d...   default: -\n"            \
+    "    server_certificate_types=%%d,%%d...   default: -\n"            \
+    "                                        0=X.509, 2=raw_public_key\n" \
+    "                                        - instead of list = don't send (default)\n"
+#else
+#define USAGE_SSL_RAW_PUBLIC_KEY ""
+#endif
+
 #define USAGE \
     "\n usage: ssl_client2 param=<>...\n"                   \
     "\n acceptable parameters:\n"                           \
@@ -245,6 +261,7 @@ int main( void )
     "\n"                                                    \
     USAGE_PSK                                               \
     USAGE_ECJPAKE                                           \
+    USAGE_SSL_RAW_PUBLIC_KEY                                \
     "\n"                                                    \
     "    allow_legacy=%%d     default: (library default: no)\n"      \
     USAGE_RENEGO                                            \
@@ -292,6 +309,10 @@ struct options
     const char *psk;            /* the pre-shared key                       */
     const char *psk_identity;   /* the pre-shared key identity              */
     const char *ecjpake_pw;     /* the EC J-PAKE password                   */
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+    certificate_type_list_t client_certificate_types; /* client certificate types to advertise */
+    certificate_type_list_t server_certificate_types; /* server certificate types to advertise */
+#endif
     int force_ciphersuite[2];   /* protocol/ciphersuite to use, or all      */
     int renegotiation;          /* enable / disable renegotiation           */
     int allow_legacy;           /* allow legacy renegotiation               */
@@ -397,6 +418,58 @@ static int my_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fl
 }
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+static int opt_parse_certificate_types( certificate_type_list_t *list,
+                                        char *arg )
+{
+    long n;
+    size_t i = 0;
+    size_t pos = 0;
+    size_t count = 0;
+    int *array = NULL;
+    *list = NULL;
+    if( arg[0] == '-' && arg[1] == 0 )
+        return( 0 );
+    while( *arg == ',' )
+        ++arg;
+    /* Count the comma-separated chunks */
+    while( arg[pos] != 0 ) {
+        if( arg[pos] != ',' && arg[pos+1] == ',' )
+            ++count;
+        ++pos;
+    }
+    /* Parse each chunk as an integer */
+    array = mbedtls_calloc( count + 1, sizeof( *list ) );
+    if( array == NULL )
+    {
+        return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
+    }
+    while( *arg != 0 )
+    {
+        n = strtol( arg, &arg, 0 );
+        if( n < INT_MIN || n > INT_MAX )
+        {
+            mbedtls_printf( "Integer in list out of range: %ld\n", n );
+            mbedtls_free( array );
+            return( 2 );
+        }
+        array[i] = n;
+        ++i;
+        if( *arg != 0 && *arg != ',' )
+        {
+            mbedtls_printf( "Bad character in integer list: '%c'\n", *arg );
+            mbedtls_free( array );
+            return( 2 );
+        }
+        while( *arg == ',' )
+            ++arg;
+    }
+    array[i] = MBEDTLS_TLS_CERT_TYPE_NONE;
+    *list = array;
+    return( 0 );
+}
+#endif
+
 int main( int argc, char *argv[] )
 {
     int ret = 0, len, tail_len, i, written, frags, retry_left;
@@ -483,6 +556,10 @@ int main( int argc, char *argv[] )
     opt.psk                 = DFL_PSK;
     opt.psk_identity        = DFL_PSK_IDENTITY;
     opt.ecjpake_pw          = DFL_ECJPAKE_PW;
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+    opt.client_certificate_types = DFL_CERTIFICATE_TYPE_LIST;
+    opt.server_certificate_types = DFL_CERTIFICATE_TYPE_LIST;
+#endif
     opt.force_ciphersuite[0]= DFL_FORCE_CIPHER;
     opt.renegotiation       = DFL_RENEGOTIATION;
     opt.allow_legacy        = DFL_ALLOW_LEGACY;
@@ -573,6 +650,24 @@ int main( int argc, char *argv[] )
             opt.psk_identity = q;
         else if( strcmp( p, "ecjpake_pw" ) == 0 )
             opt.ecjpake_pw = q;
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+        else if( strcmp( p, "client_certificate_types" ) == 0 )
+        {
+            if( opt_parse_certificate_types( &opt.client_certificate_types, q ) )
+            {
+                ret = 2;
+                goto usage;
+            }
+        }
+        else if( strcmp( p, "server_certificate_types" ) == 0 )
+        {
+            if( opt_parse_certificate_types( &opt.server_certificate_types, q ) )
+            {
+                ret = 2;
+                goto usage;
+            }
+        }
+#endif
         else if( strcmp( p, "force_ciphersuite" ) == 0 )
         {
             opt.force_ciphersuite[0] = mbedtls_ssl_get_ciphersuite_id( q );
@@ -1204,6 +1299,11 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_SSL_FALLBACK_SCSV)
     if( opt.fallback != DFL_FALLBACK )
         mbedtls_ssl_conf_fallback( &conf, opt.fallback );
+#endif
+
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+    mbedtls_ssl_conf_client_certificate_types( &conf, opt.client_certificate_types );
+    mbedtls_ssl_conf_server_certificate_types( &conf, opt.server_certificate_types );
 #endif
 
     if( ( ret = mbedtls_ssl_setup( &ssl, &conf ) ) != 0 )
