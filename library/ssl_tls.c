@@ -7275,13 +7275,6 @@ static mbedtls_ecp_group_id ssl_preset_suiteb_curves[] = {
 };
 #endif
 
-#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-static int ssl_preset_certificate_types[] = {
-    MBEDTLS_TLS_CERT_TYPE_X509,
-    MBEDTLS_TLS_CERT_TYPE_NONE
-};
-#endif
-
 /*
  * Load default in mbedtls_ssl_config
  */
@@ -7347,8 +7340,8 @@ int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
 #endif
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-    conf->client_certificate_type_list = ssl_preset_certificate_types;
-    conf->server_certificate_type_list = ssl_preset_certificate_types;
+    conf->client_certificate_type_list = NULL;
+    conf->server_certificate_type_list = NULL;
 #endif
 
 #if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_SSL_SRV_C)
