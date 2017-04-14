@@ -2794,6 +2794,257 @@ run_test    "ECJPAKE: password mismatch, DTLS" \
             -c "re-using cached ecjpake parameters" \
             -s "SSL - Verification of the message MAC failed"
 
+# Tests for certificate types extension and raw public keys (RFC 7250)
+# Part 1: server_certificate_types
+
+run_test    "RFC7250: don't send certificate types (default)" \
+            "$P_SRV debug_level=4" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -S "found client certificate type extension" \
+            -S "found server certificate type extension" \
+            -C "found client certificate type extension" \
+            -C "found server certificate type extension"
+
+run_test    "RFC7250: send server certificate types: X.509 only, no server support" \
+            "$P_SRV debug_level=4 server_certificate_types=-" \
+            "$P_CLI debug_level=4 server_certificate_types=0" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "server certificate type extension ignored" \
+            -C "found client certificate type extension" \
+            -C "found server certificate type extension"
+
+run_test    "RFC7250: send server certificate types: raw public key only, no server support" \
+            "$P_SRV debug_level=4 server_certificate_types=-" \
+            "$P_CLI debug_level=4 server_certificate_types=2" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "server certificate type extension ignored" \
+            -C "found client certificate type extension" \
+            -C "found server certificate type extension"
+
+run_test    "RFC7250: send server certificate types: X.509 only, check default reply to client" \
+            "$P_SRV debug_level=4" \
+            "$P_CLI debug_level=4 server_certificate_types=0" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "found server certificate type extension" \
+            -C "found client certificate type extension" \
+            -c "found server certificate type extension"
+
+run_test    "RFC7250: send server certificate types: X.509 only, server wants X.509" \
+            "$P_SRV debug_level=4 server_certificate_types=0" \
+            "$P_CLI debug_level=4 server_certificate_types=0" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "found server certificate type extension" \
+            -C "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "server certificate type selected: 0"
+
+run_test    "RFC7250: send server certificate types: raw public key only, server accepts either" \
+            "$P_SRV debug_level=4 server_certificate_types=0,2" \
+            "$P_CLI debug_level=4 server_certificate_types=2" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "found server certificate type extension" \
+            -C "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "server certificate type selected: 2" \
+            -s "own raw public key" \
+            -S "own certificate #1:"
+
+run_test    "RFC7250: send server certificate types: raw public key prefered, server accepts either" \
+            "$P_SRV debug_level=4 server_certificate_types=255,0,2" \
+            "$P_CLI debug_level=4 server_certificate_types=2,0" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "found server certificate type extension" \
+            -C "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "server certificate type selected: 2" \
+            -s "own raw public key" \
+            -S "own certificate #1:"
+
+run_test    "RFC7250: send server certificate types: X.509 certificate prefered, server accepts either" \
+            "$P_SRV debug_level=4 server_certificate_types=255,0,2" \
+            "$P_CLI debug_level=4 server_certificate_types=0,2" \
+            0 \
+            -S "found client certificate type extension" \
+            -s "found server certificate type extension" \
+            -C "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "server certificate type selected: 0" \
+            -S "own raw public key" \
+            -s "own certificate #1:"
+
+run_test    "RFC7250: send server certificate types: raw public key only, server wants X.509" \
+            "$P_SRV debug_level=4 server_certificate_types=0" \
+            "$P_CLI debug_level=4 server_certificate_types=2" \
+            1 \
+            -S "found client certificate type extension" \
+            -s "found server certificate type extension" \
+            -s "SSL - The server has no certificate types in common with the client" \
+            -s "! mbedtls_ssl_handshake returned"
+
+# Tests for certificate types extension and raw public keys (RFC 7250)
+# Part 2: client_certificate_types
+
+run_test    "RFC7250: don't send certificate types (default)" \
+            "$P_SRV debug_level=4" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -S "found server certificate type extension" \
+            -S "found client certificate type extension" \
+            -C "found server certificate type extension" \
+            -C "found client certificate type extension"
+
+run_test    "RFC7250: send client certificate types: X.509 only, no server support" \
+            "$P_SRV debug_level=4 client_certificate_types=-" \
+            "$P_CLI debug_level=4 client_certificate_types=0" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "client certificate type extension ignored" \
+            -C "found server certificate type extension" \
+            -C "found client certificate type extension"
+
+run_test    "RFC7250: send client certificate types: raw public key only, no server support" \
+            "$P_SRV debug_level=4 client_certificate_types=-" \
+            "$P_CLI debug_level=4 client_certificate_types=2" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "client certificate type extension ignored" \
+            -C "found server certificate type extension" \
+            -C "found client certificate type extension"
+
+run_test    "RFC7250: send client certificate types: X.509 only, check default reply to client" \
+            "$P_SRV debug_level=4" \
+            "$P_CLI debug_level=4 client_certificate_types=0" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -C "found server certificate type extension" \
+            -c "found client certificate type extension"
+
+run_test    "RFC7250: send client certificate types: X.509 only, server wants X.509" \
+            "$P_SRV debug_level=4 client_certificate_types=0 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=0" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -C "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -c "client certificate type selected: 0"
+
+run_test    "RFC7250: send client certificate types: raw public key only, server accepts either" \
+            "$P_SRV debug_level=4 client_certificate_types=0,2 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=2" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -C "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -c "client certificate type selected: 2" \
+            -c "own raw public key" \
+            -C "own certificate #1:"
+
+run_test    "RFC7250: send client certificate types: raw public key prefered, server accepts either" \
+            "$P_SRV debug_level=4 client_certificate_types=255,0,2 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=2,0" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -C "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -c "client certificate type selected: 2" \
+            -c "own raw public key" \
+            -C "own certificate #1:"
+
+run_test    "RFC7250: send client certificate types: X.509 certificate prefered, server accepts either" \
+            "$P_SRV debug_level=4 client_certificate_types=255,0,2 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=0,2" \
+            0 \
+            -S "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -C "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -c "client certificate type selected: 0" \
+            -C "own raw public key" \
+            -c "own certificate #1:"
+
+run_test    "RFC7250: send client certificate types: raw public key only, server wants X.509" \
+            "$P_SRV debug_level=4 client_certificate_types=0" \
+            "$P_CLI debug_level=4 client_certificate_types=2" \
+            1 \
+            -S "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -s "SSL - The server has no certificate types in common with the client" \
+            -s "! mbedtls_ssl_handshake returned"
+
+# Tests for certificate types extension and raw public keys (RFC 7250)
+# Part 3: combining server_certificate_types and client_certificate_types
+
+run_test    "RFC7250: send both certificate types: support for both, client prefers X.509" \
+            "$P_SRV debug_level=4 client_certificate_types=0,2 server_certificate_types=0,2 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=0,2 server_certificate_types=0,2" \
+            0 \
+            -s "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -s "server certificate type selected: 0" \
+            -c "server certificate type selected: 0" \
+            -s "client certificate type selected: 0" \
+            -c "client certificate type selected: 0" \
+            -s "own certificate #1:" \
+            -c "own certificate #1:"
+
+run_test    "RFC7250: send both certificate types: support for both, client prefers public keys" \
+            "$P_SRV debug_level=4 client_certificate_types=0,2 server_certificate_types=0,2 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=2,0 server_certificate_types=2,0" \
+            0 \
+            -s "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -s "server certificate type selected: 2" \
+            -c "server certificate type selected: 2" \
+            -s "client certificate type selected: 2" \
+            -c "client certificate type selected: 2" \
+            -s "own raw public key" \
+            -c "own raw public key"
+
+run_test    "RFC7250: send both certificate types: server accepts both, client wants server X.509 but sends own public key" \
+            "$P_SRV debug_level=4 client_certificate_types=0,2 server_certificate_types=0,2 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=2 server_certificate_types=0" \
+            0 \
+            -s "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -s "server certificate type selected: 0" \
+            -c "server certificate type selected: 0" \
+            -s "client certificate type selected: 2" \
+            -c "client certificate type selected: 2" \
+            -s "own certificate #1:" \
+            -c "own raw public key"
+
+run_test    "RFC7250: send both certificate types: both want server X.509 and client public key" \
+            "$P_SRV debug_level=4 client_certificate_types=2 server_certificate_types=0 auth_mode=required" \
+            "$P_CLI debug_level=4 client_certificate_types=2 server_certificate_types=0" \
+            0 \
+            -s "found server certificate type extension" \
+            -s "found client certificate type extension" \
+            -c "found server certificate type extension" \
+            -c "found client certificate type extension" \
+            -s "server certificate type selected: 0" \
+            -c "server certificate type selected: 0" \
+            -s "client certificate type selected: 2" \
+            -c "client certificate type selected: 2" \
+            -s "own certificate #1:" \
+            -c "own raw public key"
+
 # for tests with configs/config-thread.h
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECJPAKE
 run_test    "ECJPAKE: working, DTLS, nolog" \
