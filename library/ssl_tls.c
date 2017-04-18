@@ -4479,16 +4479,19 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
 
     if( authmode != MBEDTLS_SSL_VERIFY_NONE )
     {
-#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-        if( ( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER &&
-              ssl->handshake->client_cert_type == MBEDTLS_TLS_CERT_TYPE_X509 ) ||
-            ( ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT &&
-              ssl->handshake->server_cert_type == MBEDTLS_TLS_CERT_TYPE_X509 ) )
-#endif
-        {
-            mbedtls_x509_crt *ca_chain;
-            mbedtls_x509_crl *ca_crl;
+        uint8_t certificate_type = MBEDTLS_TLS_CERT_TYPE_X509;
+        mbedtls_x509_crt *ca_chain;
+        mbedtls_x509_crl *ca_crl;
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+        certificate_type = ( ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER ?
+                             ssl->handshake->server_cert_type :
+                             ssl->handshake->client_cert_type );
+#endif
+
+        switch( certificate_type )
+        {
+        case MBEDTLS_TLS_CERT_TYPE_X509:
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
             if( ssl->handshake->sni_ca_chain != NULL )
             {
@@ -4523,6 +4526,12 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
             {
                 MBEDTLS_SSL_DEBUG_RET( 1, "x509_verify_cert", ret );
             }
+            break;
+
+        default:
+            MBEDTLS_SSL_DEBUG_RET( 1, "verification for certificate type %d not implemented", certificate_type );
+            ret = MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE;
+            break;
         }
 
         /*
