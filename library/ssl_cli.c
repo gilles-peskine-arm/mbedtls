@@ -424,76 +424,44 @@ static void ssl_write_ecjpake_kkpp_ext( mbedtls_ssl_context *ssl,
 #endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-static void ssl_write_client_certificate_ext( mbedtls_ssl_context *ssl,
-                                              unsigned char *buf,
-                                              size_t *olen )
+static void ssl_write_certificate_type_extension( mbedtls_ssl_context *ssl,
+                                                  const int *type_list,
+                                                  uint16_t extension,
+                                                  unsigned char *buf,
+                                                  size_t *olen )
 {
-    unsigned char *p = buf;
+    unsigned char *p = buf + 5;
     const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
-    unsigned char *certificate_type_list = p + 5;
-    size_t certificate_type_len = 0;
-    const int *ctype;
+    size_t list_length = 0;
 
     *olen = 0;
 
-    if ( ssl->conf->client_certificate_type_list == NULL )
+    if ( type_list == NULL )
         return;
 
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, adding client_certificate_type extension" ) );
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, adding %s_certificate_type extension", type_list == ssl->conf->server_certificate_type_list ? "server" : ssl->conf->server_certificate_type_list ? "client" : "??" ) );
 
-    if( end - p < 7 )
+    if( end - buf < 7 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
         return;
     }
 
-    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_CLIENT_CERTIFICATE_TYPE >> 8 ) & 0xFF );
-    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_CLIENT_CERTIFICATE_TYPE      ) & 0xFF );
+    buf[0] = (unsigned char)( ( extension >> 8 ) & 0xFF );
+    buf[1] = (unsigned char)( ( extension      ) & 0xFF );
+    buf[2] = 0x00;
+    /* Lengths will be filled after walking the list */
 
-    *p++ = 0x00;
-    
-    for( ctype = ssl->conf->client_certificate_type_list; *ctype != MBEDTLS_TLS_CERT_TYPE_NONE; ctype++ )
-        certificate_type_list[certificate_type_len++] = (unsigned char)*ctype;
-
-    *p++ = 1 + certificate_type_len;
-    *p++ = certificate_type_len;
-    *olen = 5 + certificate_type_len;
-}
-
-static void ssl_write_server_certificate_ext( mbedtls_ssl_context *ssl,
-                                              unsigned char *buf,
-                                              size_t *olen )
-{
-    unsigned char *p = buf;
-    const unsigned char *end = ssl->out_msg + MBEDTLS_SSL_MAX_CONTENT_LEN;
-    unsigned char *certificate_type_list = p + 5;
-    size_t certificate_type_len = 0;
-    const int *ctype;
-
-    *olen = 0;
-
-    if ( ssl->conf->server_certificate_type_list == NULL )
-        return;
-
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello, adding server_certificate_type extension" ) );
-
-    if( end - p < 7 )
+    for( ; *type_list != MBEDTLS_TLS_CERT_TYPE_NONE; type_list++ )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 1, ( "buffer too small" ) );
-        return;
+        *p++ = (unsigned char)*type_list;
+        ++list_length;
+        // TODO: check output buffer length
     }
 
-    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_SERVER_CERTIFICATE_TYPE >> 8 ) & 0xFF );
-    *p++ = (unsigned char)( ( MBEDTLS_TLS_EXT_SERVER_CERTIFICATE_TYPE      ) & 0xFF );
-
-    *p++ = 0x00;
-
-    for( ctype = ssl->conf->server_certificate_type_list; *ctype != MBEDTLS_TLS_CERT_TYPE_NONE; ctype++ )
-        certificate_type_list[certificate_type_len++] = (unsigned char)*ctype;
-
-    *p++ = 1 + certificate_type_len;
-    *p++ = certificate_type_len;
-    *olen = 5 + certificate_type_len;
+    buf[3] = 1 + list_length;
+    buf[4] = list_length;
+    *olen = 5 + list_length;
 }
 #endif /* MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT */
 
@@ -1091,10 +1059,10 @@ static int ssl_write_client_hello( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-    ssl_write_client_certificate_ext( ssl, p + 2 + ext_len, &olen );
+    ssl_write_certificate_type_extension(ssl, ssl->conf->client_certificate_type_list, MBEDTLS_TLS_EXT_CLIENT_CERTIFICATE_TYPE, p + 2 + ext_len, &olen);
     ext_len += olen;
-    
-    ssl_write_server_certificate_ext( ssl, p + 2 + ext_len, &olen );
+
+    ssl_write_certificate_type_extension(ssl, ssl->conf->server_certificate_type_list, MBEDTLS_TLS_EXT_SERVER_CERTIFICATE_TYPE, p + 2 + ext_len, &olen);
     ext_len += olen;
 #endif
 
