@@ -2925,6 +2925,26 @@ run_test    "RFC7250: send server certificate types: raw public key only, server
             -s "SSL - The server has no certificate types in common with the client" \
             -s "! mbedtls_ssl_handshake returned"
 
+run_test    "RFC7250: send server certificate types: X.509: server badcert" \
+            "$P_SRV crt_file=data_files/server5-badsign.crt \
+             key_file=data_files/server5.key" \
+            "$P_CLI debug_level=1 server_certificate_types=0" \
+            1 \
+            -c "x509_verify_cert() returned" \
+            -c "! The certificate is not correctly signed by the trusted CA" \
+            -c "! mbedtls_ssl_handshake returned" \
+            -c "X509 - Certificate verification failed"
+
+run_test    "RFC7250: send server certificate types: raw public key: server badcert" \
+            "$P_SRV crt_file=data_files/server5-badsign.crt \
+             key_file=data_files/server5.key" \
+            "$P_CLI debug_level=1 server_certificate_types=2" \
+            1 \
+            -c "x509_verify_cert() returned" \
+            -c "! The certificate is not correctly signed by the trusted CA" \
+            -c "! mbedtls_ssl_handshake returned" \
+            -c "X509 - Certificate verification failed"
+
 # Tests for certificate types extension and raw public keys (RFC 7250)
 # Part 2: client_certificate_types
 
