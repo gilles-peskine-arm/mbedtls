@@ -4254,6 +4254,28 @@ int mbedtls_ssl_write_x509_certificate( mbedtls_ssl_context *ssl,
     return( 0 );
 }
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+/** Search for a public key in a null-terminated array of public keys.
+   Return 0 if the key was found, nonzero otherwise. */
+static int mbedtls_verify_public_key( mbedtls_ssl_context *ssl,
+                                      const mbedtls_pk_context *const *allowed_public_keys,
+                                      const mbedtls_pk_context *pk )
+{
+    size_t i;
+    if( allowed_public_keys == NULL )
+        return( MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED );
+    for( i = 0; allowed_public_keys[i] != NULL; i++ )
+    {
+        if( mbedtls_pk_compare( allowed_public_keys[i], pk ) == 0 )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 3, ( "accepting public key %zu", i ) );
+            return( 0 );
+        }
+    }
+    return( MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED );
+}
+#endif /* MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED */
+
 int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
 {
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
@@ -4527,6 +4549,14 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
                 MBEDTLS_SSL_DEBUG_RET( 1, "x509_verify_cert", ret );
             }
             break;
+
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+        case MBEDTLS_TLS_CERT_TYPE_RAW_PUBLIC_KEY:
+            ret = mbedtls_verify_public_key( ssl,
+                                             ssl->conf->peer_public_keys,
+                                             &ssl->session_negotiate->peer_cert->pk );
+            break;
+#endif
 
         default:
             MBEDTLS_SSL_DEBUG_RET( 1, "verification for certificate type %d not implemented", certificate_type );

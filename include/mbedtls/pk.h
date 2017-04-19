@@ -609,6 +609,13 @@ int mbedtls_pk_write_pubkey( unsigned char **p, unsigned char *start,
 int mbedtls_pk_load_file( const char *path, unsigned char **buf, size_t *n );
 #endif
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+/** Compare two public keys. Return 0 if the keys are determined to be
+   mathematically equivalent, nonzero otherwise. */
+int mbedtls_pk_compare( const mbedtls_pk_context *pk1,
+                        const mbedtls_pk_context *pk2 );
+#endif
+
 #ifdef __cplusplus
 }
 #endif

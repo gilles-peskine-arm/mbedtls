@@ -371,4 +371,14 @@ mbedtls_pk_type_t mbedtls_pk_get_type( const mbedtls_pk_context *ctx )
     return( ctx->pk_info->type );
 }
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+int mbedtls_pk_compare( const mbedtls_pk_context *pk1,
+                        const mbedtls_pk_context *pk2 )
+{
+    return( pk1->pk_info->compare_func( pk1->pk_ctx,
+                                        pk2->pk_info->type,
+                                        pk2->pk_ctx) );
+}
+#endif /* MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT */
+
 #endif /* MBEDTLS_PK_C */

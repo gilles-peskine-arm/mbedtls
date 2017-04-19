@@ -694,6 +694,7 @@ struct mbedtls_ssl_config
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
     const int *client_certificate_type_list; /*!< allowed client certificate types; array terminated by MBEDTLS_TLS_CERT_TYPE_NONE */
     const int *server_certificate_type_list; /*!< allowed server certificate types; array terminated by MBEDTLS_TLS_CERT_TYPE_NONE */
+    const mbedtls_pk_context *const * peer_public_keys; /*!< raw public keys that our peer may use; null-terminated array */
 #endif
 
     /*

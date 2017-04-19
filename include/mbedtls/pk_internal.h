@@ -82,6 +82,11 @@ struct mbedtls_pk_info_t
     /** Interface with the debug module */
     void (*debug_func)( const void *ctx, mbedtls_pk_debug_item *items );
 
+    /** Compare with another public key. Return 0 if the keys can be
+       determined to be mathematically equal, nonzero otherwise. */
+    int (*compare_func)( const void *ctx1,
+                         mbedtls_pk_type_t type2, const void *ctx2 );
+
 };
 #if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
 /* Container for RSA-alt */
