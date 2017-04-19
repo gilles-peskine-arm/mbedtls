@@ -255,7 +255,7 @@ typedef int *certificate_type_list_t;
     "\n"                                                    \
     USAGE_DTLS                                              \
     "\n"                                                    \
-    "    auth_mode=%%s        default: (library default: none)\n"      \
+    "    auth_mode=%%s        default: (library default: required)\n" \
     "                        options: none, optional, required\n" \
     USAGE_IO                                                \
     "\n"                                                    \

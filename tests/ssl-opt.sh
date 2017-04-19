@@ -1746,6 +1746,16 @@ run_test    "DER format: with 9 trailing random bytes" \
 
 # Tests for auth_mode
 
+run_test    "Authentication: server badcert, client default" \
+            "$P_SRV crt_file=data_files/server5-badsign.crt \
+             key_file=data_files/server5.key" \
+            "$P_CLI debug_level=1" \
+            1 \
+            -c "x509_verify_cert() returned" \
+            -c "! The certificate is not correctly signed by the trusted CA" \
+            -c "! mbedtls_ssl_handshake returned" \
+            -c "X509 - Certificate verification failed"
+
 run_test    "Authentication: server badcert, client required" \
             "$P_SRV crt_file=data_files/server5-badsign.crt \
              key_file=data_files/server5.key" \
