@@ -5244,7 +5244,7 @@ static void ssl_handshake_params_init( mbedtls_ssl_handshake_params *handshake )
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 
     handshake->update_checksum = ssl_update_checksum_start;
-    handshake->sig_alg = MBEDTLS_SSL_HASH_SHA1;
+    handshake->sig_hash_alg = MBEDTLS_SSL_HASH_SHA1;
 
 #if defined(MBEDTLS_DHM_C)
     mbedtls_dhm_init( &handshake->dhm_ctx );

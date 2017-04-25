@@ -186,15 +186,50 @@ static int ssl_parse_renegotiation_info( mbedtls_ssl_context *ssl,
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
     defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+typedef struct {
+     uint8_t rsa;
+     uint8_t ecdsa;
+} md_for_signature_t;
+
+md_for_signature_t mbedtls_default_md_choices = {
+    MBEDTLS_SSL_HASH_SHA1,
+    MBEDTLS_SSL_HASH_SHA1,
+};
+
+/** Pick our favorite hash for the signature algorithm sig_alg amongst
+ * the ones offered by the client. */
+static uint8_t ssl_choose_md_for_signature_algorithm( mbedtls_ssl_context *ssl,
+                                                   uint8_t sig_alg,
+                                                   const unsigned char *buf,
+                                                   const unsigned char *end )
+{
+    const int *md_cur;
+    const unsigned char *p;
+    for( md_cur = ssl->conf->sig_hashes; *md_cur != MBEDTLS_MD_NONE; md_cur++ ) {
+        for( p = buf; p < end; p += 2 ) {
+            if( sig_alg == p[1] &&
+                *md_cur == (int) mbedtls_ssl_md_alg_from_hash( p[0] ) )
+            {
+                MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello v3, signature_algorithm ext: md=%u for sig=%u", p[0], p[1] ) );
+                return( p[0] );
+            }
+        }
+    }
+    MBEDTLS_SSL_DEBUG_MSG( 3, ( "no hash for signature_algorithm %u", sig_alg ) );
+    return( MBEDTLS_SSL_HASH_NONE );
+}
+
+/** Pick our favorite hash for each signature algorithm according to
+ * what the client offers. Once we have determined the ciphersuite,
+ * if it uses a signature algorithm, we'll settle on the corresponding
+ * hash. In the words of RFC 5246, "this is somewhat inelegant". */
 static int ssl_parse_signature_algorithms_ext( mbedtls_ssl_context *ssl,
+                                               md_for_signature_t *md_choices,
                                                const unsigned char *buf,
                                                size_t len )
 {
     size_t sig_alg_list_size;
-    const unsigned char *p;
     const unsigned char *end = buf + len;
-    const int *md_cur;
-
 
     sig_alg_list_size = ( ( buf[0] << 8 ) | ( buf[1] ) );
     if( sig_alg_list_size + 2 != len ||
@@ -204,29 +239,17 @@ static int ssl_parse_signature_algorithms_ext( mbedtls_ssl_context *ssl,
         return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO );
     }
 
-    /*
-     * For now, ignore the SignatureAlgorithm part and rely on offered
-     * ciphersuites only for that part. To be fixed later.
-     *
-     * So, just look at the HashAlgorithm part.
-     */
-    for( md_cur = ssl->conf->sig_hashes; *md_cur != MBEDTLS_MD_NONE; md_cur++ ) {
-        for( p = buf + 2; p < end; p += 2 ) {
-            if( *md_cur == (int) mbedtls_ssl_md_alg_from_hash( p[0] ) ) {
-                ssl->handshake->sig_alg = p[0];
-                goto have_sig_alg;
-            }
-        }
-    }
-
-    /* Some key echanges do not need signatures at all */
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "no signature_algorithm in common" ) );
-    return( 0 );
-
-have_sig_alg:
-    MBEDTLS_SSL_DEBUG_MSG( 3, ( "client hello v3, signature_algorithm ext: %d",
-                   ssl->handshake->sig_alg ) );
-
+    /* We need to record a hash algorithm for each supported signature
+       algorithm, since some clients (e.g. Chrome 58) support
+       different sets of hashes depending on the signature. At this
+       point we haven't yet decided on a ciphersuite so we don't know
+       which signature algorithm will be chosen if any. */
+    md_choices->ecdsa = ssl_choose_md_for_signature_algorithm( ssl,
+                                                               MBEDTLS_SSL_SIG_RSA,
+                                                               buf + 2, end );
+    md_choices->ecdsa = ssl_choose_md_for_signature_algorithm( ssl,
+                                                               MBEDTLS_SSL_SIG_ECDSA,
+                                                               buf + 2, end );
     return( 0 );
 }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 &&
@@ -706,6 +729,7 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
  * Sets ciphersuite_info only if the suite matches.
  */
 static int ssl_ciphersuite_match( mbedtls_ssl_context *ssl, int suite_id,
+                                  const md_for_signature_t *md_choices,
                                   const mbedtls_ssl_ciphersuite_t **ciphersuite_info )
 {
     const mbedtls_ssl_ciphersuite_t *suite_info;
@@ -751,6 +775,43 @@ static int ssl_ciphersuite_match( mbedtls_ssl_context *ssl, int suite_id,
     }
 #endif
 
+#if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
+    defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)
+    switch( suite_info->key_exchange )
+    {
+    case MBEDTLS_KEY_EXCHANGE_NONE:
+    case MBEDTLS_KEY_EXCHANGE_RSA:
+    case MBEDTLS_KEY_EXCHANGE_PSK:
+    case MBEDTLS_KEY_EXCHANGE_DHE_PSK:
+    case MBEDTLS_KEY_EXCHANGE_RSA_PSK:
+    case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
+    case MBEDTLS_KEY_EXCHANGE_ECJPAKE:
+        /* No signature */
+        break;
+
+    case MBEDTLS_KEY_EXCHANGE_DHE_RSA:
+    case MBEDTLS_KEY_EXCHANGE_ECDHE_RSA:
+    case MBEDTLS_KEY_EXCHANGE_ECDH_RSA:
+        ssl->handshake->sig_hash_alg = md_choices->rsa;
+        goto signature_required;
+
+    case MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA:
+    case MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA:
+        ssl->handshake->sig_hash_alg = md_choices->ecdsa;
+        goto signature_required;
+
+    default:
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "ciphersuite matching error: unknown key exchange %u", suite_info->key_exchange ) );
+        return( 0 );
+
+    signature_required:
+        if( ssl->handshake->sig_hash_alg == MBEDTLS_SSL_HASH_NONE )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 3, ( "ciphersuite mismatch: no suitable signature algorithm" ) );
+            return( 0 );
+        }
+    }
+#endif
 
 #if defined(MBEDTLS_ECDH_C) || defined(MBEDTLS_ECDSA_C)
     if( mbedtls_ssl_ciphersuite_uses_ec( suite_info ) &&
@@ -1018,6 +1079,7 @@ static int ssl_parse_client_hello_v2( mbedtls_ssl_context *ssl )
             got_common_suite = 1;
 
             if( ( ret = ssl_ciphersuite_match( ssl, ciphersuites[i],
+                                               &mbedtls_default_md_choices,
                                                &ciphersuite_info ) ) != 0 )
                 return( ret );
 
@@ -1083,6 +1145,7 @@ static int ssl_parse_client_hello( mbedtls_ssl_context *ssl )
     int handshake_failure = 0;
     const int *ciphersuites;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
+    md_for_signature_t md_choices = mbedtls_default_md_choices;
     int major, minor;
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse client hello" ) );
@@ -1583,7 +1646,7 @@ read_record_header:
                     break;
 #endif
 
-                ret = ssl_parse_signature_algorithms_ext( ssl, ext + 4, ext_size );
+                ret = ssl_parse_signature_algorithms_ext( ssl, &md_choices, ext + 4, ext_size );
                 if( ret != 0 )
                     return( ret );
                 break;
@@ -1812,6 +1875,7 @@ read_record_header:
             got_common_suite = 1;
 
             if( ( ret = ssl_ciphersuite_match( ssl, ciphersuites[i],
+                                               &md_choices,
                                                &ciphersuite_info ) ) != 0 )
                 return( ret );
 
@@ -2874,7 +2938,7 @@ curve_matching_done:
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_3 )
         {
-            md_alg = mbedtls_ssl_md_alg_from_hash( ssl->handshake->sig_alg );
+            md_alg = mbedtls_ssl_md_alg_from_hash( ssl->handshake->sig_hash_alg );
 
             if( md_alg == MBEDTLS_MD_NONE )
             {
@@ -2995,7 +3059,7 @@ curve_matching_done:
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_3 )
         {
-            *(p++) = ssl->handshake->sig_alg;
+            *(p++) = ssl->handshake->sig_hash_alg;
             *(p++) = mbedtls_ssl_sig_from_pk( mbedtls_ssl_own_key( ssl ) );
 
             n += 2;
