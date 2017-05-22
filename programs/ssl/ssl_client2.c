@@ -79,7 +79,7 @@ int main( void )
 #define DFL_PSK                 ""
 #define DFL_PSK_IDENTITY        "Client_identity"
 #define DFL_ECJPAKE_PW          NULL
-#define DFL_FORCE_CIPHER        0
+#define DFL_FORCE_CIPHER        NULL
 #define DFL_RENEGOTIATION       MBEDTLS_SSL_RENEGOTIATION_DISABLED
 #define DFL_ALLOW_LEGACY        -2
 #define DFL_RENEGOTIATE         0
@@ -268,7 +268,7 @@ int main( void )
     "    force_version=%%s    default: \"\" (none)\n"       \
     "                        options: ssl3, tls1, tls1_1, tls1_2, dtls1, dtls1_2\n" \
     "\n"                                                    \
-    "    force_ciphersuite=<name>    default: all enabled\n"\
+    "    force_ciphersuite=<name>,...    default: all enabled\n"\
     " acceptable ciphersuite names:\n"
 
 /*
@@ -292,7 +292,7 @@ struct options
     const char *psk;            /* the pre-shared key                       */
     const char *psk_identity;   /* the pre-shared key identity              */
     const char *ecjpake_pw;     /* the EC J-PAKE password                   */
-    int force_ciphersuite[2];   /* protocol/ciphersuite to use, or all      */
+    int *force_ciphersuite;     /* protocol/ciphersuite to use; NULL=>all   */
     int renegotiation;          /* enable / disable renegotiation           */
     int allow_legacy;           /* allow legacy renegotiation               */
     int renegotiate;            /* attempt renegotiation?                   */
@@ -397,6 +397,80 @@ static int my_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fl
 }
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
+/* Parse a ciphersuite list */
+static int *opt_parse_ciphersuites( char *arg )
+{
+    long n;
+    size_t i = 0;
+    size_t count = 1;
+    size_t length = 0;
+    int *array = NULL;
+    char *list_end;
+    char *element_end;
+    char *strings;
+    char *cursor;
+    while( *arg == ',' )
+        ++arg;
+    length = strlen( arg ) + 1;
+    strings = mbedtls_calloc( length, 1 );
+    if( strings == NULL )
+    {
+        mbedtls_printf( "Failed to allocate temporary buffer in opt_parse_ciphersuites\n" );
+        return( NULL );
+    }
+    memcpy( strings, arg, length );
+    /* Count the comma-separated chunks and replace commas by nuls */
+    list_end = strings;
+    while( *list_end != 0 ) {
+        if( *list_end != ',' && list_end[1] == ',' )
+            ++count;
+        if( *list_end == ',' )
+            *list_end = 0;
+        ++list_end;
+    }
+    /* Parse each chunk as an integer or ciphersuite name */
+    array = mbedtls_calloc( count + 1, sizeof( *array ) );
+    if( array == NULL )
+    {
+        mbedtls_printf( "Failed to allocate ciphersuite list (count=%zu)\n", count );
+        mbedtls_free( strings );
+        return( NULL );
+    }
+    cursor = strings;
+    while( cursor < list_end )
+    {
+        if( ! *cursor )
+            continue;
+        n = strtol( cursor, &element_end, 0 );
+        if( *element_end != 0 )
+        {
+            const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
+                mbedtls_ssl_ciphersuite_from_string( cursor );
+            if( ciphersuite_info == NULL )
+            {
+                mbedtls_printf( "Bad ciphersuite name or number: \"%s\"\n", cursor );
+                mbedtls_free( array );
+                mbedtls_free( cursor );
+                return( NULL );
+            }
+            n = ciphersuite_info->id;
+        }
+        else if( n < 0 || n > 0xffff )
+        {
+            mbedtls_printf( "Integer in ciphersuite list out of range: %ld\n", n );
+            mbedtls_free( array );
+            mbedtls_free( cursor );
+            return( NULL );
+        }
+        array[i] = n;
+        ++i;
+        cursor = strchr( element_end, 0 ) + 1;
+    }
+    array[i] = 0;
+    mbedtls_free( strings );
+    return( array );
+}
+
 int main( int argc, char *argv[] )
 {
     int ret = 0, len, tail_len, i, written, frags, retry_left;
@@ -483,7 +557,7 @@ int main( int argc, char *argv[] )
     opt.psk                 = DFL_PSK;
     opt.psk_identity        = DFL_PSK_IDENTITY;
     opt.ecjpake_pw          = DFL_ECJPAKE_PW;
-    opt.force_ciphersuite[0]= DFL_FORCE_CIPHER;
+    opt.force_ciphersuite   = DFL_FORCE_CIPHER;
     opt.renegotiation       = DFL_RENEGOTIATION;
     opt.allow_legacy        = DFL_ALLOW_LEGACY;
     opt.renegotiate         = DFL_RENEGOTIATE;
@@ -575,14 +649,13 @@ int main( int argc, char *argv[] )
             opt.ecjpake_pw = q;
         else if( strcmp( p, "force_ciphersuite" ) == 0 )
         {
-            opt.force_ciphersuite[0] = mbedtls_ssl_get_ciphersuite_id( q );
+            opt.force_ciphersuite = opt_parse_ciphersuites( q );
 
-            if( opt.force_ciphersuite[0] == 0 )
+            if( opt.force_ciphersuite == NULL )
             {
                 ret = 2;
                 goto usage;
             }
-            opt.force_ciphersuite[1] = 0;
         }
         else if( strcmp( p, "renegotiation" ) == 0 )
         {
@@ -805,53 +878,61 @@ int main( int argc, char *argv[] )
     mbedtls_debug_set_threshold( opt.debug_level );
 #endif
 
-    if( opt.force_ciphersuite[0] > 0 )
+    if( opt.force_ciphersuite != NULL )
     {
-        const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
-        ciphersuite_info = mbedtls_ssl_ciphersuite_from_id( opt.force_ciphersuite[0] );
-
-        if( opt.max_version != -1 &&
-            ciphersuite_info->min_minor_ver > opt.max_version )
+        for( i = 0; opt.force_ciphersuite[i]; i++ )
         {
-            mbedtls_printf("forced ciphersuite not allowed with this protocol version\n");
-            ret = 2;
-            goto usage;
-        }
-        if( opt.min_version != -1 &&
-            ciphersuite_info->max_minor_ver < opt.min_version )
-        {
-            mbedtls_printf("forced ciphersuite not allowed with this protocol version\n");
-            ret = 2;
-            goto usage;
-        }
-
-        /* If the server selects a version that's not supported by
-         * this suite, then there will be no common ciphersuite... */
-        if( opt.max_version == -1 ||
-            opt.max_version > ciphersuite_info->max_minor_ver )
-        {
-            opt.max_version = ciphersuite_info->max_minor_ver;
-        }
-        if( opt.min_version < ciphersuite_info->min_minor_ver )
-        {
-            opt.min_version = ciphersuite_info->min_minor_ver;
-            /* DTLS starts with TLS 1.1 */
-            if( opt.transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
-                opt.min_version < MBEDTLS_SSL_MINOR_VERSION_2 )
-                opt.min_version = MBEDTLS_SSL_MINOR_VERSION_2;
-        }
-
-        /* Enable RC4 if needed and not explicitly disabled */
-        if( ciphersuite_info->cipher == MBEDTLS_CIPHER_ARC4_128 )
-        {
-            if( opt.arc4 == MBEDTLS_SSL_ARC4_DISABLED )
+            const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
+            ciphersuite_info = mbedtls_ssl_ciphersuite_from_id( opt.force_ciphersuite[i] );
+            if( ciphersuite_info == NULL )
             {
-                mbedtls_printf("forced RC4 ciphersuite with RC4 disabled\n");
+                /* Using forced numerical ciphersuite */
+                continue;
+            }
+
+            if( opt.max_version != -1 &&
+                ciphersuite_info->min_minor_ver > opt.max_version )
+            {
+                mbedtls_printf("forced ciphersuite not allowed with this protocol version\n");
+                ret = 2;
+                goto usage;
+            }
+            if( opt.min_version != -1 &&
+                ciphersuite_info->max_minor_ver < opt.min_version )
+            {
+                mbedtls_printf("forced ciphersuite not allowed with this protocol version\n");
                 ret = 2;
                 goto usage;
             }
 
-            opt.arc4 = MBEDTLS_SSL_ARC4_ENABLED;
+            /* If the server selects a version that's not supported by
+             * this suite, then there will be no common ciphersuite... */
+            if( opt.max_version == -1 ||
+                opt.max_version > ciphersuite_info->max_minor_ver )
+            {
+                opt.max_version = ciphersuite_info->max_minor_ver;
+            }
+            if( opt.min_version < ciphersuite_info->min_minor_ver )
+            {
+                opt.min_version = ciphersuite_info->min_minor_ver;
+                /* DTLS starts with TLS 1.1 */
+                if( opt.transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
+                    opt.min_version < MBEDTLS_SSL_MINOR_VERSION_2 )
+                    opt.min_version = MBEDTLS_SSL_MINOR_VERSION_2;
+            }
+
+            /* Enable RC4 if needed and not explicitly disabled */
+            if( ciphersuite_info->cipher == MBEDTLS_CIPHER_ARC4_128 )
+            {
+                if( opt.arc4 == MBEDTLS_SSL_ARC4_DISABLED )
+                {
+                    mbedtls_printf("forced RC4 ciphersuite with RC4 disabled\n");
+                    ret = 2;
+                    goto usage;
+                }
+
+                opt.arc4 = MBEDTLS_SSL_ARC4_ENABLED;
+            }
         }
     }
 
@@ -1154,7 +1235,7 @@ int main( int argc, char *argv[] )
     mbedtls_ssl_conf_session_tickets( &conf, opt.tickets );
 #endif
 
-    if( opt.force_ciphersuite[0] != DFL_FORCE_CIPHER )
+    if( opt.force_ciphersuite != DFL_FORCE_CIPHER )
         mbedtls_ssl_conf_ciphersuites( &conf, opt.force_ciphersuite );
 
 #if defined(MBEDTLS_ARC4_C)
