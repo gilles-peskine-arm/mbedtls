@@ -25,6 +25,9 @@ set -u
 : ${P_SRV:=../programs/ssl/ssl_server2}
 : ${P_CLI:=../programs/ssl/ssl_client2}
 : ${P_PXY:=../programs/test/udp_proxy}
+: ${P_SRV_WRAPPER=}
+: ${P_CLI_WRAPPER=}
+: ${P_PXY_WRAPPER=}
 : ${OPENSSL_CMD:=openssl} # OPENSSL would conflict with the build system
 : ${GNUTLS_CLI:=gnutls-cli}
 : ${GNUTLS_SERV:=gnutls-serv}
@@ -586,6 +589,18 @@ if [ ! -x "$P_PXY" ]; then
     echo "Command '$P_PXY' is not an executable file"
     exit 1
 fi
+if [ -n "$P_SRV_WRAPPER" ] && [ ! -x "$P_SRV_WRAPPER" ]; then
+    echo "Command '$P_SRV_WRAPPER' is not an executable file"
+    exit 1
+fi
+if [ -n "$P_CLI_WRAPPER" ] && [ ! -x "$P_CLI_WRAPPER" ]; then
+    echo "Command '$P_CLI_WRAPPER' is not an executable file"
+    exit 1
+fi
+if [ -n "$P_PXY_WRAPPER" ] && [ ! -x "$P_PXY_WRAPPER" ]; then
+    echo "Command '$P_PXY_WRAPPER' is not an executable file"
+    exit 1
+fi
 if [ "$MEMCHECK" -gt 0 ]; then
     if which valgrind >/dev/null 2>&1; then :; else
         echo "Memcheck not possible. Valgrind not found"
@@ -620,9 +635,9 @@ unset PORT_BASE
 
 # fix commands to use this port, force IPv4 while at it
 # +SRV_PORT will be replaced by either $SRV_PORT or $PXY_PORT later
-P_SRV="$P_SRV server_addr=127.0.0.1 server_port=$SRV_PORT"
-P_CLI="$P_CLI server_addr=127.0.0.1 server_port=+SRV_PORT"
-P_PXY="$P_PXY server_addr=127.0.0.1 server_port=$SRV_PORT listen_addr=127.0.0.1 listen_port=$PXY_PORT ${SEED:+"seed=$SEED"}"
+P_SRV="$P_SRV_WRAPPER $P_SRV server_addr=127.0.0.1 server_port=$SRV_PORT"
+P_CLI="$P_CLI_WRAPPER $P_CLI server_addr=127.0.0.1 server_port=+SRV_PORT"
+P_PXY="$P_PXY_WRAPPER $P_PXY server_addr=127.0.0.1 server_port=$SRV_PORT listen_addr=127.0.0.1 listen_port=$PXY_PORT ${SEED:+"seed=$SEED"}"
 O_SRV="$O_SRV -accept $SRV_PORT -dhparam data_files/dhparams.pem"
 O_CLI="$O_CLI -connect localhost:+SRV_PORT"
 G_SRV="$G_SRV -p $SRV_PORT"

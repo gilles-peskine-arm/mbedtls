@@ -25,7 +25,7 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(MBEDTLS_NET_C)
+#if defined(MBEDTLS_NET_C) && !defined(MBEDTLS_NET_OFFLOAD_C)
 
 #if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
     !defined(__APPLE__) && !defined(_WIN32)
@@ -583,4 +583,4 @@ void mbedtls_net_free( mbedtls_net_context *ctx )
     ctx->fd = -1;
 }
 
-#endif /* MBEDTLS_NET_C */
+#endif /* defined(MBEDTLS_NET_C) && !defined(MBEDTLS_NET_OFFLOAD_C) */

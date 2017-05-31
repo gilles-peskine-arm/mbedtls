@@ -1,0 +1,217 @@
+/*
+ *  Simple serialization framework
+ *
+ *  Copyright (C) 2017, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *  This file is part of mbed TLS (https://tls.mbed.org)
+ */
+
+/*
+ * Serialization format description
+ *
+ * All integers are encoded as a stream of octets in big-endian format.
+ *
+ * A serialization packet consists of a 4-byte header followed by
+ * variable-sized content. The first byte of the header is the packet
+ * type:
+ *   0x45 ('E') execute   target->host  Execute a function
+ *   0x50 ('P') push      target->host  Push an input for the next execution
+ *   0x72 ('r') result    host->target  Return an output from the last execution
+ *
+ * The host maintains a stack of parameters and results. Stack
+ * elements are byte arrays. This stack is initially empty. The "push"
+ * command transmits one item from the target to the host and pushes
+ * this item to the stack. The "execute" command requests that the host
+ * perform an action, taking parameters from the stack and sending outputs
+ * back to the target.
+ *
+ * Format of a push packet (by byte offset):
+ *   0..0       0x50    Type identifier
+ *   1..3       size    Number of bytes to follow
+ *   4..3+size  data    Content of the byte array
+ *
+ * Format of an execute packet (by byte offset):
+ *   0..0       0x45    Type identifier
+ *   1..3       func    Function identifier
+ * Function identifiers are conventionally arranged as follows:
+ *   bits 23-16   Library code (1=sockets)
+ *   bits 15-8    Function identifier inside the library
+ *   bits 7-4     Number of parameters
+ *   bits 3-0     Number of results after status code on success
+ *
+ * Format of a result packet (by byte offset):
+ *   0..0       0x72    Type identifier
+ *   1..3       size    Number of bytes to follow
+ *   4..3+size  data    Content of the byte array
+ *
+ * All functions currently follow the following result status
+ * convention. The first result is a status code (MBEDTLS_ERR_xxx
+ * constant). If this is 0 then more results follow. If this is
+ * nonzero then it is the only result.
+ */
+
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
+#if defined(MBEDTLS_NET_OFFLOAD_C)
+
+#include <limits.h>
+#include <stdint.h>
+#include <string.h>
+#include "mbedtls/serialize.h"
+#include <unistd.h>
+
+static int serialize_write_fd = 3;
+static int serialize_read_fd = 4;
+
+static int mbedtls_serialize_write( const uint8_t *buffer, size_t length )
+{
+    ssize_t result;
+    do {
+        result = write( serialize_write_fd, buffer, length );
+        /* This channel should never reach EOF under the current simplistic
+           design, so error out on EOF. */
+        if( result <= 0 )
+        {
+            return( MBEDTLS_ERR_SERIALIZE_SEND );
+        }
+        length -= result;
+        buffer += result;
+    } while( length > 0 );
+    return( 0 );
+}
+
+static int mbedtls_serialize_read( uint8_t *buffer, size_t length )
+{
+    ssize_t result;
+    do {
+        result = read( serialize_read_fd, buffer, length );
+        /* This channel should never reach EOF under the current simplistic
+           design, so error out on EOF. */
+        if( result <= 0 )
+        {
+            return( MBEDTLS_ERR_SERIALIZE_RECEIVE );
+        }
+        length -= result;
+        buffer += result;
+    } while( length > 0 );
+    return( 0 );
+}
+
+int mbedtls_serialize_push_buffer( const void *buffer, size_t length )
+{
+    int ret;
+    uint8_t header[4];
+    if( length > MBEDTLS_SERIALIZE_MAX_STRING_LENGTH )
+        return( MBEDTLS_ERR_SERIALIZE_BAD_INPUT );
+
+    header[0] = MBEDTLS_SERIALIZE_TYPE_PUSH;
+    header[1] = length >> 16 & 0xff;
+    header[2] = length >> 8 & 0xff;
+    header[3] = length & 0xff;
+
+    if( ( ret = mbedtls_serialize_write( header, sizeof( header ) ) ) != 0 )
+        return( ret );
+    if( ( ret = mbedtls_serialize_write( buffer, length ) ) != 0 )
+        return( ret );
+    return( 0 );
+}
+
+int mbedtls_serialize_push_int16( uint16_t value )
+{
+    uint8_t buffer[2];
+    buffer[0] = value >> 8 & 0xff;
+    buffer[1] = value & 0xff;
+    return( mbedtls_serialize_push_buffer( buffer, sizeof( buffer ) ) );
+}
+
+int mbedtls_serialize_push_int32( uint32_t value )
+{
+    uint8_t buffer[4];
+    buffer[0] = value >> 24 & 0xff;
+    buffer[1] = value >> 16 & 0xff;
+    buffer[2] = value >> 8 & 0xff;
+    buffer[3] = value & 0xff;
+    return( mbedtls_serialize_push_buffer( buffer, sizeof( buffer ) ) );
+}
+
+int mbedtls_serialize_execute( uint32_t command )
+{
+    int ret;
+    uint8_t buffer[4];
+    buffer[0] = MBEDTLS_SERIALIZE_TYPE_EXECUTE;
+    buffer[1] = command >> 16 & 0xff;
+    buffer[2] = command >> 8 & 0xff;
+    buffer[3] = command & 0xff;
+    if( ( ret = mbedtls_serialize_write( buffer, sizeof( buffer ) ) ) != 0 )
+        return( ret );
+    if( ( ret = mbedtls_serialize_read( buffer, sizeof( buffer ) ) ) != 0 )
+        return( ret );
+    if( ! ( buffer[0] == MBEDTLS_SERIALIZE_TYPE_RESULT &&
+            buffer[1] == 0 && buffer[2] == 0 && buffer[3] == 4 ) )
+        return( MBEDTLS_ERR_SERIALIZE_BAD_OUTPUT );
+    if( ( ret = mbedtls_serialize_read( buffer, sizeof( buffer ) ) ) != 0 )
+        return( ret );
+    return( buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3] );
+}
+
+int mbedtls_serialize_pop_buffer( void *buffer, size_t max_length, size_t *actual_length )
+{
+    int ret;
+    uint8_t header[4];
+    if( ( ret = mbedtls_serialize_read( header, sizeof( header ) ) ) != 0 )
+        return( ret );
+    *actual_length = header[1] << 16 | header[2] << 8 | header[3];
+    if( *actual_length > max_length )
+        return( MBEDTLS_ERR_SERIALIZE_BAD_OUTPUT );
+    if( ( ret = mbedtls_serialize_read( buffer, *actual_length ) ) != 0 )
+        return( ret );
+    return( 0 );
+}
+
+int mbedtls_serialize_pop_int16( uint16_t *value )
+{
+    int ret;
+    uint8_t buffer[2];
+    size_t length;
+    if( ( ret = mbedtls_serialize_pop_buffer( buffer, sizeof( buffer ),
+                                              &length ) ) != 0 )
+        return( ret );
+    if( length != sizeof( buffer ) )
+        return( MBEDTLS_ERR_SERIALIZE_BAD_OUTPUT );
+    *value = buffer[0] << 8 | buffer[1];
+    return( 0 );
+}
+
+int mbedtls_serialize_pop_int32( uint32_t *value )
+{
+    int ret;
+    uint8_t buffer[4];
+    size_t length;
+    if( ( ret = mbedtls_serialize_pop_buffer( buffer, sizeof( buffer ),
+                                              &length ) ) != 0 )
+        return( ret );
+    if( length != sizeof( buffer ) )
+        return( MBEDTLS_ERR_SERIALIZE_BAD_OUTPUT );
+    *value = buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3];
+    return( 0 );
+}
+
+
+#endif /* MBEDTLS_NET_C */

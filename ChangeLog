@@ -1,5 +1,12 @@
 mbed TLS ChangeLog (Sorted per branch, date)
 
+= mbed TLS x.x.x branch released 2017-xx-xx
+
+Features
+   * New offloading mechanism for networking functionality. This allows
+     running tests on an embedded processor without having to worry about
+     any OS- and hardware-dependent networking interface.
+
 = mbed TLS 2.5.0 branch released 2017-05-17
 
 Security

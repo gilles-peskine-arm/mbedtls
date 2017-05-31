@@ -2031,6 +2031,16 @@
 #define MBEDTLS_NET_C
 
 /**
+ * \def MBEDTLS_NET_OFFLOAD_C
+ *
+ * Serialize network functions to a host instead of performing networking on
+ * the device where mbed TLS runs.
+ *
+ * Module: library/net_sockets_serialize.c
+ */
+//#define MBEDTLS_NET_OFFLOAD_C
+
+/**
  * \def MBEDTLS_OID_C
  *
  * Enable the OID database.
