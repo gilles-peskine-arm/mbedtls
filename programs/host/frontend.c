@@ -58,45 +58,6 @@ static int debug_verbose = 0;
 #include "mbedtls/serialize.h"
 #include "mbedtls/net_sockets.h"
 
-static int serialize_write_fd = 4;
-static int serialize_read_fd = 3;
-
-/** Write data on the serialization channel.
- * Any errors are fatal. */
-static int mbedtls_serialize_write( uint8_t *buffer, size_t length )
-{
-    ssize_t result;
-    do {
-        result = write( serialize_write_fd, buffer, length );
-        if( result < 0 )
-        {
-            perror( "Serialization write error" );
-            return( MBEDTLS_ERR_SERIALIZE_SEND );
-        }
-        length -= result;
-        buffer += result;
-    } while( length > 0 );
-    return( 0 );
-}
-
-/** Read exactly length bytes from the serialization channel.
- * Any errors are fatal. */
-static int mbedtls_serialize_read( uint8_t *buffer, size_t length )
-{
-    ssize_t result;
-    do {
-        result = read( serialize_read_fd, buffer, length );
-        if( result < 0 )
-        {
-            perror( "Serialization read error" );
-            return( MBEDTLS_ERR_SERIALIZE_RECEIVE );
-        }
-        length -= result;
-        buffer += result;
-    } while( length > 0 );
-    return( 0 );
-}
-
 /** State of the offloading frontend. */
 typedef enum {
     MBEDTLS_SERIALIZE_STATUS_DEAD = 0, /**< The communication channel is broken */
@@ -173,9 +134,49 @@ static void set_item_int32( mbedtls_serialize_item_t *item, uint32_t value )
  * This data structure represents one connection to a target.
  */
 typedef struct {
+    int read_fd; /**< File descriptor for input from the target */
+    int write_fd; /**< File descriptor for output to the target */
     mbedtls_serialize_item_t *stack; /**< Stack of inputs */
     mbedtls_serialize_status_t status; /**< Frontend status */
 } mbedtls_serialize_context_t;
+
+/** Write data on the serialization channel.
+ * Any errors are fatal. */
+static int mbedtls_serialize_write( mbedtls_serialize_context_t *ctx,
+                                    uint8_t *buffer, size_t length )
+{
+    ssize_t result;
+    do {
+        result = write( ctx->write_fd, buffer, length );
+        if( result < 0 )
+        {
+            perror( "Serialization write error" );
+            return( MBEDTLS_ERR_SERIALIZE_SEND );
+        }
+        length -= result;
+        buffer += result;
+    } while( length > 0 );
+    return( 0 );
+}
+
+/** Read exactly length bytes from the serialization channel.
+ * Any errors are fatal. */
+static int mbedtls_serialize_read( mbedtls_serialize_context_t *ctx,
+                                   uint8_t *buffer, size_t length )
+{
+    ssize_t result;
+    do {
+        result = read( ctx->read_fd, buffer, length );
+        if( result < 0 )
+        {
+            perror( "Serialization read error" );
+            return( MBEDTLS_ERR_SERIALIZE_RECEIVE );
+        }
+        length -= result;
+        buffer += result;
+    } while( length > 0 );
+    return( 0 );
+}
 
 /**< Discard all items on the stack and free them. */
 static void mbedtls_serialize_discard_stack( mbedtls_serialize_context_t *ctx )
@@ -403,7 +404,8 @@ static uint32_t mbedtls_serialize_perform( mbedtls_serialize_context_t *ctx,
 }
 
 /** Send one result (function output). */
-static int mbedtls_serialize_send_result( uint8_t *buffer, size_t length )
+static int mbedtls_serialize_send_result( mbedtls_serialize_context_t *ctx,
+                                          uint8_t *buffer, size_t length )
 {
     int ret;
     uint8_t header[4];
@@ -415,9 +417,9 @@ static int mbedtls_serialize_send_result( uint8_t *buffer, size_t length )
     header[1] = length >> 16 & 0xff;
     header[2] = length >> 8 & 0xff;
     header[3] = length & 0xff;
-    if( (ret = mbedtls_serialize_write( header, sizeof( header ) ) ) != 0 )
+    if( (ret = mbedtls_serialize_write( ctx, header, sizeof( header ) ) ) != 0 )
         return( ret );
-    return( mbedtls_serialize_write( buffer, length ) );
+    return( mbedtls_serialize_write( ctx, buffer, length ) );
 }
 
 /** Read one message from the serialization channel and process it.
@@ -440,7 +442,7 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
         DBG( "already dead" );
         return( MBEDTLS_ERR_SERIALIZE_RECEIVE );
     }
-    if( ( ret = mbedtls_serialize_read( header, sizeof( header ) ) ) != 0 )
+    if( ( ret = mbedtls_serialize_read( ctx, header, sizeof( header ) ) ) != 0 )
     {
         DBG( "receive failure -> dead" );
         ctx->status = MBEDTLS_SERIALIZE_STATUS_DEAD;
@@ -459,7 +461,7 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
                them. */
             while( length > sizeof( header ) )
             {
-                if( ( ret = mbedtls_serialize_read( header, sizeof( header ) ) ) != 0 )
+                if( ( ret = mbedtls_serialize_read( ctx, header, sizeof( header ) ) ) != 0 )
                 {
                     DBG( "failed to read input with %zu bytes remaining -> dead", length );
                     ctx->status = MBEDTLS_SERIALIZE_STATUS_DEAD;
@@ -467,7 +469,7 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
                 }
                 length -= sizeof( header );
             }
-            if( ( ret = mbedtls_serialize_read( header, length ) ) != 0 )
+            if( ( ret = mbedtls_serialize_read( ctx, header, length ) ) != 0 )
             {
                 DBG( "failed to read input with %zu bytes remaining -> dead", length );
                 ctx->status = MBEDTLS_SERIALIZE_STATUS_DEAD;
@@ -482,7 +484,7 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
             ctx->status = MBEDTLS_SERIALIZE_STATUS_OUT_OF_MEMORY;
             return( MBEDTLS_ERR_SERIALIZE_ALLOC_FAILED );
         }
-        if( ( ret = mbedtls_serialize_read( item_buffer( item ), length ) ) != 0 )
+        if( ( ret = mbedtls_serialize_read( ctx, item_buffer( item ), length ) ) != 0 )
         {
             DBG( "failed to read %zu-byte input -> dead", length );
             ctx->status = MBEDTLS_SERIALIZE_STATUS_DEAD;
@@ -521,7 +523,7 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
         for( i = 0; i < sizeof( outputs ) / sizeof( *outputs ) && outputs[i] != NULL ; i++ )
         {
             DBG( "sending result %zu (%zu bytes)", i, outputs[i]->size );
-            ret = mbedtls_serialize_send_result( item_buffer( outputs[i] ),
+            ret = mbedtls_serialize_send_result( ctx, item_buffer( outputs[i] ),
                                                  outputs[i]->size );
             if( ret != 0 )
             {
@@ -540,16 +542,25 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
     }
 }
 
+void mbedtls_serialize_frontend( mbedtls_serialize_context_t *ctx )
+{
+    while( ctx->status == MBEDTLS_SERIALIZE_STATUS_OK ||
+           ctx->status == MBEDTLS_SERIALIZE_STATUS_OUT_OF_MEMORY )
+    {
+        (void) mbedtls_serialize_pull( ctx );
+    }
+    close( ctx->read_fd );
+    close( ctx->write_fd );
+}
+
 int main( )
 {
     mbedtls_serialize_context_t ctx = {0};
+    ctx.read_fd = 3;
+    ctx.write_fd = 4;
     ctx.status = MBEDTLS_SERIALIZE_STATUS_OK;
     if( getenv( "FRONTEND_DEBUG" ) )
         debug_verbose = 1;
-    while( ctx.status == MBEDTLS_SERIALIZE_STATUS_OK ||
-           ctx.status == MBEDTLS_SERIALIZE_STATUS_OUT_OF_MEMORY )
-    {
-        (void) mbedtls_serialize_pull( &ctx );
-    }
+    mbedtls_serialize_frontend( &ctx );
     return( ctx.status != MBEDTLS_SERIALIZE_STATUS_EXITED );
 }
