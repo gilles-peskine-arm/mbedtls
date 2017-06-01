@@ -400,6 +400,17 @@ static uint32_t mbedtls_serialize_perform( mbedtls_serialize_context_t *ctx,
         break;
     }
 
+    if( ret != 0 )
+    {
+        /* For all functions, output nothing but the status on failure. */
+        size_t i;
+        for( i = 0; outputs[i] != NULL; i++ )
+        {
+            mbedtls_free( outputs[i] );
+            outputs[i] = NULL;
+        }
+    }
+
     mbedtls_serialize_discard_stack( ctx );
     return( ret );
 }
