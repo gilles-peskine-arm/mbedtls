@@ -392,6 +392,7 @@ static uint32_t mbedtls_serialize_perform( mbedtls_serialize_context_t *ctx,
             mbedtls_net_free( &ctx );
             ret = 0;
         }
+        break;
 
     default:
         DBG( "unknown function 0x%06x", function );
