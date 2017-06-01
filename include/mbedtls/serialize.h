@@ -55,9 +55,9 @@ extern "C" {
 #define MBEDTLS_SERIALIZE_FUNCTION_SOCKET       0x010031 /**< bind or connect */
     /* in: string host, string port, int16 proto_and_mode
        out: int16 fd */
-#define MBEDTLS_SERIALIZE_FUNCTION_ACCEPT       0x010122 /**< accept */
+#define MBEDTLS_SERIALIZE_FUNCTION_ACCEPT       0x010123 /**< accept */
     /* in: int16 socket_fd, int32 buffer_size
-       out: int16 client_fd, string client_ip */
+       out: int16 bind_fd, int16 client_fd, string client_ip */
 #define MBEDTLS_SERIALIZE_FUNCTION_SET_BLOCK    0x010220 /**< set_block or set_nonblock */
     /* in: int16 fd, int16 nonblock */
 #define MBEDTLS_SERIALIZE_FUNCTION_RECV         0x010331 /**< recv or recv_timeout */

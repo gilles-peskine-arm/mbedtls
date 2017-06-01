@@ -132,6 +132,8 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
         return( ret );
     if( ( ret = mbedtls_serialize_execute( MBEDTLS_SERIALIZE_FUNCTION_ACCEPT ) ) != 0 )
         return( ret );
+    if( ( ret = mbedtls_serialize_pop_fd( &bind_ctx->fd ) ) != 0 )
+        return( ret );
     if( ( ret = mbedtls_serialize_pop_fd( &client_ctx->fd ) ) != 0 )
         return( ret );
     if( ( ret = mbedtls_serialize_pop_buffer( client_ip, buf_size, ip_len ) ) != 0 )

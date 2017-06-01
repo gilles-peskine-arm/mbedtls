@@ -295,17 +295,24 @@ static uint32_t mbedtls_serialize_perform( mbedtls_serialize_context_t *ctx,
             uint32_t buffer_size = item_int32( inputs[1] );
             mbedtls_net_context client_ctx;
             size_t ip_len;
-            ALLOC_OUTPUT( 0, 2 ); // client_fd
-            ALLOC_OUTPUT( 1, buffer_size ); // client_ip
+            ALLOC_OUTPUT( 0, 2 ); // bind_fd
+            ALLOC_OUTPUT( 1, 2 ); // client_fd
+            ALLOC_OUTPUT( 2, buffer_size ); // client_ip
             DBG( "executing accept fd=%d", (int) bind_ctx.fd );
             ret = mbedtls_net_accept( &bind_ctx, &client_ctx,
-                                      item_buffer( outputs[1] ), outputs[1]->size,
+                                      item_buffer( outputs[2] ), outputs[2]->size,
                                       &ip_len );
             if( ret == 0 )
             {
-                DBG( "accept -> fd %d", (int) client_ctx.fd );
-                set_item_int16( outputs[0], client_ctx.fd );
-                outputs[1]->size = ip_len;
+                /* Note that we need to return both bind_fd and client_fd
+                   because for UDP, the listening socket is used to
+                   communicate with the client (new client fd = old bind fd)
+                   and a new socket is created to accept new connections
+                   (new bind fd). */
+                DBG( "accept -> bind_fd=%d client_fd=%d", (int) bind_ctx.fd, (int) client_ctx.fd );
+                set_item_int16( outputs[0], bind_ctx.fd );
+                set_item_int16( outputs[1], client_ctx.fd );
+                outputs[2]->size = ip_len;
             }
         }
         break;
