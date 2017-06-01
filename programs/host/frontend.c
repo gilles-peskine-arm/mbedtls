@@ -533,6 +533,10 @@ static int mbedtls_serialize_pull( mbedtls_serialize_context_t *ctx )
                 break;
             }
         }
+        for( i = 1; i < sizeof( outputs ) / sizeof( *outputs ) && outputs[i] != NULL ; i++ )
+        {
+            mbedtls_free( outputs[i] );
+        }
         return( ret );
     }
 
