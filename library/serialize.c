@@ -77,12 +77,127 @@
 #include "mbedtls/serialize.h"
 #include <unistd.h>
 
-static int serialize_write_fd = 3;
-static int serialize_read_fd = 4;
+static int serialize_write_fd = -1;
+static int serialize_read_fd = -1;
+
+#if defined(MBEDTLS_SERIALIZE_FORK_FRONTEND_C)
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <signal.h>
+
+static int host_pid;
+
+static void kill_host_frontend( void )
+{
+    kill( host_pid, SIGHUP );
+}
+
+static void relay_signal( int signum )
+{
+    /* Let the atexit function kill the frontend */
+    exit( signum + 128 );
+}
+
+#define CHECK( expr, var )                      \
+    do {                                        \
+        var = ( expr );                         \
+        if( var < 0 )                           \
+        {                                       \
+            perror( #expr );                    \
+            goto cleanup;                       \
+        }                                       \
+    } while( 0 );
+int mbedtls_serialize_prepare( void )
+{
+    int ret;
+    int null = -1;
+    int host_to_target[2] = {-1, -1}, target_to_host[2] = {-1, -1};
+    const char *const frontend_path[] = {
+        "programs/host/frontend",
+        "../programs/host/frontend",
+        "../../programs/host/frontend",
+    };
+    const char *frontend_exe = NULL;
+    size_t i;
+
+    /* Look for frontend program */
+    for( i = 0; i < sizeof( frontend_path ) / sizeof( *frontend_path ); i++ )
+    {
+        if( access( frontend_path[i], F_OK ) >= 0 )
+        {
+            frontend_exe = frontend_path[i];
+            break;
+        }
+    }
+    if( frontend_exe == NULL )
+    {
+        fprintf( stderr, "Host frontend executable for offloading not found!\n" );
+        return( -1 );
+    }
+
+    /* Prepare the plumbing */
+    CHECK( open( "/dev/null", O_RDONLY ), null );
+    CHECK( dup2( null, 3 ), ret );
+    CHECK( dup2( null, 4 ), ret );
+    if( null != 3 && null != 4 )
+        close( null );
+    CHECK( pipe( host_to_target ), ret );
+    CHECK( pipe( target_to_host ), ret );
+    CHECK( signal( SIGTERM, relay_signal ) == SIG_ERR ? -1 : 0 , ret );
+    CHECK( fork( ), host_pid );
+
+    if( host_pid == 0 )
+    {
+        /* Child process (host */
+        close( host_to_target[0] );
+        close( target_to_host[1] );
+        dup2( target_to_host[0], 3 );
+        dup2( host_to_target[1], 4 );
+        execl( frontend_exe, frontend_exe, NULL );
+        perror( frontend_exe );
+        exit( 126 );
+    }
+
+    /* Parent process (target) */
+    serialize_read_fd = host_to_target[0];
+    close( host_to_target[1] );
+    close( target_to_host[0] );
+    serialize_write_fd = target_to_host[1];
+    close( null );
+    atexit( kill_host_frontend );
+
+    return( 0 );
+cleanup:
+    if( null >= 0 )
+    {
+        close( null );
+        close( 3 );
+        close( 4 );
+    }
+    if( host_to_target[0] >= 0 )
+        close( host_to_target[0] );
+    if( host_to_target[1] >= 0 )
+        close( host_to_target[1] );
+    if( target_to_host[0] >= 0 )
+        close( target_to_host[0] );
+    if( target_to_host[1] >= 0 )
+        close( target_to_host[1] );
+    return( -1 );
+}
+#undef CHECK
+#endif /* MBEDTLS_SERIALIZE_FORK_FRONTEND_C */
 
 static int mbedtls_serialize_write( const uint8_t *buffer, size_t length )
 {
     ssize_t result;
+#if defined(MBEDTLS_SERIALIZE_FORK_FRONTEND_C)
+    if( serialize_write_fd == -1 )
+        if( mbedtls_serialize_prepare( ) != 0 )
+            return( MBEDTLS_ERR_SERIALIZE_SEND );
+#endif
     do {
         result = write( serialize_write_fd, buffer, length );
         /* This channel should never reach EOF under the current simplistic

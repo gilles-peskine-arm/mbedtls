@@ -2041,6 +2041,19 @@
 //#define MBEDTLS_NET_OFFLOAD_C
 
 /**
+ * \def MBEDTLS_SERIALIZE_FORK_FRONTEND_C
+ *
+ * Offload to an auxiliary program programs/host/frontend spawned by
+ * ourselves and running on the same machine.
+ *
+ * This is only useful to test the offloading mechanism, and only works on
+ * Unix/POSIX-like systems.
+ *
+ * Module: library/net_sockets_serialize.c
+ */
+//#define MBEDTLS_SERIALIZE_FORK_FRONTEND_C
+
+/**
  * \def MBEDTLS_OID_C
  *
  * Enable the OID database.

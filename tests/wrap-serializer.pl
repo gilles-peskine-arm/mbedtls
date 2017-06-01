@@ -101,6 +101,7 @@ if (!defined $target_pid) {
     close($host_to_target_read);
     close($target_to_host_write);
     my @prefix;
+    #@prefix = qw(gdbserver localhost:6789);
     #@prefix = qw(strace -o target.strace -etrace=read,write -eread=4 -ewrite=3);
     exec @prefix, @ARGV or do {
         my $exec_error = $!;
