@@ -13,13 +13,15 @@
 ## Tools
 OPENSSL ?= openssl
 
-## Build the generated test data. Note that since the final outputs
-## are committed to the repository, this target should do nothing on a
-## fresh checkout. Furthermore, since the generation is randomized,
-## re-running the same targets may result in differing files. The goal
-## of this makefile is primarily to serve as a record of how the
-## targets were generated in the first place.
-default: all_final
+## Build the generated test data. Note that since the generation of
+## many of these files is randomized or date-dependent, re-running the
+## same targets results in differing files. Hence, to get reproducible
+## results, all the targets that are used as test data must be
+## committed to the source repository, and running make on a clean
+## checkout should not modify those files. The goal of this makefile
+## is primarily to serve as a record of how the targets were generated
+## in the first place.
+default: all
 
 all_intermediate := # temporary files
 all_final := # files used by tests
@@ -75,19 +77,15 @@ all: $(all_intermediate) $(all_final)
 
 .PHONY: default all_final all
 
-# These files should not be committed to the repository.
-list_intermediate:
-	@printf '%s\n' $(all_intermediate) | sort
 # These files should be committed to the repository so that the test data is
 # available upon checkout without running a randomized process depending on
 # third-party tools.
-list_final:
-	@printf '%s\n' $(all_final) | sort
-.PHONY: list_intermediate list_final
+list_committed:
+	@printf '%s\n' $(all_intermediate) $(all_final) | sort
+.PHONY: list_committed
 
-## Remove intermediate files
-clean:
-	rm -f $(all_intermediate)
+## Remove build products that can be regenerated easily and reproducibly
+clean: ;
 ## Remove all build products, even the ones that are committed
 neat: clean
 	rm -f $(all_final)
