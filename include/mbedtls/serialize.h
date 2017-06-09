@@ -90,6 +90,20 @@ extern "C" {
 #define MBEDTLS_ERR_SERIALIZE_RECEIVE               -0x5505 /**< Communication error while receiving data to unserialize */
 #define MBEDTLS_ERR_SERIALIZE_ALLOC_FAILED          -0x5506 /**< Out of memory to execute the function */
 
+/* Note that the serialization functions must be called in a specific sequence:
+ *
+ *  1. Push the arguments of a command, in reverse order (i.e. to call
+ *     f(x,y), push y first, then x). For each argument, call either
+ *     mbedtls_serialize_push_buffer or one of the type-specific variants.
+ *  2. Call mbedtls_serialize_execute.
+ *  3. Call mbedtls_serialize_pop_buffer or one of the type-specific variants
+ *     for each output parameter.
+ *
+ * It is important to spend minimal time before the calls to
+ * mbedtls_serialize_pop_buffer, otherwise data can be lost in transit on
+ * the serial port on some platforms.
+ */
+
 /** Send an input parameter from target to host. */
 int mbedtls_serialize_push_buffer( const void *buffer, size_t length );
 int mbedtls_serialize_push_int16( uint16_t value );
