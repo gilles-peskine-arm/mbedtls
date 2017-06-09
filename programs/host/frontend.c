@@ -95,7 +95,7 @@ static uint16_t item_int16( mbedtls_serialize_item_t *item )
     return( buffer[0] << 8 | buffer[1] );
 }
 
-static uint16_t item_int32( mbedtls_serialize_item_t *item )
+static uint32_t item_int32( mbedtls_serialize_item_t *item )
 {
     uint8_t *buffer = item_buffer( item );
     return( buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3] );
