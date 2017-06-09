@@ -171,8 +171,17 @@ int mbedtls_net_set_nonblock( mbedtls_net_context *ctx )
  */
 void mbedtls_net_usleep( unsigned long usec )
 {
-    /*TODO*/
-    (void) usec;
+    int ret;
+#if ULONG_MAX > 0xffffffff
+    /* Truncate sleeps of more than about 1 hour and 11 minutes so that they
+       fit in the parameter size. */
+    if( usec > 0xffffffff )
+        usec = 0xffffffff;
+#endif
+    if( ( ret = mbedtls_serialize_push_int32( usec ) ) != 0 )
+        return;
+    if( ( ret = mbedtls_serialize_execute( MBEDTLS_SERIALIZE_FUNCTION_USLEEP ) ) != 0 )
+        return;
 }
 
 /*

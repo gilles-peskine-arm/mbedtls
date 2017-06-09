@@ -52,6 +52,10 @@ extern "C" {
 
 #define MBEDTLS_SERIALIZE_FUNCTION_EXIT         0x000100 /**< exit the frontend */
 #define MBEDTLS_SERIALIZE_FUNCTION_ECHO         0x000211 /**< echo input */
+    /* in: data
+       out: data */
+#define MBEDTLS_SERIALIZE_FUNCTION_USLEEP       0x000310 /**< sleep */
+    /* in: usec */
 #define MBEDTLS_SERIALIZE_FUNCTION_SOCKET       0x010031 /**< bind or connect */
     /* in: string host, string port, int16 proto_and_mode
        out: int16 fd */

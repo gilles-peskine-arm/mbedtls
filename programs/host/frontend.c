@@ -255,6 +255,17 @@ static uint32_t mbedtls_serialize_perform( mbedtls_serialize_context_t *ctx,
         break;
     }
 
+    case MBEDTLS_SERIALIZE_FUNCTION_USLEEP:
+        CHECK_ARITY( 1 );
+        CHECK_LENGTH( 0, 4 ); // usec
+        {
+            unsigned long usec = item_int32( inputs[0] );
+            DBG( "executing sleep usec=%lu", usec );
+            mbedtls_net_usleep( usec );
+            ret = 0;
+        }
+        break;
+
     case MBEDTLS_SERIALIZE_FUNCTION_SOCKET:
         CHECK_ARITY( 3 ); // host, port, proto_and_mode
         CHECK_LENGTH( 2, 2 ); // proto_and_mode
