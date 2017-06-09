@@ -85,20 +85,59 @@ static int serialize_read_fd = -1;
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <signal.h>
 
-static int host_pid;
+static pid_t host_pid;
 
 static void kill_host_frontend( void )
 {
-    kill( host_pid, SIGHUP );
+    if( host_pid > 0 )
+    {
+        fprintf( stderr, "Killing host frontend (pid=%d)\n", host_pid );
+        kill( host_pid, SIGHUP );
+        host_pid = 0;
+    }
 }
 
+void ( *previous_sigterm_handler )( int ) = NULL;
 static void relay_signal( int signum )
 {
+    /* Call the previous handler if there is one. This is fragile,
+       since it doesn't pick up any subsequent change in signal
+       handlers. But that's enough for now. */
+    fprintf( stderr, "Caught signal %d\n", signum );
+    if( signum == SIGTERM && previous_sigterm_handler != NULL )
+    {
+        /* TODO: the test "Version check: cli min 1.2, srv max 1.1 ->
+           fail" requires interrupting an accept() by a SIGTERM. This
+           method of relaying signals doesn't work, because the signal
+           needs to be sent to the host to interrupt the accept call.
+           But we don't want to just kill the host: after sending the
+           signal, we need to keep the host running and run the signal
+           handler in the target, which makes further calls to the host. */
+        fprintf( stderr, "Running handler for signal %d\n", signum );
+        previous_sigterm_handler( signum );
+    }
     /* Let the atexit function kill the frontend */
+    fprintf( stderr, "Exiting from pid=%d on signal %d\n", signum, getpid( ) );
     exit( signum + 128 );
+}
+
+static void reap_child( int signum )
+{
+    int status;
+    pid_t dead_pid = wait( &status );
+    (void) signum;
+    if( dead_pid == host_pid )
+    {
+        if( WIFSIGNALED( status ) )
+            fprintf( stderr, "Host frontend died from signal %d\n", WTERMSIG( status ) );
+        else if( WIFEXITED( status ) && WEXITSTATUS( status ) != 0 )
+            fprintf( stderr, "Host frontend exited with status %d\n", WEXITSTATUS( status ) );
+        host_pid = 0;
+    }
 }
 
 #define CHECK( expr, var )                      \
@@ -146,7 +185,8 @@ int mbedtls_serialize_prepare( void )
         close( null );
     CHECK( pipe( host_to_target ), ret );
     CHECK( pipe( target_to_host ), ret );
-    CHECK( signal( SIGTERM, relay_signal ) == SIG_ERR ? -1 : 0 , ret );
+    CHECK( ( previous_sigterm_handler = signal( SIGTERM, relay_signal ) ) == SIG_ERR ? -1 : 0 , ret );
+    CHECK( signal( SIGCLD, reap_child ) == SIG_ERR ? -1 : 0 , ret );
     CHECK( fork( ), host_pid );
 
     if( host_pid == 0 )
