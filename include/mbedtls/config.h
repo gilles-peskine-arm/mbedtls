@@ -2554,6 +2554,19 @@
  */
 #define MBEDTLS_XTEA_C
 
+/**
+ * \def MBEDTLS_SERIALIZE_C
+ *
+ * Enable the serialization module. This is needed for offloading (see
+ * MBEDTLS_NET_OFFLOADING_C).
+ *
+ * Module:  library/serialize.c
+ * Caller:  library/net_sockets/serialize.c
+ */
+#if defined(MBEDTLS_NET_OFFLOAD_C)
+#define MBEDTLS_SERIALIZE_C
+#endif
+
 /* \} name SECTION: mbed TLS modules */
 
 /**

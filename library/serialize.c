@@ -69,13 +69,14 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(MBEDTLS_NET_OFFLOAD_C)
-
 #include <limits.h>
 #include <stdint.h>
 #include <string.h>
-#include "mbedtls/serialize.h"
+#include <signal.h>
 #include <unistd.h>
+#include "mbedtls/serialize.h"
+
+#if defined(MBEDTLS_SERIALIZE_C)
 
 static int serialize_write_fd = -1;
 static int serialize_read_fd = -1;

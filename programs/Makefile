@@ -104,7 +104,7 @@ hash/generic_sum$(EXEXT): hash/generic_sum.c $(DEP)
 
 # Unlike other programs, this one runs on the host even if cross-compiling,
 # and it does not link with mbed TLS libraries.
-host/frontend$(EXEXT): host/frontend.c $(DEP)
+host/frontend$(EXEXT): host/frontend.c $(DEP) ../include/mbedtls/config.h ../include/mbedtls/serialize.h
 	echo '  CC -DMBEDTLS_CONFIG_FILE="host/config.h" host/frontend.c ../library/net_sockets.c'
 	$(CC) -I. $(LOCAL_CFLAGS) $(CFLAGS) -DMBEDTLS_CONFIG_FILE=\"host/config.h\" host/frontend.c ../library/net_sockets.c $(LDFLAGS) -o $@
 
