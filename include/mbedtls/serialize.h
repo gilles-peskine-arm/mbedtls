@@ -85,13 +85,13 @@ extern "C" {
 #define MBEDTLS_SERIALIZE_TIMEOUT_INFINITE 0xffffffff
 
 /** Serialization errors */
-#define MBEDTLS_ERR_SERIALIZE_UNSUPPORTED_INPUT     -0x5500 /**< Unable to serialize this input to send it (raised on target) */
-#define MBEDTLS_ERR_SERIALIZE_BAD_INPUT             -0x5501 /**< Unable to deserialize received input (raised on host) */
-#define MBEDTLS_ERR_SERIALIZE_UNSUPPORTED_OUTPUT    -0x5502 /**< Unable to serialize output to send result (raised on host) */
-#define MBEDTLS_ERR_SERIALIZE_BAD_OUTPUT            -0x5503 /**< Unable to deserialize received result (raised on target) */
-#define MBEDTLS_ERR_SERIALIZE_SEND                  -0x5504 /**< Communication error while sending serialized data */
-#define MBEDTLS_ERR_SERIALIZE_RECEIVE               -0x5505 /**< Communication error while receiving data to unserialize */
-#define MBEDTLS_ERR_SERIALIZE_ALLOC_FAILED          -0x5506 /**< Out of memory to execute the function */
+#define MBEDTLS_ERR_SERIALIZE_UNSUPPORTED_INPUT     -0x0070 /**< Unable to serialize this input to send it (raised on target) */
+#define MBEDTLS_ERR_SERIALIZE_BAD_INPUT             -0x0071 /**< Unable to deserialize received input (raised on host) */
+#define MBEDTLS_ERR_SERIALIZE_UNSUPPORTED_OUTPUT    -0x0072 /**< Unable to serialize output to send result (raised on host) */
+#define MBEDTLS_ERR_SERIALIZE_BAD_OUTPUT            -0x0073 /**< Unable to deserialize received result (raised on target) */
+#define MBEDTLS_ERR_SERIALIZE_SEND                  -0x0074 /**< Communication error while sending serialized data */
+#define MBEDTLS_ERR_SERIALIZE_RECEIVE               -0x0075 /**< Communication error while receiving data to unserialize */
+#define MBEDTLS_ERR_SERIALIZE_ALLOC_FAILED          -0x0076 /**< Out of memory to execute the function */
 
 /* Note that the serialization functions must be called in a specific sequence:
  *
@@ -123,4 +123,3 @@ int mbedtls_serialize_pop_int32( uint32_t *value );
 #endif
 
 #endif /* serialize.h */
-
