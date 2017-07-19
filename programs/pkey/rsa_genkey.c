@@ -65,8 +65,8 @@ int main( void )
     mbedtls_rsa_context rsa;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
-    FILE *fpub  = NULL;
-    FILE *fpriv = NULL;
+    mbedtls_file_t *fpub  = NULL;
+    mbedtls_file_t *fpriv = NULL;
     const char *pers = "rsa_genkey";
 
     mbedtls_ctr_drbg_init( &ctr_drbg );
@@ -98,7 +98,7 @@ int main( void )
     mbedtls_printf( " ok\n  . Exporting the public  key in rsa_pub.txt...." );
     fflush( stdout );
 
-    if( ( fpub = fopen( "rsa_pub.txt", "wb+" ) ) == NULL )
+    if( ( fpub = mbedtls_fopen( "rsa_pub.txt", "wb+" ) ) == NULL )
     {
         mbedtls_printf( " failed\n  ! could not open rsa_pub.txt for writing\n\n" );
         ret = 1;
@@ -115,7 +115,7 @@ int main( void )
     mbedtls_printf( " ok\n  . Exporting the private key in rsa_priv.txt..." );
     fflush( stdout );
 
-    if( ( fpriv = fopen( "rsa_priv.txt", "wb+" ) ) == NULL )
+    if( ( fpriv = mbedtls_fopen( "rsa_priv.txt", "wb+" ) ) == NULL )
     {
         mbedtls_printf( " failed\n  ! could not open rsa_priv.txt for writing\n" );
         ret = 1;
@@ -152,10 +152,10 @@ int main( void )
 exit:
 
     if( fpub  != NULL )
-        fclose( fpub );
+        mbedtls_fclose( fpub );
 
     if( fpriv != NULL )
-        fclose( fpriv );
+        mbedtls_fclose( fpriv );
 
     mbedtls_rsa_free( &rsa );
     mbedtls_ctr_drbg_free( &ctr_drbg );

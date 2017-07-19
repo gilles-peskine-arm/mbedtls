@@ -58,7 +58,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     int ret, c;
     size_t i, olen = 0;
     mbedtls_pk_context pk;
@@ -66,6 +66,7 @@ int main( int argc, char *argv[] )
     mbedtls_ctr_drbg_context ctr_drbg;
     unsigned char result[1024];
     unsigned char buf[512];
+    unsigned char read_buf[512];
     const char *pers = "mbedtls_pk_decrypt";
     ((void) argv);
 
@@ -112,7 +113,7 @@ int main( int argc, char *argv[] )
      */
     ret = 1;
 
-    if( ( f = fopen( "result-enc.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "result-enc.txt", "rb" ) ) == NULL )
     {
         mbedtls_printf( "\n  ! Could not open %s\n\n", "result-enc.txt" );
         goto exit;
@@ -120,11 +121,20 @@ int main( int argc, char *argv[] )
 
     i = 0;
 
-    while( fscanf( f, "%02X", &c ) > 0 &&
-           i < (int) sizeof( buf ) )
-        buf[i++] = (unsigned char) c;
+    while( mbedtls_fread( read_buf, 1, sizeof( read_buf ), f ) > 0 &&
+            i < (int) sizeof( buf ) )
+    {
+        size_t offset = 0;
+        while( offset < sizeof( read_buf ) &&
+                i < (int) sizeof( buf ) )
+        {
+            sscanf( (char *)( read_buf + offset ), "%02X", &c );
+            offset += 2;
+            buf[i++] = (unsigned char) c;
+        }
+    }
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     /*
      * Decrypt the encrypted RSA data and print the result.

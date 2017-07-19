@@ -33,6 +33,8 @@
 #include "mbedtls/platform_time.h"
 #endif
 
+#include "mbedtls/fsio.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,11 +93,11 @@ extern "C" {
 #define MBEDTLS_PLATFORM_STD_NV_SEED_FILE   "seedfile"
 #endif
 #endif /* MBEDTLS_FS_IO */
-#else /* MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
+#else /* !MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
 #if defined(MBEDTLS_PLATFORM_STD_MEM_HDR)
 #include MBEDTLS_PLATFORM_STD_MEM_HDR
 #endif
-#endif /* MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
+#endif /* !MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
 
 
 /* \} name SECTION: Module settings */

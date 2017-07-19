@@ -54,7 +54,7 @@ int main( void )
 
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     int ret = 1;
     size_t i;
     mbedtls_pk_context pk;
@@ -90,16 +90,16 @@ int main( int argc, char *argv[] )
     ret = 1;
     mbedtls_snprintf( filename, sizeof(filename), "%s.sig", argv[2] );
 
-    if( ( f = fopen( filename, "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( filename, "rb" ) ) == NULL )
     {
         mbedtls_printf( "\n  ! Could not open %s\n\n", filename );
         goto exit;
     }
 
 
-    i = fread( buf, 1, sizeof(buf), f );
+    i = mbedtls_fread( buf, 1, sizeof(buf), f );
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     /*
      * Compute the SHA-256 hash of the input file and

@@ -58,7 +58,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     int ret;
     size_t i, olen = 0;
     mbedtls_pk_context pk;
@@ -130,7 +130,7 @@ int main( int argc, char *argv[] )
     /*
      * Write the signature into result-enc.txt
      */
-    if( ( f = fopen( "result-enc.txt", "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "result-enc.txt", "wb+" ) ) == NULL )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not create %s\n\n", "result-enc.txt" );
@@ -138,10 +138,15 @@ int main( int argc, char *argv[] )
     }
 
     for( i = 0; i < olen; i++ )
-        mbedtls_fprintf( f, "%02X%s", buf[i],
+    {
+        int len = 0;
+        char write_buf[5];
+        len = snprintf( write_buf, sizeof( write_buf ), "%02X%s", buf[i],
                  ( i + 1 ) % 16 == 0 ? "\r\n" : " " );
+        mbedtls_fwrite(write_buf, 1, len, f);
+    }
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     mbedtls_printf( "\n  . Done (created \"%s\")\n\n", "result-enc.txt" );
 

@@ -58,7 +58,7 @@ int main( void )
 
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     int ret = 1;
     mbedtls_pk_context pk;
     mbedtls_entropy_context entropy;
@@ -132,21 +132,21 @@ int main( int argc, char *argv[] )
      */
     mbedtls_snprintf( filename, sizeof(filename), "%s.sig", argv[2] );
 
-    if( ( f = fopen( filename, "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( filename, "wb+" ) ) == NULL )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not create %s\n\n", filename );
         goto exit;
     }
 
-    if( fwrite( buf, 1, olen, f ) != olen )
+    if( mbedtls_fwrite( buf, 1, olen, f ) != olen )
     {
-        mbedtls_printf( "failed\n  ! fwrite failed\n\n" );
-        fclose( f );
+        mbedtls_printf( "failed\n  ! mbedtls_fwrite failed\n\n" );
+        mbedtls_fclose( f );
         goto exit;
     }
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     mbedtls_printf( "\n  . Done (created \"%s\")\n\n", filename );
 

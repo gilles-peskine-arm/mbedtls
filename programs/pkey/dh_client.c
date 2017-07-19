@@ -69,7 +69,7 @@ int main( void )
 #else
 int main( void )
 {
-    FILE *f;
+    mbedtls_file_t *f;
 
     int ret;
     size_t n, buflen;
@@ -113,7 +113,7 @@ int main( void )
     mbedtls_printf( "\n  . Reading public key from rsa_pub.txt" );
     fflush( stdout );
 
-    if( ( f = fopen( "rsa_pub.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "rsa_pub.txt", "rb" ) ) == NULL )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not open rsa_pub.txt\n" \
@@ -127,13 +127,13 @@ int main( void )
         ( ret = mbedtls_mpi_read_file( &rsa.E, 16, f ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_mpi_read_file returned %d\n\n", ret );
-        fclose( f );
+        mbedtls_fclose( f );
         goto exit;
     }
 
     rsa.len = ( mbedtls_mpi_bitlen( &rsa.N ) + 7 ) >> 3;
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     /*
      * 3. Initiate the connection

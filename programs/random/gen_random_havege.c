@@ -49,7 +49,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     time_t t;
     int i, k, ret = 0;
     mbedtls_havege_state hs;
@@ -61,7 +61,7 @@ int main( int argc, char *argv[] )
         return( 1 );
     }
 
-    if( ( f = fopen( argv[1], "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( argv[1], "wb+" ) ) == NULL )
     {
         mbedtls_printf( "failed to open '%s' for writing.\n", argv[1] );
         return( 1 );
@@ -81,7 +81,7 @@ int main( int argc, char *argv[] )
             goto exit;
         }
 
-        fwrite( buf, sizeof( buf ), 1, f );
+        mbedtls_fwrite( buf, sizeof( buf ), 1, f );
 
         mbedtls_printf( "Generating %ldkb of data in file '%s'... %04.1f" \
                 "%% done\r", (long)(sizeof(buf) * k / 1024), argv[1], (100 * (float) (i + 1)) / k );
@@ -95,7 +95,7 @@ int main( int argc, char *argv[] )
 
 exit:
     mbedtls_havege_free( &hs );
-    fclose( f );
+    mbedtls_fclose( f );
     return( ret );
 }
 #endif /* MBEDTLS_HAVEGE_C */

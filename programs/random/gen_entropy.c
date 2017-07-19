@@ -48,7 +48,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     int i, k, ret;
     mbedtls_entropy_context entropy;
     unsigned char buf[MBEDTLS_ENTROPY_BLOCK_SIZE];
@@ -59,7 +59,7 @@ int main( int argc, char *argv[] )
         return( 1 );
     }
 
-    if( ( f = fopen( argv[1], "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( argv[1], "wb+" ) ) == NULL )
     {
         mbedtls_printf( "failed to open '%s' for writing.\n", argv[1] );
         return( 1 );
@@ -76,7 +76,7 @@ int main( int argc, char *argv[] )
             goto cleanup;
         }
 
-        fwrite( buf, 1, sizeof( buf ), f );
+        mbedtls_fwrite( buf, 1, sizeof( buf ), f );
 
         mbedtls_printf( "Generating %ldkb of data in file '%s'... %04.1f" \
                 "%% done\r", (long)(sizeof(buf) * k / 1024), argv[1], (100 * (float) (i + 1)) / k );
@@ -88,7 +88,7 @@ int main( int argc, char *argv[] )
 cleanup:
     mbedtls_printf( "\n" );
 
-    fclose( f );
+    mbedtls_fclose( f );
     mbedtls_entropy_free( &entropy );
 
     return( ret );

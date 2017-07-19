@@ -290,7 +290,7 @@ int mbedtls_md( const mbedtls_md_info_t *md_info, const unsigned char *input, si
 int mbedtls_md_file( const mbedtls_md_info_t *md_info, const char *path, unsigned char *output )
 {
     int ret;
-    FILE *f;
+    mbedtls_file_t *f;
     size_t n;
     mbedtls_md_context_t ctx;
     unsigned char buf[1024];
@@ -298,7 +298,7 @@ int mbedtls_md_file( const mbedtls_md_info_t *md_info, const char *path, unsigne
     if( md_info == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
-    if( ( f = fopen( path, "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( path, "rb" ) ) == NULL )
         return( MBEDTLS_ERR_MD_FILE_IO_ERROR );
 
     mbedtls_md_init( &ctx );
@@ -308,10 +308,10 @@ int mbedtls_md_file( const mbedtls_md_info_t *md_info, const char *path, unsigne
 
     md_info->starts_func( ctx.md_ctx );
 
-    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
+    while( ( n = mbedtls_fread( buf, 1, sizeof( buf ), f ) ) > 0 )
         md_info->update_func( ctx.md_ctx, buf, n );
 
-    if( ferror( f ) != 0 )
+    if( mbedtls_ferror( f ) != 0 )
     {
         ret = MBEDTLS_ERR_MD_FILE_IO_ERROR;
         goto cleanup;
@@ -320,7 +320,7 @@ int mbedtls_md_file( const mbedtls_md_info_t *md_info, const char *path, unsigne
     md_info->finish_func( ctx.md_ctx, output );
 
 cleanup:
-    fclose( f );
+    mbedtls_fclose( f );
     mbedtls_md_free( &ctx );
 
     return( ret );

@@ -54,7 +54,7 @@ int main( void )
 
 int main( int argc, char *argv[] )
 {
-    FILE *f;
+    mbedtls_file_t *f;
     int ret;
     size_t i;
     mbedtls_rsa_context rsa;
@@ -79,7 +79,7 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "\n  . Reading private key from rsa_priv.txt" );
     fflush( stdout );
 
-    if( ( f = fopen( "rsa_priv.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "rsa_priv.txt", "rb" ) ) == NULL )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not open rsa_priv.txt\n" \
@@ -97,13 +97,13 @@ int main( int argc, char *argv[] )
         ( ret = mbedtls_mpi_read_file( &rsa.QP, 16, f ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_mpi_read_file returned %d\n\n", ret );
-        fclose( f );
+        mbedtls_fclose( f );
         goto exit;
     }
 
     rsa.len = ( mbedtls_mpi_bitlen( &rsa.N ) + 7 ) >> 3;
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     mbedtls_printf( "\n  . Checking the private key" );
     fflush( stdout );
@@ -140,7 +140,7 @@ int main( int argc, char *argv[] )
      */
     mbedtls_snprintf( filename, sizeof(filename), "%s.sig", argv[1] );
 
-    if( ( f = fopen( filename, "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( filename, "wb+" ) ) == NULL )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not create %s\n\n", argv[1] );
@@ -148,10 +148,15 @@ int main( int argc, char *argv[] )
     }
 
     for( i = 0; i < rsa.len; i++ )
-        mbedtls_fprintf( f, "%02X%s", buf[i],
+    {
+        int len = 0;
+        char write_buf[5];
+        len = snprintf( write_buf, sizeof( write_buf ), "%02X%s", buf[i],
                  ( i + 1 ) % 16 == 0 ? "\r\n" : " " );
+        mbedtls_fwrite(write_buf, 1, len, f);
+    }
 
-    fclose( f );
+    mbedtls_fclose( f );
 
     mbedtls_printf( "\n  . Done (created \"%s\")\n\n", filename );
 
