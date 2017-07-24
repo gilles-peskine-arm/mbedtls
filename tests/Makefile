@@ -194,6 +194,10 @@ test_suite_hmac_drbg.pr.c : suites/test_suite_hmac_drbg.function suites/test_sui
 	echo "  Gen   $@"
 	perl scripts/generate_code.pl suites test_suite_hmac_drbg test_suite_hmac_drbg.pr
 
+test_suite_fs_abstraction.c : suites/test_suite_fs_abstraction.function suites/test_suite_fs_abstraction.data scripts/generate_code.pl suites/helpers.function suites/main_test.function
+	echo "  Gen   $@"
+	perl scripts/generate_code.pl suites test_suite_fs_abstraction test_suite_fs_abstraction
+
 %.c : suites/%.function suites/%.data scripts/generate_code.pl suites/helpers.function suites/main_test.function
 	echo "  Gen   $@"
 	perl scripts/generate_code.pl suites $* $*
@@ -435,6 +439,10 @@ test_suite_debug$(EXEXT): test_suite_debug.c $(DEP)
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) $<	$(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 test_suite_version$(EXEXT): test_suite_version.c $(DEP)
+	echo "  CC    $<"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) $<	$(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+test_suite_fs_abstraction$(EXEXT): test_suite_fs_abstraction.c $(DEP)
 	echo "  CC    $<"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) $<	$(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
