@@ -45,7 +45,7 @@
 #include <string.h>
 
 #if defined(MBEDTLS_FS_IO)
-#include <stdio.h>
+#include "mbedtls/fsio.h"
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
