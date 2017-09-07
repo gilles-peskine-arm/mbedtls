@@ -53,7 +53,7 @@ int main( void )
 
 int main( int argc, char *argv[] )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
     int ret, c;
     size_t i;
     mbedtls_rsa_context rsa;
@@ -79,7 +79,7 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "\n  . Reading public key from rsa_pub.txt" );
     fflush( stdout );
 
-    if( ( f = mbedtls_fopen( "rsa_pub.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "rsa_pub.txt", "rb" ) ) == MBEDTLS_FILE_INVALID )
     {
         mbedtls_printf( " failed\n  ! Could not open rsa_pub.txt\n" \
                 "  ! Please run rsa_genkey first\n\n" );
@@ -104,7 +104,7 @@ int main( int argc, char *argv[] )
     ret = 1;
     mbedtls_snprintf( filename, sizeof(filename), "%s.sig", argv[1] );
 
-    if( ( f = mbedtls_fopen( filename, "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( filename, "rb" ) ) == MBEDTLS_FILE_INVALID )
     {
         mbedtls_printf( "\n  ! Could not open %s\n\n", filename );
         goto exit;

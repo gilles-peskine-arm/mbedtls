@@ -69,7 +69,7 @@ int main( void )
 #else
 int main( void )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
 
     int ret;
     size_t n, buflen;
@@ -114,7 +114,7 @@ int main( void )
     mbedtls_printf( "\n  . Reading private key from rsa_priv.txt" );
     fflush( stdout );
 
-    if( ( f = mbedtls_fopen( "rsa_priv.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "rsa_priv.txt", "rb" ) ) == MBEDTLS_FILE_INVALID )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not open rsa_priv.txt\n" \
@@ -148,7 +148,7 @@ int main( void )
     mbedtls_printf( "\n  . Reading DH parameters from dh_prime.txt" );
     fflush( stdout );
 
-    if( ( f = mbedtls_fopen( "dh_prime.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "dh_prime.txt", "rb" ) ) == MBEDTLS_FILE_INVALID )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not open dh_prime.txt\n" \

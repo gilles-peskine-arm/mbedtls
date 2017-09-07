@@ -58,7 +58,7 @@ int main( void )
 
 int main( int argc, char *argv[] )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
     int ret = 1;
     mbedtls_pk_context pk;
     mbedtls_entropy_context entropy;
@@ -132,7 +132,7 @@ int main( int argc, char *argv[] )
      */
     mbedtls_snprintf( filename, sizeof(filename), "%s.sig", argv[2] );
 
-    if( ( f = mbedtls_fopen( filename, "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( filename, "wb+" ) ) == MBEDTLS_FILE_INVALID )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not create %s\n\n", filename );

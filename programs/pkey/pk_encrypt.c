@@ -58,7 +58,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
     int ret;
     size_t i, olen = 0;
     mbedtls_pk_context pk;
@@ -130,7 +130,7 @@ int main( int argc, char *argv[] )
     /*
      * Write the signature into result-enc.txt
      */
-    if( ( f = mbedtls_fopen( "result-enc.txt", "wb+" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "result-enc.txt", "wb+" ) ) == MBEDTLS_FILE_INVALID )
     {
         ret = 1;
         mbedtls_printf( " failed\n  ! Could not create %s\n\n", "result-enc.txt" );

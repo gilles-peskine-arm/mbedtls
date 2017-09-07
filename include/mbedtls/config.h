@@ -884,7 +884,7 @@
 /**
  * \def MBEDTLS_FS_IO_ALT
  *
- * Provide your own alternate filesystem implementation.
+ * Provide your own alternative filesystem implementation.
  *
  * Requires: MBEDTLS_FS_IO
  *
@@ -2581,8 +2581,9 @@
 /**
  * \def MBEDTLS_SERIALIZE_C
  *
- * Enable the serialization module. This is needed for offloading (see
- * MBEDTLS_FS_IO_ALT).
+ * Enable the serialization module. This is needed for deligating file system
+ * operations to another process or machine. It helps in on-target testing.
+ * (see MBEDTLS_FS_IO_ALT).
  *
  * Module:  library/serialize.c
  * Caller:  library/net_sockets/serialize.c
@@ -2595,6 +2596,9 @@
  * Enable testing of serialization module on a host machine using a frontend.
  *
  * Module:  library/serialize.c
+ *
+ * Requires: MBEDTLS_SERIALIZE_C
+ *
  * Caller:  library/net_sockets/serialize.c
  *          library/fsio.c
  */

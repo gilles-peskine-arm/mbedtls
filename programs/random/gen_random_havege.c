@@ -49,7 +49,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
     time_t t;
     int i, k, ret = 0;
     mbedtls_havege_state hs;

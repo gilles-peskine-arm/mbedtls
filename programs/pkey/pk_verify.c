@@ -54,7 +54,7 @@ int main( void )
 
 int main( int argc, char *argv[] )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
     int ret = 1;
     size_t i;
     mbedtls_pk_context pk;
@@ -90,7 +90,7 @@ int main( int argc, char *argv[] )
     ret = 1;
     mbedtls_snprintf( filename, sizeof(filename), "%s.sig", argv[2] );
 
-    if( ( f = mbedtls_fopen( filename, "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( filename, "rb" ) ) == MBEDTLS_FILE_INVALID )
     {
         mbedtls_printf( "\n  ! Could not open %s\n\n", filename );
         goto exit;

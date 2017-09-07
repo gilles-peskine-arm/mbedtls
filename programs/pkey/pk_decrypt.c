@@ -58,7 +58,7 @@ int main( void )
 #else
 int main( int argc, char *argv[] )
 {
-    mbedtls_file_t *f;
+    mbedtls_file_t f;
     int ret, c;
     size_t i, olen = 0;
     mbedtls_pk_context pk;
@@ -113,7 +113,7 @@ int main( int argc, char *argv[] )
      */
     ret = 1;
 
-    if( ( f = mbedtls_fopen( "result-enc.txt", "rb" ) ) == NULL )
+    if( ( f = mbedtls_fopen( "result-enc.txt", "rb" ) ) == MBEDTLS_FILE_INVALID )
     {
         mbedtls_printf( "\n  ! Could not open %s\n\n", "result-enc.txt" );
         goto exit;

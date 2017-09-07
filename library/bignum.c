@@ -597,7 +597,7 @@ cleanup:
 /*
  * Read X from an opened file
  */
-int mbedtls_mpi_read_file( mbedtls_mpi *X, int radix, mbedtls_file_t *fin )
+int mbedtls_mpi_read_file( mbedtls_mpi *X, int radix, mbedtls_file_t fin )
 {
     mbedtls_mpi_uint d;
     size_t slen;
@@ -628,9 +628,9 @@ int mbedtls_mpi_read_file( mbedtls_mpi *X, int radix, mbedtls_file_t *fin )
 }
 
 /*
- * Write X into an opened file (or stdout if fout == NULL)
+ * Write X into an opened file (or stdout if fout == MBEDTLS_FILE_INVALID)
  */
-int mbedtls_mpi_write_file( const char *p, const mbedtls_mpi *X, int radix, mbedtls_file_t *fout )
+int mbedtls_mpi_write_file( const char *p, const mbedtls_mpi *X, int radix, mbedtls_file_t fout )
 {
     int ret;
     size_t n, slen, plen;
@@ -651,7 +651,7 @@ int mbedtls_mpi_write_file( const char *p, const mbedtls_mpi *X, int radix, mbed
     s[slen++] = '\r';
     s[slen++] = '\n';
 
-    if( fout != NULL )
+    if( fout != MBEDTLS_FILE_INVALID )
     {
         if( mbedtls_fwrite( p, 1, plen, fout ) != plen ||
             mbedtls_fwrite( s, 1, slen, fout ) != slen )
