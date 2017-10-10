@@ -208,6 +208,117 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void timing_delay2( int int_ms_arg, int fin_ms_arg )
+{
+    /* This function assumes that if int_ms is positive then it is large
+       enough that we have time to read all timers at least once in an
+       interval of time lasting int_ms milliseconds, and likewise for (fin_ms
+       - int_ms). So don't call it with arguments that are too small. */
+
+    mbedtls_timing_delay_context delay;
+    struct mbedtls_timing_hr_time timer_before, timer_after;
+    int status;
+    uint32_t int_ms = ( int_ms_arg > 0 ? int_ms_arg : 0 );
+    uint32_t fin_ms = ( fin_ms_arg > 0 ? fin_ms_arg : 0 );
+    unsigned long iterations1 = 0, iterations2 = 0;
+    int warn_inconclusive = 0;
+
+    /* Program a delay. Start two reference timers for comparison: one whose
+       elapsed time should remain more than the delay's because it was started
+       before, and one whose elapsed time should remain less than the
+       delay because it was started after. */
+    (void) mbedtls_timing_get_timer( &timer_before, 1 );
+    mbedtls_timing_set_delay( &delay, int_ms, fin_ms );
+    (void) mbedtls_timing_get_timer( &timer_after, 1 );
+
+    status = mbedtls_timing_get_delay( &delay );
+    if( fin_ms == 0 )
+    {
+        /* Cancelled timer. Just check the correct status for this case. */
+        TEST_ASSERT( status == -1 );
+        return;
+    }
+
+    /* Initially, none of the delays must be passed yet if they're nonzero.
+       This could fail for very small values of int_ms and fin_ms, where "very
+       small" depends how fast and how busy the platform is. */
+    if( int_ms > 0 )
+    {
+        TEST_ASSERT( status == 0 );
+    }
+    else
+    {
+        TEST_ASSERT( status == 1 );
+    }
+
+    if( fin_ms > int_ms )
+    {
+        /* Wait for the first delay to be passed. We insist on reaching the
+           first delay before the second, which could fail for values of
+           fin_ms that are only slightly larger than int_ms depending on how
+           fast and busy the platform is. */
+        status = 0;
+        do
+        {
+            /* As long as timer_before hasn't reached int_ms, the delay must
+               not have reached int_ms. */
+            TEST_ASSERT( status == 0 );
+            ++iterations1;
+            status = mbedtls_timing_get_delay( &delay );
+        }
+        while( mbedtls_timing_get_timer( &timer_before, 0 ) < int_ms );
+        do
+        {
+            ++iterations2;
+            status = mbedtls_timing_get_delay( &delay );
+        }
+        while( mbedtls_timing_get_timer( &timer_after, 0 ) < int_ms );
+        /* Since timer_after has reached int_ms, so must the delay. */
+        status = mbedtls_timing_get_delay( &delay );
+        if( status == 2 &&
+            mbedtls_timing_get_timer( &timer_after, 0 ) > fin_ms )
+        {
+            /* The second delay (fin_ms) has already legitimately fired. This
+               means that the test is inconclusive. In practice this appears
+               to be the most common case of test failure on a heavily loaded
+               multitasking machine. */
+            warn_inconclusive = 1;
+        }
+        TEST_ASSERT( status == 1 );
+        iterations1 = iterations2 = 0;
+    }
+
+    /* Wait for the second delay to be passed. As long as the before timer
+       hasn't passed the deadline, the delay must not have passed either. Once
+       the after timer has passed, the delay must have passed as well. */
+    do
+    {
+        ++iterations1;
+        status = mbedtls_timing_get_delay( &delay );
+        if( mbedtls_timing_get_timer( &timer_before, 0 ) < fin_ms )
+        {
+            TEST_ASSERT( status != 2 );
+        }
+    }
+    while( mbedtls_timing_get_timer( &timer_after, 0 ) < fin_ms );
+    status = mbedtls_timing_get_delay( &delay );
+    TEST_ASSERT( status == 2 );
+
+    return;
+
+exit:
+    /* No cleanup needed, but show some diagnostic iterations, because timing
+       problems can be hard to reproduce. */
+    if( warn_inconclusive )
+        mbedtls_printf( "  Inconclusive test, try running it on a less heavily loaded machine.\n" );
+    mbedtls_printf( "  Finished with get(timer_before)<=%lu get(timer_after)<=%lu status=%d iterations=%lu,%lu\n",
+                    mbedtls_timing_get_timer( &timer_before, 0 ),
+                    mbedtls_timing_get_timer( &timer_after, 0 ),
+                    status, iterations1, iterations2 );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void timing_delay( int int_ms, int fin_ms )
 {
     /* This function assumes that if int_ms is nonzero then it is large
