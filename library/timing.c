@@ -283,6 +283,9 @@ void mbedtls_set_alarm( int seconds )
 
 #else /* _WIN32 && !EFIX64 && !EFI32 */
 
+struct timeval gettimeofday_log[4];
+unsigned gettimeofday_index;
+
 unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )
 {
     unsigned long delta;
@@ -290,6 +293,8 @@ unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int 
     struct _hr_time *t = (struct _hr_time *) val;
 
     gettimeofday( &offset, NULL );
+    gettimeofday_log[gettimeofday_index] = offset;
+    gettimeofday_index = ( gettimeofday_index + 1 ) % ( sizeof( gettimeofday_log ) / sizeof( gettimeofday_log[0] ) );
 
     if( reset )
     {

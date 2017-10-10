@@ -1,6 +1,42 @@
 /* BEGIN_HEADER */
 #include <limits.h>
 #include "mbedtls/timing.h"
+
+#if defined(__unix__) // for debugging on Unix-like platforms only
+#include <sys/time.h>
+static void dump_gettimeofday( void )
+{
+    struct timeval tv;
+    gettimeofday( &tv, NULL );
+    mbedtls_printf( "  gettimeofday() = {%lu,%lu}\n", tv.tv_sec, tv.tv_usec );
+}
+static void dump_gettimeofday_log( void )
+{
+    extern struct timeval gettimeofday_log[4];
+    extern unsigned gettimeofday_index;
+    unsigned i = gettimeofday_index;
+    mbedtls_printf( "  Last 4 calls to gettimeofday():" );
+    i = ( i == 0 ? sizeof( gettimeofday_log ) / sizeof( gettimeofday_log[0] ) : i ) - 1;
+    mbedtls_printf( " {%lu,%lu}", gettimeofday_log[i].tv_sec, gettimeofday_log[i].tv_usec );
+    i = ( i == 0 ? sizeof( gettimeofday_log ) / sizeof( gettimeofday_log[0] ) : i ) - 1;
+    mbedtls_printf( " {%lu,%lu}", gettimeofday_log[i].tv_sec, gettimeofday_log[i].tv_usec );
+    i = ( i == 0 ? sizeof( gettimeofday_log ) / sizeof( gettimeofday_log[0] ) : i ) - 1;
+    mbedtls_printf( " {%lu,%lu}", gettimeofday_log[i].tv_sec, gettimeofday_log[i].tv_usec );
+    i = ( i == 0 ? sizeof( gettimeofday_log ) / sizeof( gettimeofday_log[0] ) : i ) - 1;
+    mbedtls_printf( " {%lu,%lu}", gettimeofday_log[i].tv_sec, gettimeofday_log[i].tv_usec );
+    mbedtls_printf( "\n" );
+}
+static void dump_timer( const char *msg,
+                        const struct mbedtls_timing_hr_time *timer )
+{
+    struct timeval *tv = (struct timeval *) timer;
+    mbedtls_printf( "%s start={%lu,%lu}\n", msg, tv->tv_sec, tv->tv_usec );
+}
+#else
+#define dump_gettimeofday( ) ( (void) 0 )
+#define dump_timer( msg, timer ) ( (void) 0 )
+#endif
+
 /* Wait this many milliseconds for a short timing test. This duration
    should be large enough that, in practice, if you read the timer
    value twice in a row, it won't have jumped by that much. */
@@ -434,6 +470,9 @@ exit:
        problems can be hard to reproduce. */
     mbedtls_printf( "  Finished with delta=%lu before=%lu after=%lu status=%d iterations=%lu\n",
                     delta, before, after, status, iterations );
+    dump_timer( "  ctx:", &delay.timer );
+    dump_timer( "  timer:", &timer );
+    dump_gettimeofday_log( );
     if( warn_inconclusive )
         mbedtls_printf( "  Inconclusive test, try running it on a less heavily loaded machine.\n" );
  }
