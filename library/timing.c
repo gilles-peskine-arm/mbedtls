@@ -384,13 +384,16 @@ static void busy_msleep( unsigned long msec )
     (void) j;
 }
 
-#define FAIL    do                      \
-{                                       \
-    if( verbose != 0 )                  \
-        mbedtls_printf( "failed\n" );   \
-                                        \
-    return( 1 );                        \
-} while( 0 )
+#define FAIL    do                                                      \
+    {                                                                   \
+        if( verbose != 0 )                                              \
+        {                                                               \
+            mbedtls_printf( "failed at line %d\n", __LINE__ );          \
+            mbedtls_printf( " cycles=%lu ratio=%lu millisecs=%lu secs=%lu hardfail=%d a=%lu b=%lu\n", cycles, ratio, millisecs, secs, hardfail, (unsigned long) a, (unsigned long) b ); \
+            mbedtls_printf( " elapsed(hires)=%lu elapsed(ctx)=%lu status(ctx)=%d\n", mbedtls_timing_get_timer( &hires, 0 ), mbedtls_timing_get_timer( &ctx.timer, 0 ), mbedtls_timing_get_delay( &ctx ) ); \
+        }                                                               \
+        return( 1 );                                                    \
+    } while( 0 )
 
 /*
  * Checkup routine
@@ -404,12 +407,11 @@ int mbedtls_timing_self_test( int verbose )
     unsigned long millisecs, secs;
     int hardfail;
     struct mbedtls_timing_hr_time hires;
-    uint32_t a, b;
+    uint32_t a = 0, b = 0;
     mbedtls_timing_delay_context ctx;
 
     if( verbose != 0 )
         mbedtls_printf( "  TIMING tests note: will take some time!\n" );
-
 
     if( verbose != 0 )
         mbedtls_printf( "  TIMING test #1 (set_alarm / get_timer): " );
@@ -427,12 +429,7 @@ int mbedtls_timing_self_test( int verbose )
         /* For some reason on Windows it looks like alarm has an extra delay
          * (maybe related to creating a new thread). Allow some room here. */
         if( millisecs < 800 * secs || millisecs > 1200 * secs + 300 )
-        {
-            if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
-
-            return( 1 );
-        }
+            FAIL;
     }
 
     if( verbose != 0 )
