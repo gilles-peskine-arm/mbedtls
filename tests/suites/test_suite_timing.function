@@ -107,14 +107,22 @@ void timing_two_timers( int delta )
 {
     struct mbedtls_timing_hr_time timer1, timer2;
     unsigned long millis1, millis2;
+    unsigned long hardclock_origin, hardclock1, hardclock2;
 
     /* Start the first timer and wait for a short time. */
     (void) mbedtls_timing_get_timer( &timer1, 1 );
+    hardclock_origin = mbedtls_timing_hardclock( );
     do
     {
         millis1 = mbedtls_timing_get_timer( &timer1, 0 );
     }
     while( millis1 < TIMING_SHORT_TEST_MS );
+    /* The hardclock counter may have wrapped around, but as long as it only
+       wraped once, that's ok, taking the difference modulo the type size
+       cancels this. This does mean that the loop must not overflow the
+       counter. If hardclock is a 4GHz cycle counter and long is a 32-bit
+       type, that means delays up to 1 second are ok. */
+    hardclock1 = mbedtls_timing_hardclock( ) - hardclock_origin;
 
     /* Do a short busy-wait, so that the difference between timer1 and timer2
        doesn't practically always end up being very close to a whole number of
@@ -124,6 +132,7 @@ void timing_two_timers( int delta )
 
     /* Start the second timer and compare it with the first. */
     mbedtls_timing_get_timer( &timer2, 1 );
+    hardclock_origin = mbedtls_timing_hardclock( );
     do
     {
         millis1 = mbedtls_timing_get_timer( &timer1, 0 );
@@ -136,15 +145,28 @@ void timing_two_timers( int delta )
            system, so we don't test it it. */
     }
     while( millis2 < TIMING_SHORT_TEST_MS );
+    hardclock2 = mbedtls_timing_hardclock( ) - hardclock_origin;
+
+    /* Check that the two loops have lasted about the same time according to
+       the hardclock counter. Since the timer API and the hardclock API may
+       rely on independent clocks and neither is required to be
+       high-precision, allow a fairly large fuzz factor. */
+    /* This test will fail if hardclock is implemented around a variable-rate
+       clock. A variable-rate clock may be legitimate, e.g. a cycle counter on
+       a processor with variable frequency. Arguably, there's no
+       platform-independent way of testing mbedtls_timing_hardclock! */
+    TEST_ASSERT( hardclock1 >= hardclock2 / 4 * 3 );
+    TEST_ASSERT( hardclock2 >= hardclock1 / 4 * 3 );
 
     return;
 
 exit:
     /* No cleanup needed, but show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
-    mbedtls_printf( "  Finished with millis1=%lu get(timer1)<=%lu millis2=%lu get(timer2)<=%lu\n",
+    mbedtls_printf( "  Finished with millis1=%lu get(timer1)<=%lu millis2=%lu get(timer2)<=%lu hardclock=%lu,%lu\n",
                     millis1, mbedtls_timing_get_timer( &timer1, 0 ),
-                    millis2, mbedtls_timing_get_timer( &timer2, 0 ) );
+                    millis2, mbedtls_timing_get_timer( &timer2, 0 ),
+                    hardclock1, hardclock2 );
 }
 /* END_CASE */
 
