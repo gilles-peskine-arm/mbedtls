@@ -134,7 +134,7 @@ static int write_public_key( mbedtls_pk_context *key, const char *output_file )
     if( ( f = mbedtls_fopen( output_file, "w" ) ) == MBEDTLS_FILE_INVALID )
         return( -1 );
 
-    if( mbedtls_fwrite( c, 1, len, f ) != len )
+    if( mbedtls_fwrite( c, len, f ) != len )
     {
         mbedtls_fclose( f );
         return( -1 );
@@ -176,7 +176,7 @@ static int write_private_key( mbedtls_pk_context *key, const char *output_file )
     if( ( f = mbedtls_fopen( output_file, "w" ) ) == MBEDTLS_FILE_INVALID )
         return( -1 );
 
-    if( mbedtls_fwrite( c, 1, len, f ) != len )
+    if( mbedtls_fwrite( c, len, f ) != len )
     {
         mbedtls_fclose( f );
         return( -1 );

@@ -308,7 +308,7 @@ int mbedtls_md_file( const mbedtls_md_info_t *md_info, const char *path, unsigne
 
     md_info->starts_func( ctx.md_ctx );
 
-    while( ( n = mbedtls_fread( buf, 1, sizeof( buf ), f ) ) > 0 )
+    while( ( n = mbedtls_fread( buf, sizeof( buf ), f ) ) > 0 )
         md_info->update_func( ctx.md_ctx, buf, n );
 
     if( mbedtls_ferror( f ) != 0 )

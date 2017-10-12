@@ -412,7 +412,7 @@ int mbedtls_entropy_write_seed_file( mbedtls_entropy_context *ctx, const char *p
     if( ( ret = mbedtls_entropy_func( ctx, buf, MBEDTLS_ENTROPY_BLOCK_SIZE ) ) != 0 )
         goto exit;
 
-    if( mbedtls_fwrite( buf, 1, MBEDTLS_ENTROPY_BLOCK_SIZE, f ) != MBEDTLS_ENTROPY_BLOCK_SIZE )
+    if( mbedtls_fwrite( buf, MBEDTLS_ENTROPY_BLOCK_SIZE, f ) != MBEDTLS_ENTROPY_BLOCK_SIZE )
     {
         ret = MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR;
         goto exit;
@@ -441,7 +441,7 @@ int mbedtls_entropy_update_seed_file( mbedtls_entropy_context *ctx, const char *
     if( n > MBEDTLS_ENTROPY_MAX_SEED_SIZE )
         n = MBEDTLS_ENTROPY_MAX_SEED_SIZE;
 
-    if( mbedtls_fread( buf, 1, n, f ) != n )
+    if( mbedtls_fread( buf, n, f ) != n )
     {
         mbedtls_fclose( f );
         return( MBEDTLS_ERR_ENTROPY_FILE_IO_ERROR );
