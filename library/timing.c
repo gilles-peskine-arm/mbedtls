@@ -291,15 +291,14 @@ unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int 
 
     gettimeofday( &offset, NULL );
 
+    delta = ( offset.tv_sec  - t->start.tv_sec  ) * 1000
+          + ( offset.tv_usec - t->start.tv_usec ) / 1000;
+
     if( reset )
     {
         t->start.tv_sec  = offset.tv_sec;
         t->start.tv_usec = offset.tv_usec;
-        return( 0 );
     }
-
-    delta = ( offset.tv_sec  - t->start.tv_sec  ) * 1000
-          + ( offset.tv_usec - t->start.tv_usec ) / 1000;
 
     return( delta );
 }
