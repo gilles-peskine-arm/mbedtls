@@ -50,13 +50,14 @@ void timing_timer_simple( )
 {
     struct mbedtls_timing_hr_time timer;
     unsigned long millis = 0;
+    unsigned long new_millis = 0;
     unsigned long iterations = 0;
     /* Start the timer. */
     (void) mbedtls_timing_get_timer( &timer, 1 );
     /* Busy-wait loop for a few milliseconds. */
     do
     {
-        unsigned long new_millis = mbedtls_timing_get_timer( &timer, 0 );
+        new_millis = mbedtls_timing_get_timer( &timer, 0 );
         ++iterations;
         /* Check that the timer didn't go backwards */
         TEST_ASSERT( new_millis >= millis );
@@ -74,8 +75,8 @@ void timing_timer_simple( )
 exit:
     /* No cleanup needed, but show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
-    mbedtls_fprintf( stdout, "  Finished with millis=%lu get(timer)<=%lu iterations=%lu\n",
-                     millis, mbedtls_timing_get_timer( &timer, 0 ),
+    mbedtls_fprintf( stdout, "  Finished with millis=%lu new_millis=%lu get(timer)<=%lu iterations=%lu\n",
+                     millis, new_millis, mbedtls_timing_get_timer( &timer, 0 ),
                      iterations );
 }
 /* END_CASE */
