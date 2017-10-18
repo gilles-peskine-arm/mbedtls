@@ -388,8 +388,13 @@ static void busy_msleep( unsigned long msec )
         if( verbose != 0 )                                              \
         {                                                               \
             mbedtls_printf( "failed at line %d\n", __LINE__ );          \
-            mbedtls_printf( " cycles=%lu ratio=%lu millisecs=%lu secs=%lu hardfail=%d a=%lu b=%lu\n", cycles, ratio, millisecs, secs, hardfail, (unsigned long) a, (unsigned long) b ); \
-            mbedtls_printf( " elapsed(hires)=%lu elapsed(ctx)=%lu status(ctx)=%d\n", mbedtls_timing_get_timer( &hires, 0 ), mbedtls_timing_get_timer( &ctx.timer, 0 ), mbedtls_timing_get_delay( &ctx ) ); \
+            mbedtls_printf( " cycles=%lu ratio=%lu millisecs=%lu secs=%lu hardfail=%d a=%lu b=%lu\n", \
+                            cycles, ratio, millisecs, secs, hardfail,   \
+                            (unsigned long) a, (unsigned long) b );     \
+            mbedtls_printf( " elapsed(hires)=%lu elapsed(ctx)=%lu status(ctx)=%d\n", \
+                            mbedtls_timing_get_timer( &hires, 0 ),      \
+                            mbedtls_timing_get_timer( &ctx.timer, 0 ),  \
+                            mbedtls_timing_get_delay( &ctx ) );         \
         }                                                               \
         return( 1 );                                                    \
     } while( 0 )
@@ -403,7 +408,7 @@ static void busy_msleep( unsigned long msec )
 int mbedtls_timing_self_test( int verbose )
 {
     unsigned long cycles = 0, ratio = 0;
-    unsigned long millisecs, secs;
+    unsigned long millisecs = 0, secs = 0;
     int hardfail = 0;
     struct mbedtls_timing_hr_time hires;
     uint32_t a = 0, b = 0;
