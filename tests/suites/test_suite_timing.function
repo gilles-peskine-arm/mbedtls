@@ -38,6 +38,14 @@ static int expected_delay_status( uint32_t int_ms, uint32_t fin_ms,
             0 );
 }
 
+/* Some conditions in timing_timer_simple suggest that timers are unreliable.
+   Most other test cases rely on timers to terminate, and could loop
+   indefinitely if timers are too broken. So if timing_timer_simple detected a
+   timer that risks not terminating (going backwards, or not reaching the
+   desired count in the alloted clock cycles), set this flag to immediately
+   fail those other tests without running any timers. */
+static int timers_are_badly_broken = 0;
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -73,6 +81,15 @@ void timing_timer_simple( )
     return;
 
 exit:
+    if( iterations >= TIMING_SHORT_TEST_ITERATIONS_MAX ||
+        new_millis < millis )
+    {
+        /* The timer was very unreliable: it didn't increment and the loop ran
+           out, or it went backwards. Other tests that use timers might go
+           into an infinite loop, so we'll skip them. */
+        timers_are_badly_broken = 1;
+    }
+
     /* No cleanup needed, but show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
     mbedtls_fprintf( stdout, "  Finished with millis=%lu new_millis=%lu get(timer)<=%lu iterations=%lu\n",
@@ -87,6 +104,10 @@ void timing_timer_reset( )
     struct mbedtls_timing_hr_time timer;
     unsigned long millis = 0;
     unsigned long iterations = 0;
+
+    /* Skip this test if it looks like timers don't work at all, to avoid an
+       infinite loop below. */
+    TEST_ASSERT( !timers_are_badly_broken );
 
     /* Start the timer. After setting it for the first time, the return value
        is indeterminate. */
@@ -121,6 +142,10 @@ void timing_two_timers( int delta )
 {
     struct mbedtls_timing_hr_time timer1, timer2;
     unsigned long millis1, millis2;
+
+    /* Skip this test if it looks like timers don't work at all, to avoid an
+       infinite loop below. */
+    TEST_ASSERT( !timers_are_badly_broken );
 
     /* Start the first timer and wait for a short time. */
     (void) mbedtls_timing_get_timer( &timer1, 1 );
@@ -179,6 +204,10 @@ void timing_alarm( int seconds )
                                  seconds * 1100 + 400 :
                                  TIMING_ALARM_0_DELAY_MS );
     unsigned long iterations = 0;
+
+    /* Skip this test if it looks like timers don't work at all, to avoid an
+       infinite loop below. */
+    TEST_ASSERT( !timers_are_badly_broken );
 
     /* Set an alarm and count how long it takes with a timer. */
     (void) mbedtls_timing_get_timer( &timer, 1 );
@@ -240,6 +269,10 @@ void timing_delay( int int_ms, int fin_ms )
 
     assert( int_ms >= 0 );
     assert( fin_ms >= 0 );
+
+    /* Skip this test if it looks like timers don't work at all, to avoid an
+       infinite loop below. */
+    TEST_ASSERT( !timers_are_badly_broken );
 
     /* Start a reference timer. Program a delay, and verify that the status of
        the delay is consistent with the time given by the reference timer. */
@@ -330,6 +363,10 @@ void timing_hardclock( )
 
     struct mbedtls_timing_hr_time timer;
     unsigned long hardclock0, hardclock1, delta1;
+
+    /* Skip this test if it looks like timers don't work at all, to avoid an
+       infinite loop below. */
+    TEST_ASSERT( !timers_are_badly_broken );
 
     hardclock0 = mbedtls_timing_hardclock( );
     /* Wait 2ms to ensure a nonzero delay. Since the timer interface has 1ms
