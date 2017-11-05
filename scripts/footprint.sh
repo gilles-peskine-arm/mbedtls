@@ -18,23 +18,16 @@
 #
 # Usage: footprint.sh
 #
-set -eu
 
-CONFIG_H='include/mbedtls/config.h'
-
-if [ -r $CONFIG_H ]; then :; else
-    echo "$CONFIG_H not found" >&2
-    echo "This script needs to be run from the root of" >&2
-    echo "a git checkout or uncompressed tarball" >&2
-    exit 1
-fi
+. "$(dirname -- "$0")/lib.sh" || exit 125
+save_config
 
 if grep -i cmake Makefile >/dev/null; then
     echo "Not compatible with CMake" >&2
     exit 1
 fi
 
-if which arm-none-eabi-gcc >/dev/null 2>&1; then :; else
+if ! type arm-none-eabi-gcc >/dev/null 2>&1; then
     echo "You need the ARM-GCC toolchain in your path" >&2
     echo "See https://launchpad.net/gcc-arm-embedded/" >&2
     exit 1
@@ -57,7 +50,6 @@ doit()
     log ""
     log "$NAME ($FILE):"
 
-    cp $CONFIG_H ${CONFIG_H}.bak
     if [ "$FILE" != $CONFIG_H ]; then
         cp "$FILE"  $CONFIG_H
     fi
@@ -77,8 +69,6 @@ doit()
     arm-none-eabi-size -t library/libmbed*.a > "$OUT"
     log "$( head -n1 "$OUT" )"
     log "$( tail -n1 "$OUT" )"
-
-    cp ${CONFIG_H}.bak $CONFIG_H
 }
 
 # truncate the file just this time

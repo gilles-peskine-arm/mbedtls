@@ -28,13 +28,8 @@
 # Usage: basic-build-tests.sh
 #
 
-# Abort on errors (and uninitiliased variables)
-set -eu
-
-if [ -d library -a -d include -a -d tests ]; then :; else
-    echo "Must be run from mbed TLS root" >&2
-    exit 1
-fi
+. "$(dirname -- "$0")/../../scripts/lib.sh" || exit 125
+save_config
 
 : ${OPENSSL:="openssl"}
 : ${OPENSSL_LEGACY:="$OPENSSL"}
@@ -49,8 +44,12 @@ export OPENSSL_CMD="$OPENSSL"
 export GNUTLS_CLI="$GNUTLS_CLI"
 export GNUTLS_SERV="$GNUTLS_SERV"
 
-CONFIG_H='include/mbedtls/config.h'
-CONFIG_BAK="$CONFIG_H.bak"
+cleanup () {
+  rm -f unit-test-$TEST_OUTPUT
+  rm -f sys-test-$TEST_OUTPUT
+  rm -f compat-test-$TEST_OUTPUT
+  rm -f cov-$TEST_OUTPUT
+}
 
 # Step 0 - print build environment info
 OPENSSL="$OPENSSL"                           \
@@ -62,10 +61,9 @@ OPENSSL="$OPENSSL"                           \
     scripts/output_env.sh
 echo
 
-# Step 1 - Make and instrumented build for code coverage
+# Step 1 - Make an instrumented build for code coverage
 export CFLAGS=' --coverage -g3 -O0 '
 make clean
-cp "$CONFIG_H" "$CONFIG_BAK"
 scripts/config.pl full
 scripts/config.pl unset MBEDTLS_MEMORY_BACKTRACE
 make -j
@@ -75,15 +73,15 @@ make -j
 TEST_OUTPUT=out_${PPID}
 cd tests
 
-# Step 2a - Unit Tests
+# Step 2a - Unit Tests (allow failures)
 perl scripts/run-test-suites.pl -v |tee unit-test-$TEST_OUTPUT
 echo
 
-# Step 2b - System Tests
+# Step 2b - System Tests (allow failures)
 sh ssl-opt.sh |tee sys-test-$TEST_OUTPUT
 echo
 
-# Step 2c - Compatibility tests
+# Step 2c - Compatibility tests (allow failures)
 sh compat.sh -m 'tls1 tls1_1 tls1_2 dtls1 dtls1_2' | \
     tee compat-test-$TEST_OUTPUT
 OPENSSL_CMD="$OPENSSL_LEGACY"                               \
@@ -97,7 +95,8 @@ echo
 
 # Step 3 - Process the coverage report
 cd ..
-make lcov |tee tests/cov-$TEST_OUTPUT
+make lcov >tests/cov-$TEST_OUTPUT
+cat tests/cov-$TEST_OUTPUT
 
 
 # Step 4 - Summarise the test report
@@ -203,17 +202,3 @@ FUNCS_PERCENT="$(($FUNCS_PERCENT/10)).$(($FUNCS_PERCENT-($FUNCS_PERCENT/10)*10))
 echo "Lines Tested       : $LINES_TESTED of $LINES_TOTAL $LINES_PERCENT%"
 echo "Functions Tested   : $FUNCS_TESTED of $FUNCS_TOTAL $FUNCS_PERCENT%"
 echo
-
-
-rm unit-test-$TEST_OUTPUT
-rm sys-test-$TEST_OUTPUT
-rm compat-test-$TEST_OUTPUT
-rm cov-$TEST_OUTPUT
-
-cd ..
-
-make clean
-
-if [ -f "$CONFIG_BAK" ]; then
-    mv "$CONFIG_BAK" "$CONFIG_H"
-fi

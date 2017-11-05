@@ -7,27 +7,20 @@
 # cmake -D CMAKE_BUILD_TYPE=Release .
 # scripts/ecc-heap.sh | tee ecc-heap.log
 
-set -eu
-
-CONFIG_H='include/mbedtls/config.h'
-
-if [ -r $CONFIG_H ]; then :; else
-    echo "$CONFIG_H not found" >&2
-    exit 1
+. "$(dirname -- "$0")/lib.sh" || exit 125
+if [ -e "$CONFIG_H" ]; then
+    save_config
 fi
 
-if grep -i cmake Makefile >/dev/null; then :; else
-    echo "Needs Cmake" >&2
-    exit 1
+if grep -q CMAKE Makefile >/dev/null; then
+    rebuild () {
+        make benchmark
+    }
+else
+    rebuild () {
+        make -C programs test/benchmark
+    }
 fi
-
-if git status | grep -F $CONFIG_H >/dev/null 2>&1; then
-    echo "config.h not clean" >&2
-    exit 1
-fi
-
-CONFIG_BAK=${CONFIG_H}.bak
-cp $CONFIG_H $CONFIG_BAK
 
 cat << EOF >$CONFIG_H
 #define MBEDTLS_PLATFORM_C
@@ -61,14 +54,9 @@ for F in 0 1; do
     for W in 2 3 4 5 6; do
         scripts/config.pl set MBEDTLS_ECP_WINDOW_SIZE $W
         scripts/config.pl set MBEDTLS_ECP_FIXED_POINT_OPTIM $F
-        make benchmark >/dev/null 2>&1
+        rebuild >/dev/null 2>&1
         echo "fixed point optim = $F, max window size = $W"
         echo "--------------------------------------------"
         programs/test/benchmark
     done
 done
-
-# cleanup
-
-mv $CONFIG_BAK $CONFIG_H
-make clean

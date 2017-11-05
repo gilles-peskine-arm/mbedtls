@@ -6,32 +6,16 @@
 # Use different build options for measuring executable size and memory usage,
 # since for memory we want debug information.
 
-set -eu
-
-CONFIG_H='include/mbedtls/config.h'
+. "$(dirname -- "$0")/lib.sh" || exit 125
+save_config
 
 CLIENT='mini_client'
 
 CFLAGS_EXEC='-fno-asynchronous-unwind-tables -Wl,--gc-section -ffunction-sections -fdata-sections'
 CFLAGS_MEM=-g3
 
-if [ -r $CONFIG_H ]; then :; else
-    echo "$CONFIG_H not found" >&2
-    exit 1
-fi
-
-if grep -i cmake Makefile >/dev/null; then
+if grep -q CMAKE Makefile; then
     echo "Not compatible with CMake" >&2
-    exit 1
-fi
-
-if [ $( uname ) != Linux ]; then
-    echo "Only work on Linux" >&2
-    exit 1
-fi
-
-if git status | grep -F $CONFIG_H >/dev/null 2>&1; then
-    echo "config.h not clean" >&2
     exit 1
 fi
 
@@ -93,8 +77,9 @@ do_config()
 
 # preparation
 
-CONFIG_BAK=${CONFIG_H}.bak
-cp $CONFIG_H $CONFIG_BAK
+cleanup () {
+  rm -f ssl_server2
+}
 
 rm -f massif.out.*
 
@@ -102,7 +87,7 @@ printf "building server... "
 
 make clean
 make lib >/dev/null 2>&1
-(cd programs && make ssl/ssl_server2) >/dev/null
+make -C programs ssl/ssl_server2 >/dev/null
 cp programs/ssl/ssl_server2 .
 
 echo "done"
@@ -118,9 +103,5 @@ do_config   "suite-b" \
             ""
 
 # cleanup
-
-mv $CONFIG_BAK $CONFIG_H
-make clean
-rm ssl_server2
 
 exit $FAILED

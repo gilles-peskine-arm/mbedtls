@@ -7,19 +7,8 @@
 # /!\ This must not be a Makefile target, as it would create a race condition
 # when multiple targets are invoked in the same parallel build.
 
-set -eu
-
-CONFIG_H='include/mbedtls/config.h'
-
-if [ -r $CONFIG_H ]; then :; else
-    echo "$CONFIG_H not found" >&2
-    exit 1
-fi
-
-CONFIG_BAK=${CONFIG_H}.bak
-cp -p $CONFIG_H $CONFIG_BAK
+. "$(dirname -- "$0")/lib.sh" || exit 125
+save_config
 
 scripts/config.pl realfull
 make apidoc
-
-mv $CONFIG_BAK $CONFIG_H
