@@ -15,10 +15,11 @@
 
 use warnings;
 use strict;
+use File::Copy;
 
 my %configs = (
     'config-mini-tls1_1.h' => {
-        'compat' => '-m tls1_1 -f \'^DES-CBC3-SHA$\|^TLS-RSA-WITH-3DES-EDE-CBC-SHA$\'',
+        'compat' => '-m tls1_1 -f \'^DES-CBC3-SHA$\|^TLS-RSA-WITH-3DES-EDE-CBC-SHA$\'', #'
     },
     'config-suite-b.h' => {
         'compat' => "-m tls1_2 -f 'ECDHE-ECDSA.*AES.*GCM' -p mbedTLS",
@@ -51,34 +52,47 @@ if ($#ARGV >= 0) {
 -d 'library' && -d 'include' && -d 'tests' or die "Must be run from root\n";
 
 my $config_h = 'include/mbedtls/config.h';
+my $config_bak = "$config_h.bak";
 
-system( "cp $config_h $config_h.bak" ) and die;
-sub abort {
-    system( "mv $config_h.bak $config_h" ) and warn "$config_h not restored\n";
-    die $_[0];
+if( -e $config_bak ) {
+    die "Backup config file found: $config_bak, aborting\n";
 }
+rename $config_h, $config_bak or die "Failed to back up $config_h";
+
+sub cleanup {
+    rename $config_bak, $config_h or warn "$config_h not restored\n";
+    system( "make clean" );
+}
+sub signalled {
+    cleanup;
+    $SIG{$_[0]} = 'DEFAULT';
+    kill $_[0], $$;
+}
+$SIG{HUP} = $SIG{INT} = $SIG{TERM} = \&signalled;
+$SIG{__DIE__} = \&cleanup;
+
+$ENV{CFLAGS} = '-Os -Werror -Wall -Wextra';
 
 foreach my $conf (sort keys %configs) {
     my $data = $configs{$conf};
-    system( "cp $config_h.bak $config_h" ) and die;
-    system( "make clean" ) and die;
+    system( "make clean" ) and die "Failed to make clean ($?)\n";
 
     print "\n******************************************\n";
     print "* Testing configuration: $conf\n";
     print "******************************************\n";
 
-    system( "cp configs/$conf $config_h" )
-        and abort "Failed to activate $conf\n";
+    copy( "configs/$conf", $config_h )
+        or die "Failed to activate $conf: $!\n";
 
-    system( "CFLAGS='-Os -Werror -Wall -Wextra' make" ) and abort "Failed to build: $conf\n";
-    system( "make test" ) and abort "Failed test suite: $conf\n";
+    system( "make" ) and die "Failed to build: $conf ($?)\n";
+    system( "make test" ) and die "Failed test suite: $conf ($?)\n";
 
     my $compat = $data->{'compat'};
     if( $compat )
     {
         print "\nrunning compat.sh $compat\n";
         system( "tests/compat.sh $compat" )
-            and abort "Failed compat.sh: $conf\n";
+            and die "Failed compat.sh: $conf ($?)\n";
     }
     else
     {
@@ -90,7 +104,7 @@ foreach my $conf (sort keys %configs) {
     {
         print "\nrunning ssl-opt.sh $opt\n";
         system( "tests/ssl-opt.sh $opt" )
-            and abort "Failed ssl-opt.sh: $conf\n";
+            and die "Failed ssl-opt.sh: $conf ($?)\n";
     }
     else
     {
@@ -98,6 +112,4 @@ foreach my $conf (sort keys %configs) {
     }
 }
 
-system( "mv $config_h.bak $config_h" ) and warn "$config_h not restored\n";
-system( "make clean" );
-exit 0;
+cleanup;
