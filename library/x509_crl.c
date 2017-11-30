@@ -511,30 +511,30 @@ int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, s
                                "-----END X509 CRL-----",
                                buf, NULL, 0, &use_len );
 
-        if( ret == 0 )
-        {
-            /*
-             * Was PEM encoded
-             */
-            is_pem = 1;
+    if( ret == 0 )
+    {
+        /*
+         * Was PEM encoded
+         */
+        is_pem = 1;
 
-            buflen -= use_len;
-            buf += use_len;
+        buflen -= use_len;
+        buf += use_len;
 
-            if( ( ret = mbedtls_x509_crl_parse_der( chain,
-                                            pem.buf, pem.buflen ) ) != 0 )
-            {
-                mbedtls_pem_free( &pem );
-                return( ret );
-            }
-        }
-        else if( is_pem )
+        if( ( ret = mbedtls_x509_crl_parse_der( chain,
+                                                pem.buf, pem.buflen ) ) != 0 )
         {
             mbedtls_pem_free( &pem );
             return( ret );
         }
-
+    }
+    else if( is_pem )
+    {
         mbedtls_pem_free( &pem );
+        return( ret );
+    }
+
+    mbedtls_pem_free( &pem );
     }
     /* In the PEM case, buflen is 1 at the end, for the terminated NULL byte.
      * And a valid CRL cannot be less than 1 byte anyway. */
