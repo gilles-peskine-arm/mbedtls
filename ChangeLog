@@ -30,6 +30,7 @@ Bugfix
      when dealing with negative MPI. Found by Guido Vranken.
    * Fix potential stack underflow in mpi_read_file.
      Found by Guido Vranken.
+   * Fix test_suite_pk to work on 64-bit ILP32 systems. #849
 
 Changes
    * Send fatal alerts in many more cases instead of dropping the connection.
