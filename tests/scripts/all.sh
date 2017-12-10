@@ -37,6 +37,7 @@ MEMORY=0
 FORCE=0
 KEEP_GOING=0
 RELEASE=0
+YOTTA=1
 
 # Default commands, can be overriden by the environment
 : ${OPENSSL:="openssl"}
@@ -64,9 +65,11 @@ General options:
   -f|--force            Force the tests to overwrite any modified files.
   -k|--keep-going       Run all tests and report errors at the end.
   -m|--memory           Additional optional memory tests.
+     --no-yotta         Skip yotta module build.
      --out-of-source-dir=<path>  Directory used for CMake out-of-source build tests.
   -r|--release-test     Run this script in release mode. This fixes the seed value to 1.
   -s|--seed             Integer seed value to use for this test run.
+     --yotta            Build yotta module (on by default).
 
 Tool path options:
      --armc5-bin-dir=<ARMC5_bin_dir_path>       ARM Compiler 5 bin directory.
@@ -185,6 +188,9 @@ while [ $# -gt 0 ]; do
         --memory|-m)
             MEMORY=1
             ;;
+        --no-yotta)
+            YOTTA=0
+            ;;
         --openssl)
             shift
             OPENSSL="$1"
@@ -204,6 +210,9 @@ while [ $# -gt 0 ]; do
             shift
             SEED="$1"
             ;;
+        --yotta)
+            YOTTA=1
+            ;;
         *)
             echo >&2 "Unknown option: $1"
             echo >&2 "Run $0 --help for usage."
@@ -219,7 +228,7 @@ if [ $FORCE -eq 1 ]; then
     cleanup
 else
 
-    if [ -d yotta/module ]; then
+    if [ $YOTTA -ne 0 ] && [ -d yotta/module ]; then
         err_msg "Warning - there is an existing yotta module in the directory 'yotta/module'"
         echo "You can either delete your work and retry, or force the test to overwrite the"
         echo "test by rerunning the script as: $0 --force"
@@ -378,11 +387,13 @@ msg "test: doxygen warnings" # ~ 3s
 cleanup
 tests/scripts/doxygen.sh
 
-# Note - use of yotta is deprecated, and yotta also requires armcc to be on the
-# path, and uses whatever version of armcc it finds there.
-msg "build: create and build yotta module" # ~ 30s
-cleanup
-record_status tests/scripts/yotta-build.sh
+if [ $YOTTA -ne 0 ]; then
+    # Note - use of yotta is deprecated, and yotta also requires armcc to be on the
+    # path, and uses whatever version of armcc it finds there.
+    msg "build: create and build yotta module" # ~ 30s
+    cleanup
+    record_status tests/scripts/yotta-build.sh
+fi
 
 msg "build: cmake, gcc, ASan" # ~ 1 min 50s
 cleanup
