@@ -5,12 +5,27 @@
 
 import optparse, os, re, subprocess, sys
 
+# List of backported versions, in the form 'A.B'. These are versions
+# for which the next version number is obtained by incrementing the
+# patchlevel.
+stable_versions = ['1.3', '2.1']
+
+# List of section names that we normally use, in the order in which
+# they should appear.
+common_section_names = ['Security',
+                        'Features',
+                        'API changes',
+                        'Removals',
+                        'New deprecations',
+                        'Bugfix',
+                        'Changes']
+
 def next_version_xxx(match):
     """Return the conventional placeholder for the next version number.
 
     This is e.g. 2.1.x for a backport and x.x.x for the development branch.
     """
-    if match.group(1) in ['1.3', '2.1']:
+    if match.group(1) in stable_versions:
         return match.group(1) + '.' + str(int(match.group(2)) + 1)
     else:
         return 'x.x.x'
@@ -41,13 +56,7 @@ class ChangeLogHead:
 
     def init_v0_sections(self):
         """Declare the common section names in their standard order."""
-        self.v0_titles = ['Security',
-                          'Features',
-                          'API changes',
-                          'Removals',
-                          'New deprecations',
-                          'Bugfix',
-                          'Changes']
+        self.v0_titles = common_section_names[:]
         self.v0_contents = {}
         for title in self.v0_titles:
             self.v0_contents[title] = ''
