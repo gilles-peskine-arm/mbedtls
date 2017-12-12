@@ -221,12 +221,12 @@ def set_git_options(option, opt_str, value, parser):
     parser.values.revisions = False
     parser.values.stdout = False
 
-def exec_git_merge(options):
+def exec_git_merge(ancestor_file, current_file, other_file, options):
     """Run git merge-file because we failed."""
     cmd = ['git-merge-file', '-q']
     if options.marker_size is not None:
-        cmd.append(['--marker-size=' + str(options.marker_size)])
-    cmd.append([current_file, ancestor_file, other_file])
+        cmd += ['--marker-size=' + str(options.marker_size)]
+    cmd += [current_file, ancestor_file, other_file]
     # TODO: figure out -L options.
     # https://stackoverflow.com/questions/24302644/how-to-retrieve-branch-names-in-a-custom-git-merge-driver
     # Useful environment variables:
