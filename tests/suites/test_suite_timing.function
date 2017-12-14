@@ -131,9 +131,10 @@ void timing_timer_reset( )
 exit:
     /* No cleanup needed, but show some diagnostic information, because timing
        problems can be hard to reproduce. */
-    mbedtls_fprintf( stdout, "  Finished with millis=%lu get(timer)<=%lu iterations=%lu\n",
-                     millis, mbedtls_timing_get_timer( &timer, 0 ),
-                     iterations );
+    if( !timers_are_badly_broken )
+        mbedtls_fprintf( stdout, "  Finished with millis=%lu get(timer)<=%lu iterations=%lu\n",
+                         millis, mbedtls_timing_get_timer( &timer, 0 ),
+                         iterations );
 }
 /* END_CASE */
 
@@ -181,9 +182,10 @@ void timing_two_timers( int delta )
 exit:
     /* No cleanup needed, but show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
-    mbedtls_fprintf( stdout, "  Finished with millis1=%lu get(timer1)<=%lu millis2=%lu get(timer2)<=%lu\n",
-                     millis1, mbedtls_timing_get_timer( &timer1, 0 ),
-                     millis2, mbedtls_timing_get_timer( &timer2, 0 ) );
+    if( !timers_are_badly_broken )
+        mbedtls_fprintf( stdout, "  Finished with millis1=%lu get(timer1)<=%lu millis2=%lu get(timer2)<=%lu\n",
+                         millis1, mbedtls_timing_get_timer( &timer1, 0 ),
+                         millis2, mbedtls_timing_get_timer( &timer2, 0 ) );
 }
 /* END_CASE */
 
@@ -241,10 +243,11 @@ void timing_alarm( int seconds )
 exit:
     /* Show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
-    mbedtls_fprintf( stdout, "  Finished with alarmed=%d millis=%lu get(timer)<=%lu iterations=%lu\n",
-                     mbedtls_timing_alarmed,
-                     millis, mbedtls_timing_get_timer( &timer, 0 ),
-                     iterations );
+    if( !timers_are_badly_broken )
+        mbedtls_fprintf( stdout, "  Finished with alarmed=%d millis=%lu get(timer)<=%lu iterations=%lu\n",
+                         mbedtls_timing_alarmed,
+                         millis, mbedtls_timing_get_timer( &timer, 0 ),
+                         iterations );
     /* Cleanup */
     mbedtls_timing_alarmed = 0;
 }
@@ -346,8 +349,9 @@ void timing_delay( int int_ms, int fin_ms )
 exit:
     /* No cleanup needed, but show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
-    mbedtls_fprintf( stdout, "  Finished with delta=%lu before=%lu after=%lu status=%d iterations=%lu\n",
-                     delta, before, after, status, iterations );
+    if( !timers_are_badly_broken )
+        mbedtls_fprintf( stdout, "  Finished with delta=%lu before=%lu after=%lu status=%d iterations=%lu\n",
+                         delta, before, after, status, iterations );
     if( warn_inconclusive )
         mbedtls_fprintf( stdout, "  Inconclusive test, try running it on a less heavily loaded machine.\n" );
  }
@@ -394,7 +398,8 @@ void timing_hardclock( )
 exit:
     /* No cleanup needed, but show some diagnostic iterations, because timing
        problems can be hard to reproduce. */
-    mbedtls_fprintf( stdout, "  Finished with hardclock=%lu,%lu\n",
-                     hardclock0, hardclock1 );
+    if( !timers_are_badly_broken )
+        mbedtls_fprintf( stdout, "  Finished with hardclock=%lu,%lu\n",
+                         hardclock0, hardclock1 );
 }
 /* END_CASE */
