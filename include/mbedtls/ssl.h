@@ -109,6 +109,7 @@
 #define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700  /**< Record header looks valid but is not expected. */
 #define MBEDTLS_ERR_SSL_NON_FATAL                         -0x6680  /**< The alert message received indicates a non-fatal error. */
 #define MBEDTLS_ERR_SSL_INVALID_VERIFY_HASH               -0x6600  /**< Couldn't set the hash for verifying CertificateVerify */
+#define MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS                 -0x6580  /**< Asynchronous callback is not ready yet */
 
 /*
  * Various constants
@@ -656,6 +657,19 @@ struct mbedtls_ssl_config
     mbedtls_ssl_key_cert *key_cert; /*!< own certificate/key pair(s)        */
     mbedtls_x509_crt *ca_chain;     /*!< trusted CAs                        */
     mbedtls_x509_crl *ca_crl;       /*!< trusted CAs CRLs                   */
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+    int (*f_async_sign_start)( void *class_ctx, void **instance_ctx,
+                               mbedtls_ssl_context *ssl,
+                               mbedtls_x509_crt *cert,
+                               mbedtls_md_type_t md_alg,
+                               const unsigned char *hash, size_t hash_len );
+    int (*f_async_sign_resume)( void *class_ctx, void **instance_ctx,
+                                unsigned char *sig,
+                                size_t *sig_len,
+                                size_t sig_size );
+    //TODO: f_async_detach if the context is reset/freed while an async operation is in progress
+    void *p_async_conf;
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED)

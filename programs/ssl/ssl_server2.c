@@ -837,6 +837,111 @@ static int ssl_sig_hashes_for_test[] = {
 };
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+typedef struct {
+    mbedtls_x509_crt *cert1;
+    mbedtls_pk_context *pkey1;
+    mbedtls_x509_crt *cert2;
+    mbedtls_pk_context *pkey2;
+} ssl_async_sign_conf_t;
+static ssl_async_sign_conf_t ssl_async_sign_context;
+
+typedef struct {
+    mbedtls_ssl_context *ssl;
+    mbedtls_pk_context *pk;
+    mbedtls_md_type_t md_alg;
+    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
+    size_t hash_len;
+    unsigned step;
+} ssl_async_sign_instance_t;
+
+static inline int pk_hashlen_helper( mbedtls_md_type_t md_alg, size_t *hash_len )
+{
+    const mbedtls_md_info_t *md_info;
+
+    if( *hash_len != 0 )
+        return( 0 );
+
+    if( ( md_info = mbedtls_md_info_from_type( md_alg ) ) == NULL )
+        return( -1 );
+
+    *hash_len = mbedtls_md_get_size( md_info );
+    return( 0 );
+}
+
+static int ssl_async_sign_start( void *class_ctx,
+                                 void **instance_ctx,
+                                 mbedtls_ssl_context *ssl,
+                                 mbedtls_x509_crt *cert,
+                                 mbedtls_md_type_t md_alg,
+                                 const unsigned char *hash, size_t hash_len )
+{
+    ssl_async_sign_conf_t *conf = class_ctx;
+    ssl_async_sign_instance_t *op;
+    int ret = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
+    *instance_ctx = NULL;
+    op = mbedtls_calloc( 1, sizeof( *op ) );
+    if( op == NULL )
+        return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
+    op->ssl = ssl;
+    if( cert == conf->cert1 )
+        op->pk = conf->pkey1;
+    else if( cert == conf->cert2 )
+        op->pk = conf->pkey2;
+    else
+        goto fail;
+    op->md_alg = md_alg;
+    pk_hashlen_helper( md_alg, &hash_len );
+    if( hash_len > sizeof( op->hash ) )
+        goto fail;
+    memcpy( op->hash, hash, hash_len );
+    op->hash_len = hash_len;
+    op->step = 0;
+    *instance_ctx = op;
+    return( MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
+fail:
+    mbedtls_free( op );
+    return( ret );
+}
+
+static int ssl_async_sign_resume( void *class_ctx,
+                                  void **instance_ctx,
+                                  unsigned char *sig,
+                                  size_t *sig_len,
+                                  size_t sig_size )
+{
+    ssl_async_sign_conf_t *conf = class_ctx;
+    ssl_async_sign_instance_t *op = *instance_ctx;
+    int ret;
+    (void) conf;
+    ++op->step;
+#if 0
+    if( op->step < 2 )
+        return( MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
+#endif
+    (void) sig_size;
+    ret = mbedtls_pk_sign( op->pk,
+                           op->md_alg, op->hash, op->hash_len,
+                           sig, sig_len,
+                           op->ssl->conf->f_rng, op->ssl->conf->p_rng );
+    mbedtls_free( op );
+    *instance_ctx = NULL;
+    return( ret );
+}
+
+static void ssl_async_sign_init( ssl_async_sign_conf_t *conf,
+                                 mbedtls_x509_crt *cert1,
+                                 mbedtls_pk_context *pkey1,
+                                 mbedtls_x509_crt *cert2,
+                                 mbedtls_pk_context *pkey2 )
+{
+    conf->cert1 = cert1;
+    conf->pkey1 = pkey1;
+    conf->cert2 = cert2;
+    conf->pkey2 = pkey2;
+}
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
+
 int main( int argc, char *argv[] )
 {
     int ret = 0, len, written, frags, exchanges_left;
@@ -872,8 +977,10 @@ int main( int argc, char *argv[] )
     mbedtls_x509_crt cacert;
     mbedtls_x509_crt srvcert;
     mbedtls_pk_context pkey;
+    mbedtls_pk_context *ppkey = &pkey;
     mbedtls_x509_crt srvcert2;
     mbedtls_pk_context pkey2;
+    mbedtls_pk_context *ppkey2 = &pkey2;
     int key_cert_init = 0, key_cert_init2 = 0;
 #endif
 #if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_FS_IO)
@@ -1931,14 +2038,29 @@ int main( int argc, char *argv[] )
     {
         mbedtls_ssl_conf_ca_chain( &conf, &cacert, NULL );
     }
+
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+    if( getenv("SSL_ASYNC") && *getenv("SSL_ASYNC") )
+    {
+        conf.f_async_sign_start = ssl_async_sign_start;
+        conf.f_async_sign_resume = ssl_async_sign_resume;
+        conf.p_async_conf = &ssl_async_sign_context;
+        ssl_async_sign_init( &ssl_async_sign_context,
+                             &srvcert, &pkey,
+                             &srvcert2, &pkey2 );
+        ppkey = NULL;
+        ppkey2 = NULL;
+    }
+#endif
+
     if( key_cert_init )
-        if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &srvcert, &pkey ) ) != 0 )
+        if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &srvcert, ppkey ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_own_cert returned %d\n\n", ret );
             goto exit;
         }
     if( key_cert_init2 )
-        if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &srvcert2, &pkey2 ) ) != 0 )
+        if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &srvcert2, ppkey2 ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_own_cert returned %d\n\n", ret );
             goto exit;

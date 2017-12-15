@@ -707,7 +707,7 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
         MBEDTLS_SSL_DEBUG_CRT( 3, "candidate certificate chain, certificate",
                           cur->cert );
 
-        if( ! mbedtls_pk_can_do( cur->key, pk_alg ) )
+        if( ! mbedtls_pk_can_do( &cur->cert->pk, pk_alg ) )
         {
             MBEDTLS_SSL_DEBUG_MSG( 3, ( "certificate mismatch: key type" ) );
             continue;
@@ -3176,6 +3176,11 @@ curve_matching_done:
         /*
          * 3.3: Compute and add the signature
          */
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+        if( ssl->conf->f_async_sign_start )
+            /*we don't have a private key, the HSM does*/;
+        else
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
         if( mbedtls_ssl_own_key( ssl ) == NULL )
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no private key" ) );
@@ -3208,6 +3213,33 @@ curve_matching_done:
         }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+        if( ssl->conf->f_async_sign_start )
+        {
+            ret = ssl->conf->f_async_sign_start( ssl->conf->p_async_conf,
+                                                 &ssl->handshake->p_async_operation,
+                                                 ssl,
+                                                 mbedtls_ssl_own_cert( ssl ),
+                                                 md_alg, hash, hashlen );
+            if( ret == 0
+#if 1
+                || ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS
+#endif
+                )
+            {
+                ret = ssl->conf->f_async_sign_resume( ssl->conf->p_async_conf,
+                                                      &ssl->handshake->p_async_operation,
+                                                      p + 2, &signature_len, 42 );
+                if( ret != 0 && ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
+                    MBEDTLS_SSL_DEBUG_RET( 1, "ssl->conf->f_async_sign_resume", ret );
+            }
+            else if( ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
+                MBEDTLS_SSL_DEBUG_RET( 1, "ssl->conf->f_async_sign_start", ret );
+            if( ret != 0 )
+                return( ret );
+        }
+        else
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
         if( ( ret = mbedtls_pk_sign( mbedtls_ssl_own_key( ssl ), md_alg, hash, hashlen,
                         p + 2 , &signature_len, ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
         {
