@@ -75,14 +75,12 @@ unsigned long mbedtls_timing_hardclock( void );
  * \brief          Return the elapsed time in milliseconds
  *
  * \param val      points to a timer structure
- * \param reset    If 0, query the elapsed time. Otherwise restart the timer.
+ * \param reset    If 0, query the elapsed time. Otherwise (re)start the timer.
  *
- * \return         Elapsed time since the previous reset in ms.
+ * \return         Elapsed time since the previous reset in ms. When
+ *                 restarting, this is always 0.
  *
- * \note           If reset=1, this function currently returns the elapsed
- *                 time since the previous reset. Before or on the first call
- *                 with reset=1 for a given timer object, the return value is
- *                 indeterminate.
+ * \note           To initialize a timer, call this function with reset=1.
  *
  *                 Determining the elapsed time and resetting the timer is not
  *                 atomic on all platforms, so after the sequence
