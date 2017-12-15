@@ -258,6 +258,7 @@ const selftest_t selftests[] =
 int main( int argc, char *argv[] )
 {
     const selftest_t *test;
+    char **argp = argc >= 1 ? argv + 1 : argv;
     int v, suites_tested = 0, suites_failed = 0;
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && defined(MBEDTLS_SELF_TEST)
     unsigned char buf[1000000];
@@ -285,10 +286,11 @@ int main( int argc, char *argv[] )
         mbedtls_exit( MBEDTLS_EXIT_FAILURE );
     }
 
-    if( argc == 2 && ( strcmp( argv[1], "--quiet" ) == 0  ||
+    if( argc >= 2 && ( strcmp( argv[1], "--quiet" ) == 0  ||
         strcmp( argv[1], "-q" ) == 0 ) )
     {
         v = 0;
+        ++argp;
     }
     else
     {
@@ -302,13 +304,41 @@ int main( int argc, char *argv[] )
     mbedtls_memory_buffer_alloc_init( buf, sizeof(buf) );
 #endif
 
-    for( test = selftests; test->name != NULL; test++ )
+    if( *argp != NULL )
     {
-        if( test->function( v )  != 0 )
+        /* Run the specified tests */
+        for( ; *argp != NULL; argp++ )
         {
-            suites_failed++;
+            for( test = selftests; test->name != NULL; test++ )
+            {
+                if( !strcmp( *argp, test->name ) )
+                {
+                    if( test->function( v )  != 0 )
+                    {
+                        suites_failed++;
+                    }
+                    suites_tested++;
+                    break;
+                }
+            }
+            if( test->name == NULL )
+            {
+                mbedtls_printf( "  Test suite %s not available -> failed\n\n", *argp );
+                suites_failed++;
+            }
         }
-        suites_tested++;
+    }
+    else
+    {
+        /* Run all the tests */
+        for( test = selftests; test->name != NULL; test++ )
+        {
+            if( test->function( v )  != 0 )
+            {
+                suites_failed++;
+            }
+            suites_tested++;
+        }
     }
 
 #else
