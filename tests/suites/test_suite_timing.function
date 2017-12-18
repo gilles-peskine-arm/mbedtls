@@ -141,7 +141,7 @@ exit:
 void timing_two_timers( int delta )
 {
     struct mbedtls_timing_hr_time timer1, timer2;
-    unsigned long millis1, millis2;
+    unsigned long millis1 = 0, millis2 = 0;
 
     /* Skip this test if it looks like timers don't work at all, to avoid an
        infinite loop below. */
@@ -262,7 +262,7 @@ void timing_delay( int int_ms, int fin_ms )
 
     mbedtls_timing_delay_context delay;
     struct mbedtls_timing_hr_time timer;
-    unsigned long delta; /* delay started between timer=0 and timer=delta */
+    unsigned long delta = 0; /* delay started between timer=0 and timer=delta */
     unsigned long before = 0, after = 0;
     unsigned long iterations = 0;
     int status = -2;
@@ -365,7 +365,7 @@ void timing_hardclock( )
        completely nonsensical values. */
 
     struct mbedtls_timing_hr_time timer;
-    unsigned long hardclock0, hardclock1, delta1;
+    unsigned long hardclock0 = -1, hardclock1 = -1, delta1 = -1;
 
     /* Skip this test if it looks like timers don't work at all, to avoid an
        infinite loop below. */
