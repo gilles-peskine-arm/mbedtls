@@ -120,9 +120,8 @@ void timing_timer_reset( )
     }
     while( millis < TIMING_SHORT_TEST_MS );
 
-    /* Reset the timer. This returns the elapsed time before the reset, which
-       must be at least TIMING_SHORT_TEST_MS if the previous loop finished. */
-    TEST_ASSERT( mbedtls_timing_get_timer( &timer, 1 ) >= TIMING_SHORT_TEST_MS );
+    /* Reset the timer. This returns 0. */
+    TEST_ASSERT( mbedtls_timing_get_timer( &timer, 1 ) == 0 );
     /* Read the timer immediately after reset. It should be 0 or close
        to it. */
     TEST_ASSERT( mbedtls_timing_get_timer( &timer, 0 ) < TIMING_SHORT_TEST_MS );
