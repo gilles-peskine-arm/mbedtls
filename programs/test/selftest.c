@@ -159,6 +159,7 @@ int mbedtls_memory_buffer_alloc_free_and_self_test( int verbose )
 }
 #endif
 
+#if defined(MBEDTLS_SELF_TEST)
 typedef struct
 {
     const char *name;
@@ -254,10 +255,13 @@ const selftest_t selftests[] =
 #endif
     {NULL, NULL}
 };
+#endif /* MBEDTLS_SELF_TEST */
 
 int main( int argc, char *argv[] )
 {
+#if defined(MBEDTLS_SELF_TEST)
     const selftest_t *test;
+#endif /* MBEDTLS_SELF_TEST */
     char **argp = argc >= 1 ? argv + 1 : argv;
     int v, suites_tested = 0, suites_failed = 0;
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && defined(MBEDTLS_SELF_TEST)
