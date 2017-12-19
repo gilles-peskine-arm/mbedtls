@@ -447,21 +447,17 @@ int mbedtls_timing_self_test( int verbose )
     {
         a = 800;
         b = 400;
-        mbedtls_timing_set_delay( &ctx, a, a + b );
+        mbedtls_timing_set_delay( &ctx, a, a + b );          /* T = 0 */
 
-        busy_msleep( a - a / 4 );
+        busy_msleep( a - a / 4 );                      /* T = a - a/4 */
         if( mbedtls_timing_get_delay( &ctx ) != 0 )
             FAIL;
 
-        busy_msleep( a / 2 );
+        busy_msleep( a / 4 + b / 4 );                  /* T = a + b/4 */
         if( mbedtls_timing_get_delay( &ctx ) != 1 )
             FAIL;
 
-        busy_msleep( b - a / 4 - b / 4 );
-        if( mbedtls_timing_get_delay( &ctx ) != 1 )
-            FAIL;
-
-        busy_msleep( b / 2 );
+        busy_msleep( b );                          /* T = a + b + b/4 */
         if( mbedtls_timing_get_delay( &ctx ) != 2 )
             FAIL;
     }
