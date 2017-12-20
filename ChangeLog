@@ -4,8 +4,10 @@ mbed TLS ChangeLog (Sorted per branch, date)
 
 Features
    * Allow comments in test data files.
-   * New unit tests for timing that should be less prone to failing on a
+   * Unit tests and self tests for timing should be less prone to failing on a
      heavily loaded machine.
+   * The selftest program can execute a subset of the tests based on command
+     line arguments.
 
 Bugfix
    * Fix memory leak in mbedtls_ssl_set_hostname() when called multiple times.
@@ -13,6 +15,7 @@ Bugfix
    * Fix usage help in ssl_server2 example. Found and fixed by Bei Lin.
    * Align the behavior of mbedtls_timing_alarm(0) on Unix with the behavior
      on Windows and in the documentation.
+   * Fix use of uninitialized memory in mbedtls_timing_get_timer when reset=1.
 
 = mbed TLS 2.6.0 branch released 2017-08-10
 
