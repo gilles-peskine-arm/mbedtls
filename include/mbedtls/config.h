@@ -267,6 +267,7 @@
 //#define MBEDTLS_BLOWFISH_ALT
 //#define MBEDTLS_CAMELLIA_ALT
 //#define MBEDTLS_DES_ALT
+//#define MBEDTLS_RSA_ALT
 //#define MBEDTLS_XTEA_ALT
 //#define MBEDTLS_MD2_ALT
 //#define MBEDTLS_MD4_ALT
@@ -1656,6 +1657,7 @@
  *          library/ecp.c
  *          library/ecdsa.c
  *          library/rsa.c
+ *          library/rsa_internal.c
  *          library/ssl_tls.c
  *
  * This module is required for RSA, DHM and ECC (ECDH, ECDSA) support.
@@ -2269,6 +2271,7 @@
  * Enable the RSA public-key cryptosystem.
  *
  * Module:  library/rsa.c
+ *          library/rsa_internal.c
  * Caller:  library/ssl_cli.c
  *          library/ssl_srv.c
  *          library/ssl_tls.c
