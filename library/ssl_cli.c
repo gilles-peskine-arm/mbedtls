@@ -3096,20 +3096,16 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
 }
 #else
-static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
+static int ssl_prepare_certificate_verify( mbedtls_ssl_context *ssl,
+                                           size_t *signature_len )
 {
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->transform_negotiate->ciphersuite_info;
-    size_t signature_len = 0;
     unsigned char hash[48];
     unsigned char *hash_start = hash;
     mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
     unsigned int hashlen;
-
-    MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write certificate verify" ) );
-
-    ssl->out_msglen = 4; /* leave room for the header */
 
     if( ( ret = mbedtls_ssl_derive_keys( ssl ) ) != 0 )
     {
@@ -3123,17 +3119,16 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECJPAKE )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
-        ssl->state++;
         return( 0 );
     }
 
     if( ssl->client_auth == 0 || mbedtls_ssl_own_cert( ssl ) == NULL )
     {
-        MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
-        ssl->state++;
         return( 0 );
     }
+
+    /* At this point, we do want to generate a CertificateVerify message. */
+    ssl->out_msglen = 4; /* leave room for the header */
 
     if( mbedtls_ssl_own_key( ssl ) == NULL )
     {
@@ -3220,17 +3215,41 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     }
 
     if( ( ret = mbedtls_pk_sign( mbedtls_ssl_own_key( ssl ), md_alg, hash_start, hashlen,
-                         ssl->out_msg + ssl->out_msglen + 2, &signature_len,
+                         ssl->out_msg + ssl->out_msglen + 2, signature_len,
                          ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_pk_sign", ret );
         return( ret );
     }
 
+    return( 0 );
+}
+
+static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
+{
+    int ret;
+    size_t signature_len = 0;
+
+    MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write certificate verify" ) );
+
+    ssl->out_msglen = 0;
+    ret = ssl_prepare_certificate_verify( ssl, &signature_len );
+    if( ret != 0 )
+    {
+        ssl->out_msglen = 0;
+        return( ret );
+    }
+    if( ssl->out_msglen == 0 )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= skip write certificate verify" ) );
+        ssl->state++;
+        return( 0 );
+    }
+
     ssl->out_msg[ssl->out_msglen++] = (unsigned char)( signature_len >> 8 );
     ssl->out_msg[ssl->out_msglen++] = (unsigned char)( signature_len      );
+    ssl->out_msglen += signature_len;
 
-    ssl->out_msglen  = ssl->out_msglen + signature_len;
     ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
     ssl->out_msg[0]  = MBEDTLS_SSL_HS_CERTIFICATE_VERIFY;
 
