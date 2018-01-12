@@ -3101,13 +3101,15 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->transform_negotiate->ciphersuite_info;
-    size_t n = 0, offset = 0;
+    size_t signature_len = 0;
     unsigned char hash[48];
     unsigned char *hash_start = hash;
     mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
     unsigned int hashlen;
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write certificate verify" ) );
+
+    ssl->out_msglen = 4; /* leave room for the header */
 
     if( ( ret = mbedtls_ssl_derive_keys( ssl ) ) != 0 )
     {
@@ -3198,18 +3200,17 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
             MBEDTLS_MD_SHA384 )
         {
             md_alg = MBEDTLS_MD_SHA384;
-            ssl->out_msg[4] = MBEDTLS_SSL_HASH_SHA384;
+            ssl->out_msg[ssl->out_msglen++] = MBEDTLS_SSL_HASH_SHA384;
         }
         else
         {
             md_alg = MBEDTLS_MD_SHA256;
-            ssl->out_msg[4] = MBEDTLS_SSL_HASH_SHA256;
+            ssl->out_msg[ssl->out_msglen++] = MBEDTLS_SSL_HASH_SHA256;
         }
-        ssl->out_msg[5] = mbedtls_ssl_sig_from_pk( mbedtls_ssl_own_key( ssl ) );
+        ssl->out_msg[ssl->out_msglen++] =
+            mbedtls_ssl_sig_from_pk( mbedtls_ssl_own_key( ssl ) );
 
-        /* Info from md_alg will be used instead */
-        hashlen = 0;
-        offset = 2;
+        hashlen = mbedtls_md_get_size( mbedtls_md_info_from_type( md_alg ) );
     }
     else
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
@@ -3219,17 +3220,17 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     }
 
     if( ( ret = mbedtls_pk_sign( mbedtls_ssl_own_key( ssl ), md_alg, hash_start, hashlen,
-                         ssl->out_msg + 6 + offset, &n,
+                         ssl->out_msg + ssl->out_msglen + 2, &signature_len,
                          ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_pk_sign", ret );
         return( ret );
     }
 
-    ssl->out_msg[4 + offset] = (unsigned char)( n >> 8 );
-    ssl->out_msg[5 + offset] = (unsigned char)( n      );
+    ssl->out_msg[ssl->out_msglen++] = (unsigned char)( signature_len >> 8 );
+    ssl->out_msg[ssl->out_msglen++] = (unsigned char)( signature_len      );
 
-    ssl->out_msglen  = 6 + n + offset;
+    ssl->out_msglen  = ssl->out_msglen + signature_len;
     ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
     ssl->out_msg[0]  = MBEDTLS_SSL_HS_CERTIFICATE_VERIFY;
 
