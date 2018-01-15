@@ -855,7 +855,10 @@ int main( int argc, char *argv[] )
     {
         p = argv[i];
         if( ( q = strchr( p, '=' ) ) == NULL )
+        {
+            mbedtls_printf( "Missing argument for option %s\n", p );
             goto usage;
+        }
         *q++ = '\0';
 
         if( strcmp( p, "server_port" ) == 0 )
@@ -870,19 +873,31 @@ int main( int argc, char *argv[] )
             else if( t == 1 )
                 opt.transport = MBEDTLS_SSL_TRANSPORT_DATAGRAM;
             else
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "debug_level" ) == 0 )
         {
             opt.debug_level = atoi( q );
             if( opt.debug_level < 0 || opt.debug_level > 65535 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0..655535)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "nbio" ) == 0 )
         {
             opt.nbio = atoi( q );
             if( opt.nbio < 0 || opt.nbio > 2 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0..2)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "read_timeout" ) == 0 )
             opt.read_timeout = atoi( q );
@@ -917,6 +932,7 @@ int main( int argc, char *argv[] )
             if( opt.force_ciphersuite[0] == 0 )
             {
                 ret = 2;
+                mbedtls_printf( "Unknown ciphersuite: %s\n", q );
                 goto usage;
             }
             opt.force_ciphersuite[1] = 0;
@@ -937,14 +953,21 @@ int main( int argc, char *argv[] )
                 case -1: opt.allow_legacy = MBEDTLS_SSL_LEGACY_BREAK_HANDSHAKE; break;
                 case 0:  opt.allow_legacy = MBEDTLS_SSL_LEGACY_NO_RENEGOTIATION; break;
                 case 1:  opt.allow_legacy = MBEDTLS_SSL_LEGACY_ALLOW_RENEGOTIATION; break;
-                default: goto usage;
+                default:
+                    mbedtls_printf( "Invalid value for option %s (must be -1, 0 or 1)\n",
+                                p );
+                    goto usage;
             }
         }
         else if( strcmp( p, "renegotiate" ) == 0 )
         {
             opt.renegotiate = atoi( q );
             if( opt.renegotiate < 0 || opt.renegotiate > 1 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "renego_delay" ) == 0 )
         {
@@ -956,16 +979,27 @@ int main( int argc, char *argv[] )
             opt.renego_period = _strtoui64( q, NULL, 10 );
 #else
             if( sscanf( q, "%" SCNu64, &opt.renego_period ) != 1 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=2)\n",
+                                p );
                 goto usage;
+            }
 #endif /* _MSC_VER */
             if( opt.renego_period < 2 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=2)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "exchanges" ) == 0 )
         {
             opt.exchanges = atoi( q );
             if( opt.exchanges < 0 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=0)\n", p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "min_version" ) == 0 )
         {
@@ -985,7 +1019,10 @@ int main( int argc, char *argv[] )
             {
                 case 0:     opt.arc4 = MBEDTLS_SSL_ARC4_DISABLED;   break;
                 case 1:     opt.arc4 = MBEDTLS_SSL_ARC4_ENABLED;    break;
-                default:    goto usage;
+                default:
+                    mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                    p );
+                    goto usage;
             }
         }
         else if( strcmp( p, "allow_sha1" ) == 0 )
@@ -994,7 +1031,10 @@ int main( int argc, char *argv[] )
             {
                 case 0:     opt.allow_sha1 = 0;   break;
                 case 1:     opt.allow_sha1 = 1;    break;
-                default:    goto usage;
+                default:
+                    mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                    p );
+                    goto usage;
             }
         }
         else if( strcmp( p, "force_version" ) == 0 )
@@ -1010,13 +1050,20 @@ int main( int argc, char *argv[] )
         else if( strcmp( p, "auth_mode" ) == 0 )
         {
             if( ( opt.auth_mode = mbedtls_ssl_test_get_auth_mode( q ) ) < 0 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be none|optional|required)\n", p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "cert_req_ca_list" ) == 0 )
         {
             opt.cert_req_ca_list = atoi( q );
             if( opt.cert_req_ca_list < 0 || opt.cert_req_ca_list > 1 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "max_frag_len" ) == 0 )
         {
@@ -1029,7 +1076,11 @@ int main( int argc, char *argv[] )
             else if( strcmp( q, "4096" ) == 0 )
                 opt.mfl_code = MBEDTLS_SSL_MAX_FRAG_LEN_4096;
             else
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 512, 1024, 2048 or 4096)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "alpn" ) == 0 )
         {
@@ -1041,7 +1092,10 @@ int main( int argc, char *argv[] )
             {
                 case 0: opt.trunc_hmac = MBEDTLS_SSL_TRUNC_HMAC_DISABLED; break;
                 case 1: opt.trunc_hmac = MBEDTLS_SSL_TRUNC_HMAC_ENABLED; break;
-                default: goto usage;
+                default:
+                    mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
+                    goto usage;
             }
         }
         else if( strcmp( p, "extended_ms" ) == 0 )
@@ -1050,7 +1104,10 @@ int main( int argc, char *argv[] )
             {
                 case 0: opt.extended_ms = MBEDTLS_SSL_EXTENDED_MS_DISABLED; break;
                 case 1: opt.extended_ms = MBEDTLS_SSL_EXTENDED_MS_ENABLED; break;
-                default: goto usage;
+                default:
+                    mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
+                    goto usage;
             }
         }
         else if( strcmp( p, "etm" ) == 0 )
@@ -1059,67 +1116,106 @@ int main( int argc, char *argv[] )
             {
                 case 0: opt.etm = MBEDTLS_SSL_ETM_DISABLED; break;
                 case 1: opt.etm = MBEDTLS_SSL_ETM_ENABLED; break;
-                default: goto usage;
+                default:
+                    mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
+                    goto usage;
             }
         }
         else if( strcmp( p, "tickets" ) == 0 )
         {
             opt.tickets = atoi( q );
             if( opt.tickets < 0 || opt.tickets > 1 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "ticket_timeout" ) == 0 )
         {
             opt.ticket_timeout = atoi( q );
             if( opt.ticket_timeout < 0 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=0)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "cache_max" ) == 0 )
         {
             opt.cache_max = atoi( q );
             if( opt.cache_max < 0 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=0)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "cache_timeout" ) == 0 )
         {
             opt.cache_timeout = atoi( q );
             if( opt.cache_timeout < 0 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=0)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "cookies" ) == 0 )
         {
             opt.cookies = atoi( q );
             if( opt.cookies < -1 || opt.cookies > 1)
+            {
+                mbedtls_printf( "Invalid value for option %s (must be -1..1)\n", p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "anti_replay" ) == 0 )
         {
             opt.anti_replay = atoi( q );
             if( opt.anti_replay < 0 || opt.anti_replay > 1)
+            {
+                mbedtls_printf( "Invalid value for option %s (must be 0 or 1)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "badmac_limit" ) == 0 )
         {
             opt.badmac_limit = atoi( q );
             if( opt.badmac_limit < 0 )
+            {
+                mbedtls_printf( "Invalid value for option %s (must be >=0)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "hs_timeout" ) == 0 )
         {
-            if( ( p = strchr( q, '-' ) ) == NULL )
-                goto usage;
-            *p++ = '\0';
+            char *r = strchr( q, '-' );
+            if( r == NULL )
+                goto hs_timeout_usage;
+            *r++ = '\0';
             opt.hs_to_min = atoi( q );
-            opt.hs_to_max = atoi( p );
+            opt.hs_to_max = atoi( r );
             if( opt.hs_to_min == 0 || opt.hs_to_max < opt.hs_to_min )
+            {
+            hs_timeout_usage:
+                mbedtls_printf( "Invalid value for option %s (must be MIN-MAX with 0<MIN<=MAX)\n",
+                                p );
                 goto usage;
+            }
         }
         else if( strcmp( p, "sni" ) == 0 )
         {
             opt.sni = q;
         }
         else
+        {
+            mbedtls_printf( "Unknown option: %s\n", p );
             goto usage;
+        }
     }
 
 #if defined(MBEDTLS_DEBUG_C)
