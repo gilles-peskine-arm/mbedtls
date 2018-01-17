@@ -2826,27 +2826,6 @@ static int ssl_get_ecdh_params_from_cert( mbedtls_ssl_context *ssl )
 #endif /* MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||
           MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED */
 
-#if defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED) && \
-    defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
-static int ssl_resume_server_key_exchange( mbedtls_ssl_context *ssl,
-                                            size_t *signature_len )
-{
-    size_t sig_max_len = ( ssl->out_buf + MBEDTLS_SSL_MAX_CONTENT_LEN
-                           - ( ssl->out_msg + ssl->out_msglen + 2 ) );
-    int ret = ssl->conf->f_async_resume( ssl->conf->p_async_connection_ctx,
-                                         ssl->handshake->p_async_operation_ctx,
-                                         ssl->out_msg + ssl->out_msglen + 2,
-                                         signature_len, sig_max_len );
-    if( ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
-    {
-        ssl->handshake->p_async_operation_ctx = NULL;
-    }
-    MBEDTLS_SSL_DEBUG_RET( 2, "ssl_resume_server_key_exchange", ret );
-    return( ret );
-}
-#endif /* defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED) &&
-          defined(MBEDTLS_SSL_ASYNC_PRIVATE_C) */
-
 /* Prepare the ServerKeyExchange message, up to and including
    calculating the signature if any, but excluding formatting the
    signature and sending the message. */
@@ -3216,7 +3195,7 @@ curve_matching_done:
                 /* act as if f_async_sign was null */
                 break;
             case 0:
-                return( ssl_resume_server_key_exchange( ssl, signature_len ) );
+                return( ssl_resume_async_sign( ssl, signature_len ) );
             case MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS:
                 return( MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
             default:
@@ -3292,7 +3271,7 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
     if( ssl->handshake->p_async_operation_ctx != NULL )
     {
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "resuming signature operation" ) );
-        ret = ssl_resume_server_key_exchange( ssl, &signature_len );
+        ret = ssl_resume_async_sign( ssl, &signature_len );
     }
     else
 #endif /* defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED) &&

@@ -8086,4 +8086,34 @@ int mbedtls_ssl_set_calc_verify_md( mbedtls_ssl_context *ssl, int md )
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 }
 
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C) &&                             \
+    defined(MBEDTLS_X509_CRT_PARSE_C) &&                                \
+    ( ( defined(MBEDTLS_SSL_SRV_C) &&                                   \
+        defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED) && \
+        defined(MBEDTLS_SSL_ASYNC_PRIVATE_C) ) ||                       \
+      ( defined(MBEDTLS_SSL_CLI_C) &&                                   \
+        ( defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) ||                  \
+          defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) ||              \
+          defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) ||             \
+          defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||            \
+          defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) ||           \
+          defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) ) ) )
+int ssl_resume_async_sign( mbedtls_ssl_context *ssl,
+                           size_t *signature_len )
+{
+    size_t sig_max_len = ( ssl->out_buf + MBEDTLS_SSL_MAX_CONTENT_LEN
+                           - ( ssl->out_msg + ssl->out_msglen + 2 ) );
+    int ret = ssl->conf->f_async_resume( ssl->conf->p_async_connection_ctx,
+                                         ssl->handshake->p_async_operation_ctx,
+                                         ssl->out_msg + ssl->out_msglen + 2,
+                                         signature_len, sig_max_len );
+    if( ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
+    {
+        ssl->handshake->p_async_operation_ctx = NULL;
+    }
+    MBEDTLS_SSL_DEBUG_RET( 2, "ssl_resume_async_sign", ret );
+    return( ret );
+}
+#endif
+
 #endif /* MBEDTLS_SSL_TLS_C */
