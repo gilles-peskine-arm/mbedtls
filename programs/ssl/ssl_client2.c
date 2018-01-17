@@ -63,6 +63,8 @@ int main( void )
 #include <stdlib.h>
 #include <string.h>
 
+#include "ssl_lib.h"
+
 #define MAX_REQUEST_SIZE      20000
 #define MAX_REQUEST_SIZE_STR "20000"
 
@@ -74,11 +76,14 @@ int main( void )
 #define DFL_DEBUG_LEVEL         0
 #define DFL_NBIO                0
 #define DFL_READ_TIMEOUT        0
+#define DFL_FAKE_ENTROPY        ""
 #define DFL_MAX_RESEND          0
 #define DFL_CA_FILE             ""
 #define DFL_CA_PATH             ""
 #define DFL_CRT_FILE            ""
 #define DFL_KEY_FILE            ""
+#define DFL_ASYNC_PRIVATE_DELAY ( -1 )
+#define DFL_ASYNC_PRIVATE_ERROR 0
 #define DFL_PSK                 ""
 #define DFL_PSK_IDENTITY        "Client_identity"
 #define DFL_ECJPAKE_PW          NULL
@@ -129,6 +134,15 @@ int main( void )
 #else
 #define USAGE_IO ""
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
+
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+#define USAGE_SSL_ASYNC \
+    "    async_private_delay=%%d  Asynchronous delay for key_file or preloaded key\n" \
+    "    async_private_error=%%d  Async callback error injection (default=0=none,\n" \
+    "                            -1=fallback, 1=start, 2=cancel, 3=resume, 4=pk)"
+#else
+#define USAGE_SSL_ASYNC ""
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
 
 #if defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED)
 #define USAGE_PSK                                                   \
@@ -252,6 +266,7 @@ int main( void )
     "                        options: 1 (non-blocking), 2 (added delays)\n" \
     "    read_timeout=%%d     default: 0 ms (no timeout)\n"    \
     "    max_resend=%%d       default: 0 (no resend on timeout)\n" \
+    "    fake_entropy=%%s     default: empty (use normal sources)" \
     "\n"                                                    \
     USAGE_DTLS                                              \
     "\n"                                                    \
@@ -304,12 +319,15 @@ struct options
     int nbio;                   /* should I/O be blocking?                  */
     uint32_t read_timeout;      /* timeout on mbedtls_ssl_read() in milliseconds    */
     int max_resend;             /* DTLS times to resend on read timeout     */
+    const char *fake_entropy;   /* string to use instead of entropy */
     const char *request_page;   /* page on server to request                */
     int request_size;           /* pad request with header to requested size */
     const char *ca_file;        /* the file with the CA certificate(s)      */
     const char *ca_path;        /* the path with the CA certificate(s) reside */
     const char *crt_file;       /* the file with the client certificate     */
     const char *key_file;       /* the file with the client key             */
+    int async_private_delay;    /* number of times f_async_resume needs to be called, or -1 for no async */
+    int async_private_error;    /* inject error in async private callback   */
     const char *psk;            /* the pre-shared key                       */
     const char *psk_identity;   /* the pre-shared key identity              */
     const char *ecjpake_pw;     /* the EC J-PAKE password                   */
@@ -355,6 +373,20 @@ static void my_debug( void *ctx, int level,
 
     mbedtls_fprintf( (FILE *) ctx, "%s:%04d: |%d| %s", basename, line, level, str );
     fflush(  (FILE *) ctx  );
+}
+
+/* Fake entropy source which is a constant string. Use this for
+ * reproducible tests. */
+static int fake_entropy_func( void *data,
+                              unsigned char *output, size_t output_len )
+{
+    const char *input = data;
+    size_t input_len = strlen( input );
+    size_t n;
+    for( n = 0; n + input_len < output_len; n += input_len )
+        memcpy( output + n, input, input_len );
+    memcpy( output + n, input, output_len - n );
+    return( 0 );
 }
 
 /*
@@ -473,6 +505,9 @@ int main( int argc, char *argv[] )
     mbedtls_x509_crt cacert;
     mbedtls_x509_crt clicert;
     mbedtls_pk_context pkey;
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+    ssl_async_key_context_t ssl_async_keys;
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
 #endif
     char *p, *q;
     const int *list;
@@ -522,6 +557,7 @@ int main( int argc, char *argv[] )
     opt.debug_level         = DFL_DEBUG_LEVEL;
     opt.nbio                = DFL_NBIO;
     opt.read_timeout        = DFL_READ_TIMEOUT;
+    opt.fake_entropy        = DFL_FAKE_ENTROPY;
     opt.max_resend          = DFL_MAX_RESEND;
     opt.request_page        = DFL_REQUEST_PAGE;
     opt.request_size        = DFL_REQUEST_SIZE;
@@ -529,6 +565,8 @@ int main( int argc, char *argv[] )
     opt.ca_path             = DFL_CA_PATH;
     opt.crt_file            = DFL_CRT_FILE;
     opt.key_file            = DFL_KEY_FILE;
+    opt.async_private_delay = DFL_ASYNC_PRIVATE_DELAY;
+    opt.async_private_error = DFL_ASYNC_PRIVATE_ERROR;
     opt.psk                 = DFL_PSK;
     opt.psk_identity        = DFL_PSK_IDENTITY;
     opt.ecjpake_pw          = DFL_ECJPAKE_PW;
@@ -602,6 +640,8 @@ int main( int argc, char *argv[] )
             if( opt.max_resend < 0 )
                 goto usage;
         }
+        else if ( strcmp( p, "fake_entropy" ) == 0 )
+            opt.fake_entropy = q;
         else if( strcmp( p, "request_page" ) == 0 )
             opt.request_page = q;
         else if( strcmp( p, "request_size" ) == 0 )
@@ -619,6 +659,20 @@ int main( int argc, char *argv[] )
             opt.crt_file = q;
         else if( strcmp( p, "key_file" ) == 0 )
             opt.key_file = q;
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+        else if( strcmp( p, "async_private_delay" ) == 0 )
+            opt.async_private_delay = atoi( q );
+        else if( strcmp( p, "async_private_error" ) == 0 )
+        {
+            int n = atoi( q );
+            if( n < 0 || n > SSL_ASYNC_INJECT_ERROR_MAX )
+            {
+                ret = 2;
+                goto usage;
+            }
+            opt.async_private_error = n;
+        }
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
         else if( strcmp( p, "psk" ) == 0 )
             opt.psk = q;
         else if( strcmp( p, "psk_identity" ) == 0 )
@@ -1050,10 +1104,24 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "\n  . Seeding the random number generator..." );
     fflush( stdout );
 
-    mbedtls_entropy_init( &entropy );
-    if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
-                               (const unsigned char *) pers,
-                               strlen( pers ) ) ) != 0 )
+    if( *opt.fake_entropy == 0 )
+    {
+        mbedtls_entropy_init( &entropy );
+        ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
+                                     mbedtls_entropy_func, &entropy,
+                                     (const unsigned char *) pers,
+                                     strlen( pers ) );
+    }
+    else
+    {
+        ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
+                                     fake_entropy_func,
+                                     (void*) opt.fake_entropy,
+                                     (const unsigned char *) pers,
+                                     strlen( pers ) );
+        mbedtls_printf( " fake, will use a constant seed for each connection\n" );
+    }
+    if( ret != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n", -ret );
         goto exit;
@@ -1305,7 +1373,29 @@ int main( int argc, char *argv[] )
     if( strcmp( opt.crt_file, "none" ) != 0 &&
         strcmp( opt.key_file, "none" ) != 0 )
     {
-        if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &clicert, &pkey ) ) != 0 )
+        mbedtls_pk_context *pk = &pkey;
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+        if( opt.async_private_delay >= 0 )
+        {
+            mbedtls_x509_crt *cert = &clicert;
+            if( opt.async_private_error == SSL_ASYNC_INJECT_ERROR_FALLBACK )
+                cert = NULL;
+            ssl_async_set_key( &ssl_async_keys, cert, &pkey,
+                               opt.async_private_delay );
+            if( opt.async_private_error != SSL_ASYNC_INJECT_ERROR_FALLBACK )
+                pk = NULL;
+            ssl_async_keys.inject_error = opt.async_private_error;
+            ssl_async_keys.f_rng = mbedtls_ctr_drbg_random;
+            ssl_async_keys.p_rng = &ctr_drbg;
+            mbedtls_ssl_conf_async_private_cb( &conf,
+                                               ssl_async_sign,
+                                               NULL,
+                                               ssl_async_resume,
+                                               ssl_async_cancel,
+                                               &ssl_async_keys );
+        }
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
+        if( ( ret = mbedtls_ssl_conf_own_cert( &conf, &clicert, pk ) ) != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_conf_own_cert returned %d\n\n", ret );
             goto exit;
@@ -1390,6 +1480,17 @@ int main( int argc, char *argv[] )
 
     while( ( ret = mbedtls_ssl_handshake( &ssl ) ) != 0 )
     {
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+        if( ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
+        {
+            if( ssl_async_keys.inject_error == SSL_ASYNC_INJECT_ERROR_CANCEL )
+            {
+                mbedtls_printf( " cancelling on injected error\n" );
+                goto exit;
+            }
+        }
+        else
+#endif
         if( ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n", -ret );
@@ -1482,7 +1583,8 @@ int main( int argc, char *argv[] )
         while( ( ret = mbedtls_ssl_renegotiate( &ssl ) ) != 0 )
         {
             if( ret != MBEDTLS_ERR_SSL_WANT_READ &&
-                ret != MBEDTLS_ERR_SSL_WANT_WRITE )
+                ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
+                ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
             {
                 mbedtls_printf( " failed\n  ! mbedtls_ssl_renegotiate returned %d\n\n", ret );
                 goto exit;
@@ -1534,7 +1636,8 @@ send_request:
                            <= 0 )
             {
                 if( ret != MBEDTLS_ERR_SSL_WANT_READ &&
-                    ret != MBEDTLS_ERR_SSL_WANT_WRITE )
+                    ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
+                    ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
                 {
                     mbedtls_printf( " failed\n  ! mbedtls_ssl_write returned -0x%x\n\n", -ret );
                     goto exit;
@@ -1546,7 +1649,8 @@ send_request:
     {
         do ret = mbedtls_ssl_write( &ssl, buf, len );
         while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-               ret == MBEDTLS_ERR_SSL_WANT_WRITE );
+               ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
+               ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
 
         if( ret < 0 )
         {
@@ -1585,7 +1689,8 @@ send_request:
             ret = mbedtls_ssl_read( &ssl, buf, len );
 
             if( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-                ret == MBEDTLS_ERR_SSL_WANT_WRITE )
+                ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
+                ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
                 continue;
 
             if( ret <= 0 )
@@ -1630,7 +1735,8 @@ send_request:
 
         do ret = mbedtls_ssl_read( &ssl, buf, len );
         while( ret == MBEDTLS_ERR_SSL_WANT_READ ||
-               ret == MBEDTLS_ERR_SSL_WANT_WRITE );
+               ret == MBEDTLS_ERR_SSL_WANT_WRITE ||
+               ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
 
         if( ret <= 0 )
         {
@@ -1678,7 +1784,8 @@ send_request:
         while( ( ret = mbedtls_ssl_handshake( &ssl ) ) != 0 )
         {
             if( ret != MBEDTLS_ERR_SSL_WANT_READ &&
-                ret != MBEDTLS_ERR_SSL_WANT_WRITE )
+                ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
+                ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
             {
                 mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
                 goto exit;
@@ -1761,7 +1868,8 @@ reconnect:
         while( ( ret = mbedtls_ssl_handshake( &ssl ) ) != 0 )
         {
             if( ret != MBEDTLS_ERR_SSL_WANT_READ &&
-                ret != MBEDTLS_ERR_SSL_WANT_WRITE )
+                ret != MBEDTLS_ERR_SSL_WANT_WRITE &&
+                ret != MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
             {
                 mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
                 goto exit;
@@ -1797,7 +1905,8 @@ exit:
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
     mbedtls_ctr_drbg_free( &ctr_drbg );
-    mbedtls_entropy_free( &entropy );
+    if( *opt.fake_entropy == 0 )
+        mbedtls_entropy_free( &entropy );
 
 #if defined(_WIN32)
     mbedtls_printf( "  + Press Enter to exit this program.\n" );

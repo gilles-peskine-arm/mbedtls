@@ -97,11 +97,14 @@ int main( void )
 #include <windows.h>
 #endif
 
+#include "ssl_lib.h"
+
 #define DFL_SERVER_ADDR         NULL
 #define DFL_SERVER_PORT         "4433"
 #define DFL_DEBUG_LEVEL         0
 #define DFL_NBIO                0
 #define DFL_READ_TIMEOUT        0
+#define DFL_FAKE_ENTROPY        ""
 #define DFL_CA_FILE             ""
 #define DFL_CA_PATH             ""
 #define DFL_CRT_FILE            ""
@@ -348,6 +351,7 @@ int main( void )
     "    nbio=%%d             default: 0 (blocking I/O)\n"  \
     "                        options: 1 (non-blocking), 2 (added delays)\n" \
     "    read_timeout=%%d     default: 0 ms (no timeout)\n"    \
+    "    fake_entropy=%%s     default: empty (use normal sources)" \
     "\n"                                                    \
     USAGE_DTLS                                              \
     USAGE_COOKIES                                           \
@@ -417,6 +421,7 @@ struct options
     int debug_level;            /* level of debugging                       */
     int nbio;                   /* should I/O be blocking?                  */
     uint32_t read_timeout;      /* timeout on mbedtls_ssl_read() in milliseconds    */
+    const char *fake_entropy;   /* string to use instead of entropy */
     const char *ca_file;        /* the file with the CA certificate(s)      */
     const char *ca_path;        /* the path with the CA certificate(s) reside */
     const char *crt_file;       /* the file with the server certificate     */
@@ -478,6 +483,20 @@ static void my_debug( void *ctx, int level,
 
     mbedtls_fprintf( (FILE *) ctx, "%s:%04d: |%d| %s", basename, line, level, str );
     fflush(  (FILE *) ctx  );
+}
+
+/* Fake entropy source which is a constant string. Use this for
+ * reproducible tests. */
+static int fake_entropy_func( void *data,
+                              unsigned char *output, size_t output_len )
+{
+    const char *input = data;
+    size_t input_len = strlen( input );
+    size_t n;
+    for( n = 0; n + input_len < output_len; n += input_len )
+        memcpy( output + n, input, input_len );
+    memcpy( output + n, input, output_len - n );
+    return( 0 );
 }
 
 /*
@@ -858,189 +877,6 @@ static int ssl_sig_hashes_for_test[] = {
 };
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
-#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
-typedef struct
-{
-    mbedtls_x509_crt *cert;
-    mbedtls_pk_context *pk;
-    unsigned delay;
-} ssl_async_key_slot_t;
-
-typedef enum {
-    SSL_ASYNC_INJECT_ERROR_NONE = 0,
-    SSL_ASYNC_INJECT_ERROR_START,
-    SSL_ASYNC_INJECT_ERROR_CANCEL,
-    SSL_ASYNC_INJECT_ERROR_RESUME,
-    SSL_ASYNC_INJECT_ERROR_PK
-#define SSL_ASYNC_INJECT_ERROR_MAX SSL_ASYNC_INJECT_ERROR_PK
-} ssl_async_inject_error_t;
-
-typedef struct
-{
-    ssl_async_key_slot_t slots[2];
-    size_t slots_used;
-    ssl_async_inject_error_t inject_error;
-    int (*f_rng)(void *, unsigned char *, size_t);
-    void *p_rng;
-} ssl_async_key_context_t;
-
-void ssl_async_set_key( ssl_async_key_context_t *ctx,
-                        mbedtls_x509_crt *cert,
-                        mbedtls_pk_context *pk,
-                        unsigned delay )
-{
-    ctx->slots[ctx->slots_used].cert = cert;
-    ctx->slots[ctx->slots_used].pk = pk;
-    ctx->slots[ctx->slots_used].delay = delay;
-    ++ctx->slots_used;
-}
-
-#define SSL_ASYNC_INPUT_MAX_SIZE 512
-typedef struct
-{
-    size_t slot;
-    mbedtls_md_type_t md_alg;
-    unsigned char input[SSL_ASYNC_INPUT_MAX_SIZE];
-    size_t input_len;
-    unsigned delay;
-} ssl_async_operation_context_t;
-
-static int ssl_async_start( void *connection_ctx_arg,
-                            void **p_operation_ctx,
-                            mbedtls_x509_crt *cert,
-                            const char *op_name,
-                            mbedtls_md_type_t md_alg,
-                            const unsigned char *input,
-                            size_t input_len )
-{
-    ssl_async_key_context_t *key_ctx = connection_ctx_arg;
-    size_t slot;
-    ssl_async_operation_context_t *ctx = NULL;
-    {
-        char dn[100];
-        mbedtls_x509_dn_gets( dn, sizeof( dn ), &cert->subject );
-        mbedtls_printf( "Async %s callback: looking for DN=%s\n", op_name, dn );
-    }
-    for( slot = 0; slot < key_ctx->slots_used; slot++ )
-    {
-        if( key_ctx->slots[slot].cert == cert )
-            break;
-    }
-    if( slot == key_ctx->slots_used )
-    {
-        mbedtls_printf( "Async %s callback: no key matches this certificate.\n",
-                        op_name );
-        return( MBEDTLS_ERR_SSL_HW_ACCEL_FALLTHROUGH );
-    }
-    mbedtls_printf( "Async %s callback: using key slot %zd, delay=%u.\n",
-                    op_name, slot, key_ctx->slots[slot].delay );
-    if( key_ctx->inject_error == SSL_ASYNC_INJECT_ERROR_START )
-    {
-        mbedtls_printf( "Async %s callback: injected error\n", op_name );
-        return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
-    }
-    if( input_len > SSL_ASYNC_INPUT_MAX_SIZE )
-        return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
-    ctx = mbedtls_calloc( 1, sizeof( *ctx ) );
-    if( ctx == NULL )
-        return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
-    ctx->slot = slot;
-    ctx->md_alg = md_alg;
-    memcpy( ctx->input, input, input_len );
-    ctx->input_len = input_len;
-    ctx->delay = key_ctx->slots[slot].delay;
-    *p_operation_ctx = ctx;
-    if( ctx->delay == 0 )
-        return( 0 );
-    else
-        return( MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
-}
-
-static int ssl_async_sign( void *connection_ctx_arg,
-                           void **p_operation_ctx,
-                           mbedtls_x509_crt *cert,
-                           mbedtls_md_type_t md_alg,
-                           const unsigned char *hash,
-                           size_t hash_len )
-{
-    return( ssl_async_start( connection_ctx_arg, p_operation_ctx, cert,
-                             "sign", md_alg,
-                             hash, hash_len ) );
-}
-
-static int ssl_async_decrypt( void *connection_ctx_arg,
-                              void **p_operation_ctx,
-                              mbedtls_x509_crt *cert,
-                              const unsigned char *input,
-                              size_t input_len )
-{
-    return( ssl_async_start( connection_ctx_arg, p_operation_ctx, cert,
-                             "decrypt", MBEDTLS_MD_NONE,
-                             input, input_len ) );
-}
-
-static int ssl_async_resume( void *connection_ctx_arg,
-                             void *operation_ctx_arg,
-                             unsigned char *output,
-                             size_t *output_len,
-                             size_t output_size )
-{
-    ssl_async_operation_context_t *ctx = operation_ctx_arg;
-    ssl_async_key_context_t *connection_ctx = connection_ctx_arg;
-    ssl_async_key_slot_t *key_slot = &connection_ctx->slots[ctx->slot];
-    int ret;
-    const char *op_name;
-    if( connection_ctx->inject_error == SSL_ASYNC_INJECT_ERROR_RESUME )
-    {
-        mbedtls_printf( "Async resume callback: injected error\n" );
-        return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
-    }
-    if( ctx->delay > 0 )
-    {
-        --ctx->delay;
-        mbedtls_printf( "Async resume (slot %zd): call %u more times.\n",
-                        ctx->slot, ctx->delay );
-        return( MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
-    }
-    if( ctx->md_alg == MBEDTLS_MD_NONE )
-    {
-        op_name = "decrypt";
-        ret = mbedtls_pk_decrypt( key_slot->pk,
-                                  ctx->input, ctx->input_len,
-                                  output, output_len, output_size,
-                                  connection_ctx->f_rng, connection_ctx->p_rng );
-    }
-    else
-    {
-        op_name = "sign";
-        ret = mbedtls_pk_sign( key_slot->pk,
-                               ctx->md_alg,
-                               ctx->input, ctx->input_len,
-                               output, output_len,
-                               connection_ctx->f_rng, connection_ctx->p_rng );
-    }
-    if( connection_ctx->inject_error == SSL_ASYNC_INJECT_ERROR_PK )
-    {
-        mbedtls_printf( "Async resume callback: %s done but injected error\n",
-                        op_name );
-        return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
-    }
-    mbedtls_printf( "Async resume (slot %zd): %s done, status=%d.\n",
-                    ctx->slot, op_name, ret );
-    mbedtls_free( ctx );
-    return( ret );
-}
-
-static void ssl_async_cancel( void *connection_ctx_arg,
-                              void *operation_ctx_arg )
-{
-    ssl_async_operation_context_t *ctx = operation_ctx_arg;
-    (void) connection_ctx_arg;
-    mbedtls_printf( "Async cancel callback.\n" );
-    mbedtls_free( ctx );
-}
-#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
-
 int main( int argc, char *argv[] )
 {
     int ret = 0, len, written, frags, exchanges_left;
@@ -1178,6 +1014,7 @@ int main( int argc, char *argv[] )
     opt.debug_level         = DFL_DEBUG_LEVEL;
     opt.nbio                = DFL_NBIO;
     opt.read_timeout        = DFL_READ_TIMEOUT;
+    opt.fake_entropy        = DFL_FAKE_ENTROPY;
     opt.ca_file             = DFL_CA_FILE;
     opt.ca_path             = DFL_CA_PATH;
     opt.crt_file            = DFL_CRT_FILE;
@@ -1260,6 +1097,8 @@ int main( int argc, char *argv[] )
         }
         else if( strcmp( p, "read_timeout" ) == 0 )
             opt.read_timeout = atoi( q );
+        else if ( strcmp( p, "fake_entropy" ) == 0 )
+            opt.fake_entropy = q;
         else if( strcmp( p, "ca_file" ) == 0 )
             opt.ca_file = q;
         else if( strcmp( p, "ca_path" ) == 0 )
@@ -1755,10 +1594,24 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "\n  . Seeding the random number generator..." );
     fflush( stdout );
 
-    mbedtls_entropy_init( &entropy );
-    if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, &entropy,
-                               (const unsigned char *) pers,
-                               strlen( pers ) ) ) != 0 )
+    if( *opt.fake_entropy == 0 )
+    {
+        mbedtls_entropy_init( &entropy );
+        ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
+                                     mbedtls_entropy_func, &entropy,
+                                     (const unsigned char *) pers,
+                                     strlen( pers ) );
+    }
+    else
+    {
+        ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
+                                     fake_entropy_func,
+                                     (void*) opt.fake_entropy,
+                                     (const unsigned char *) pers,
+                                     strlen( pers ) );
+        mbedtls_printf( " fake, will use a constant seed for each connection\n" );
+    }
+    if( ret != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n", -ret );
         goto exit;
@@ -2311,6 +2164,20 @@ reset:
     }
 #endif
 
+    if( *opt.fake_entropy != 0 )
+    {
+        /* Use the same DRBG state for each connection, to enable
+         * reproducible tests. Note that reproducible tests also
+         * require unsetting MBEDTLS_HAVE_TIME. */
+        mbedtls_ctr_drbg_free( &ctr_drbg );
+        mbedtls_ctr_drbg_init( &ctr_drbg );
+        mbedtls_ctr_drbg_seed( &ctr_drbg,
+                               fake_entropy_func,
+                               (void*) opt.fake_entropy,
+                               (const unsigned char *) pers,
+                               strlen( pers ) );
+    }
+
     if( ret == MBEDTLS_ERR_SSL_CLIENT_RECONNECT )
     {
         mbedtls_printf( "  ! Client initiated reconnection from same port\n" );
@@ -2780,7 +2647,8 @@ exit:
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
     mbedtls_ctr_drbg_free( &ctr_drbg );
-    mbedtls_entropy_free( &entropy );
+    if( *opt.fake_entropy == 0 )
+        mbedtls_entropy_free( &entropy );
 
 #if defined(MBEDTLS_SSL_CACHE_C)
     mbedtls_ssl_cache_free( &cache );

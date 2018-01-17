@@ -193,6 +193,9 @@ random/gen_random_ctr_drbg$(EXEXT): random/gen_random_ctr_drbg.c $(DEP)
 	echo "  CC    random/gen_random_ctr_drbg.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) random/gen_random_ctr_drbg.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
+ssl/ssl_client2$(EXEXT): ssl/ssl_lib.h ssl/ssl_lib.c
+ssl/ssl_server2$(EXEXT): ssl/ssl_lib.h ssl/ssl_lib.c
+
 ssl/dtls_client$(EXEXT): ssl/dtls_client.c $(DEP)
 	echo "  CC    ssl/dtls_client.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/dtls_client.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
@@ -207,7 +210,7 @@ ssl/ssl_client1$(EXEXT): ssl/ssl_client1.c $(DEP)
 
 ssl/ssl_client2$(EXEXT): ssl/ssl_client2.c $(DEP)
 	echo "  CC    ssl/ssl_client2.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client2.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_lib.c ssl/ssl_client2.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 ssl/ssl_server$(EXEXT): ssl/ssl_server.c $(DEP)
 	echo "  CC    ssl/ssl_server.c"
@@ -215,7 +218,7 @@ ssl/ssl_server$(EXEXT): ssl/ssl_server.c $(DEP)
 
 ssl/ssl_server2$(EXEXT): ssl/ssl_server2.c $(DEP)
 	echo "  CC    ssl/ssl_server2.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_server2.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_lib.c ssl/ssl_server2.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 ssl/ssl_fork_server$(EXEXT): ssl/ssl_fork_server.c $(DEP)
 	echo "  CC    ssl/ssl_fork_server.c"
