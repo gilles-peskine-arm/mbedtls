@@ -131,6 +131,7 @@ const mbedtls_cipher_info_t *mbedtls_cipher_info_from_values( const mbedtls_ciph
 void mbedtls_cipher_init( mbedtls_cipher_context_t *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx )
@@ -158,6 +159,7 @@ int mbedtls_cipher_setup( mbedtls_cipher_context_t *ctx, const mbedtls_cipher_in
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
     memset( ctx, 0, sizeof( mbedtls_cipher_context_t ) );
+    ctx->inited = 'y';
 
     if( NULL == ( ctx->cipher_ctx = cipher_info->base->ctx_alloc_func() ) )
         return( MBEDTLS_ERR_CIPHER_ALLOC_FAILED );
@@ -256,6 +258,7 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
 {
     if( NULL == ctx || NULL == ctx->cipher_info )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    CHECK_INITED( ctx );
 
     if( MBEDTLS_MODE_GCM == ctx->cipher_info->mode )
     {
@@ -277,6 +280,7 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
     {
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     }
+    CHECK_INITED( ctx );
 
     *olen = 0;
     block_size = mbedtls_cipher_get_block_size( ctx );

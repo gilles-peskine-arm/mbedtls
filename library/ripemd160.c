@@ -77,6 +77,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 void mbedtls_ripemd160_init( mbedtls_ripemd160_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_ripemd160_context ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_ripemd160_free( mbedtls_ripemd160_context *ctx )
@@ -98,6 +99,7 @@ void mbedtls_ripemd160_clone( mbedtls_ripemd160_context *dst,
  */
 void mbedtls_ripemd160_starts( mbedtls_ripemd160_context *ctx )
 {
+    CHECK_INITED( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -116,6 +118,7 @@ void mbedtls_ripemd160_process( mbedtls_ripemd160_context *ctx, const unsigned c
 {
     uint32_t A, B, C, D, E, Ap, Bp, Cp, Dp, Ep, X[16];
 
+    CHECK_INITED( ctx );
     GET_UINT32_LE( X[ 0], data,  0 );
     GET_UINT32_LE( X[ 1], data,  4 );
     GET_UINT32_LE( X[ 2], data,  8 );

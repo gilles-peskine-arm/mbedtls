@@ -251,6 +251,7 @@ typedef struct {
     /** CMAC Specific context */
     mbedtls_cmac_context_t *cmac_ctx;
 #endif
+    int inited;
 } mbedtls_cipher_context_t;
 
 /**

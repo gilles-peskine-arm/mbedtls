@@ -78,6 +78,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 void mbedtls_sha1_init( mbedtls_sha1_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_sha1_context ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_sha1_free( mbedtls_sha1_context *ctx )
@@ -99,6 +100,7 @@ void mbedtls_sha1_clone( mbedtls_sha1_context *dst,
  */
 void mbedtls_sha1_starts( mbedtls_sha1_context *ctx )
 {
+    CHECK_INITED( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -114,6 +116,7 @@ void mbedtls_sha1_process( mbedtls_sha1_context *ctx, const unsigned char data[6
 {
     uint32_t temp, W[16], A, B, C, D, E;
 
+    CHECK_INITED( ctx );
     GET_UINT32_BE( W[ 0], data,  0 );
     GET_UINT32_BE( W[ 1], data,  4 );
     GET_UINT32_BE( W[ 2], data,  8 );

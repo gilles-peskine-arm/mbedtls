@@ -81,6 +81,7 @@ do {                                                    \
 void mbedtls_sha256_init( mbedtls_sha256_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_sha256_context ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_sha256_free( mbedtls_sha256_context *ctx )
@@ -102,6 +103,7 @@ void mbedtls_sha256_clone( mbedtls_sha256_context *dst,
  */
 void mbedtls_sha256_starts( mbedtls_sha256_context *ctx, int is224 )
 {
+    CHECK_INITED( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -185,6 +187,7 @@ void mbedtls_sha256_process( mbedtls_sha256_context *ctx, const unsigned char da
     uint32_t A[8];
     unsigned int i;
 
+    CHECK_INITED( ctx );
     for( i = 0; i < 8; i++ )
         A[i] = ctx->state[i];
 

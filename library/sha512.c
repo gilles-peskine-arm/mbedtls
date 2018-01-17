@@ -95,6 +95,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 void mbedtls_sha512_init( mbedtls_sha512_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_sha512_context ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_sha512_free( mbedtls_sha512_context *ctx )
@@ -116,6 +117,7 @@ void mbedtls_sha512_clone( mbedtls_sha512_context *dst,
  */
 void mbedtls_sha512_starts( mbedtls_sha512_context *ctx, int is384 )
 {
+    CHECK_INITED( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -221,6 +223,7 @@ void mbedtls_sha512_process( mbedtls_sha512_context *ctx, const unsigned char da
     d += temp1; h = temp1 + temp2;              \
 }
 
+    CHECK_INITED( ctx );
     for( i = 0; i < 16; i++ )
     {
         GET_UINT64_BE( W[i], data, i << 3 );

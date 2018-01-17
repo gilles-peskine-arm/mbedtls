@@ -324,4 +324,9 @@ void mbedtls_platform_teardown( mbedtls_platform_context *ctx )
 }
 #endif /* MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT */
 
+void mbedtls_barf( void )
+{
+    mbedtls_exit( 'y' );
+}
+
 #endif /* MBEDTLS_PLATFORM_C */

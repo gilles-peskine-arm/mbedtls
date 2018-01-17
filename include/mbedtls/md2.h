@@ -48,6 +48,7 @@ typedef struct
     unsigned char state[48];    /*!< intermediate digest state  */
     unsigned char buffer[16];   /*!< data block being processed */
     size_t left;                /*!< amount of data in buffer   */
+    int inited;
 }
 mbedtls_md2_context;
 

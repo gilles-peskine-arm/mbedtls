@@ -49,6 +49,7 @@ typedef struct
     uint64_t state[8];          /*!< intermediate digest state  */
     unsigned char buffer[128];  /*!< data block being processed */
     int is384;                  /*!< 0 => SHA-512, else SHA-384 */
+    int inited;
 }
 mbedtls_sha512_context;
 

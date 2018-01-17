@@ -340,4 +340,19 @@ void mbedtls_platform_teardown( mbedtls_platform_context *ctx );
 }
 #endif
 
+void mbedtls_barf( void );
+
+#define CHECK_INITED( ctx )                                     \
+    do                                                          \
+    {                                                           \
+        if( ( ctx )->inited != 'y' )                            \
+        {                                                       \
+            mbedtls_printf( "%s:%d:%s: %s->inited=%d !!\n",     \
+                            __FILE__, __LINE__, __FUNCTION__,   \
+                            #ctx, ( ctx )->inited );            \
+            mbedtls_barf( );                                    \
+        }                                                       \
+    }                                                           \
+    while( 0 )                                                  \
+
 #endif /* platform.h */

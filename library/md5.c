@@ -78,6 +78,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 void mbedtls_md5_init( mbedtls_md5_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_md5_context ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_md5_free( mbedtls_md5_context *ctx )
@@ -99,6 +100,7 @@ void mbedtls_md5_clone( mbedtls_md5_context *dst,
  */
 void mbedtls_md5_starts( mbedtls_md5_context *ctx )
 {
+    CHECK_INITED( ctx );
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -113,6 +115,7 @@ void mbedtls_md5_process( mbedtls_md5_context *ctx, const unsigned char data[64]
 {
     uint32_t X[16], A, B, C, D;
 
+    CHECK_INITED( ctx );
     GET_UINT32_LE( X[ 0], data,  0 );
     GET_UINT32_LE( X[ 1], data,  4 );
     GET_UINT32_LE( X[ 2], data,  8 );

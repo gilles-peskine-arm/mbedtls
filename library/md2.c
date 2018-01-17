@@ -86,6 +86,7 @@ static const unsigned char PI_SUBST[256] =
 void mbedtls_md2_init( mbedtls_md2_context *ctx )
 {
     memset( ctx, 0, sizeof( mbedtls_md2_context ) );
+    ctx->inited = 'y';
 }
 
 void mbedtls_md2_free( mbedtls_md2_context *ctx )
@@ -107,6 +108,7 @@ void mbedtls_md2_clone( mbedtls_md2_context *dst,
  */
 void mbedtls_md2_starts( mbedtls_md2_context *ctx )
 {
+    CHECK_INITED( ctx );
     memset( ctx->cksum, 0, 16 );
     memset( ctx->state, 0, 46 );
     memset( ctx->buffer, 0, 16 );
@@ -119,6 +121,7 @@ void mbedtls_md2_process( mbedtls_md2_context *ctx )
     int i, j;
     unsigned char t = 0;
 
+    CHECK_INITED( ctx );
     for( i = 0; i < 16; i++ )
     {
         ctx->state[i + 16] = ctx->buffer[i];
