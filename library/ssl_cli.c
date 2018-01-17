@@ -3130,12 +3130,6 @@ static int ssl_prepare_certificate_verify( mbedtls_ssl_context *ssl,
     /* At this point, we do want to generate a CertificateVerify message. */
     ssl->out_msglen = 4; /* leave room for the header */
 
-    if( mbedtls_ssl_own_key( ssl ) == NULL )
-    {
-        MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no private key for certificate" ) );
-        return( MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED );
-    }
-
     /*
      * Make an RSA signature of the handshake digests
      */
@@ -3203,7 +3197,7 @@ static int ssl_prepare_certificate_verify( mbedtls_ssl_context *ssl,
             ssl->out_msg[ssl->out_msglen++] = MBEDTLS_SSL_HASH_SHA256;
         }
         ssl->out_msg[ssl->out_msglen++] =
-            mbedtls_ssl_sig_from_pk( mbedtls_ssl_own_key( ssl ) );
+            mbedtls_ssl_sig_from_pk( &mbedtls_ssl_own_cert( ssl )->pk );
 
         hashlen = mbedtls_md_get_size( mbedtls_md_info_from_type( md_alg ) );
     }
@@ -3212,6 +3206,36 @@ static int ssl_prepare_certificate_verify( mbedtls_ssl_context *ssl,
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
         return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
+    }
+
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+    if( ssl->conf->f_async_sign_start != NULL )
+    {
+        ret = ssl->conf->f_async_sign_start(
+            ssl->conf->p_async_connection_ctx,
+            &ssl->handshake->p_async_operation_ctx,
+            mbedtls_ssl_own_cert( ssl ),
+            md_alg, hash_start, hashlen );
+        switch( ret )
+        {
+        case MBEDTLS_ERR_SSL_HW_ACCEL_FALLTHROUGH:
+            /* act as if f_async_sign was null */
+            break;
+        case 0:
+            return( ssl_resume_async_sign( ssl, signature_len ) );
+        case MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS:
+            return( MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS );
+        default:
+            MBEDTLS_SSL_DEBUG_RET( 1, "f_async_sign", ret );
+            return( ret );
+        }
+    }
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
+
+    if( mbedtls_ssl_own_key( ssl ) == NULL )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "got no private key for certificate" ) );
+        return( MBEDTLS_ERR_SSL_PRIVATE_KEY_REQUIRED );
     }
 
     if( ( ret = mbedtls_pk_sign( mbedtls_ssl_own_key( ssl ), md_alg, hash_start, hashlen,
@@ -3232,11 +3256,25 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write certificate verify" ) );
 
-    ssl->out_msglen = 0;
-    ret = ssl_prepare_certificate_verify( ssl, &signature_len );
+#if defined(MBEDTLS_SSL_ASYNC_PRIVATE_C)
+    /* If we have already prepared the message and there is an ongoing
+       signature operation, resume signing. */
+    if( ssl->handshake->p_async_operation_ctx != NULL )
+    {
+        MBEDTLS_SSL_DEBUG_MSG( 2, ( "resuming signature operation" ) );
+        ret = ssl_resume_async_sign( ssl, &signature_len );
+    }
+    else
+#endif /* MBEDTLS_SSL_ASYNC_PRIVATE_C */
+    {
+        ret = ssl_prepare_certificate_verify( ssl, &signature_len );
+    }
     if( ret != 0 )
     {
-        ssl->out_msglen = 0;
+        if( ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
+            MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= write certificate verify (pending)" ) );
+        else
+            ssl->out_msglen = 0;
         return( ret );
     }
     if( ssl->out_msglen == 0 )
