@@ -138,6 +138,98 @@ static size_t pkcs11_pk_signature_size( const void *ctx_arg )
     }
 }
 
+static int pkcs11_sign_core( mbedtls_pk_pkcs11_context_t *ctx,
+                             CK_MECHANISM_TYPE mechanism_type,
+                             const unsigned char *payload, size_t payload_len,
+                             unsigned char *sig, size_t *sig_len,
+                             size_t sig_size )
+{
+    CK_ULONG ck_sig_len = sig_size;
+    CK_MECHANISM mechanism = {mechanism_type, NULL_PTR, 0};
+    CK_RV rv;
+    rv = C_SignInit( ctx->hSession, &mechanism, ctx->hPrivateKey );
+    if( rv != CKR_OK )
+        goto exit;
+    rv = C_Sign( ctx->hSession, (CK_BYTE_PTR) payload, payload_len,
+                 sig, &ck_sig_len );
+    if( rv != CKR_OK )
+        goto exit;
+    *sig_len = ck_sig_len;
+exit:
+    return( pkcs11_err_to_mbedtls_pk_err( rv ) );
+}
+
+#if defined(MBEDTLS_RSA_C)
+static int pkcs11_sign_rsa( mbedtls_pk_pkcs11_context_t *ctx,
+                            const unsigned char *digest_info,
+                            size_t digest_info_len,
+                            unsigned char *sig, size_t *sig_len )
+{
+    return( pkcs11_sign_core( ctx, CKM_RSA_PKCS,
+                              digest_info, digest_info_len,
+                              sig, sig_len, ( ctx->bit_length + 7 ) / 8 ) );
+}
+#endif /* MBEDTLS_RSA_C */
+
+#if defined(MBEDTLS_ECDSA_C)
+static int pkcs11_sign_ecdsa( mbedtls_pk_pkcs11_context_t *ctx,
+                              const unsigned char *hash, size_t hash_len,
+                              unsigned char *sig, size_t *sig_len )
+{
+    int ret;
+    uint16_t byte_len = ( ( ctx->bit_length + 7 ) / 8 );
+    size_t sig_size = MBEDTLS_ECDSA_MAX_SIG_LEN( ctx->bit_length );
+    mbedtls_mpi r, s;
+
+    ret = pkcs11_sign_core( ctx, CKM_ECDSA,
+                            hash, hash_len,
+                            sig, sig_len, sig_size );
+    if( ret != 0 )
+        return( ret );
+
+    /* The signature from the token contains r and s concatenated,
+     * each in the form of a big-endian byte sequence, with r and s
+     * having the same length as the base point.
+     *
+     * A standard ECDSA signature is encoded in ASN.1:
+     *   SEQUENCE {
+     *     r INTEGER,
+     *     s INTEGER
+     *   }
+     *
+     * Perform the conversion using existing utility functions,
+     * with temporary bignums.
+     */
+    mbedtls_mpi_init( &r );
+    mbedtls_mpi_init( &s );
+    if( *sig_len != 2 * byte_len )
+    {
+        /* Bad data from the token */
+        ret = MBEDTLS_ERR_PK_INVALID_SIGNATURE;
+        goto exit;
+    }
+    if( mbedtls_mpi_read_binary( &r, sig, byte_len ) != 0 ||
+        mbedtls_mpi_read_binary( &s, sig + byte_len, byte_len ) != 0 )
+    {
+        ret = MBEDTLS_ERR_PK_ALLOC_FAILED;
+        goto exit;
+    }
+    /* The signature buffer is guaranteed to have enough room for
+       the encoded signature by the pk_sign interface. */
+    if( mbedtls_ecdsa_signature_to_asn1( &r, &s, sig, sig_len, sig_size ) != 0 )
+    {
+        /* Bad data from the token */
+        ret = MBEDTLS_ERR_PK_INVALID_SIGNATURE;
+        goto exit;
+    }
+
+exit:
+    mbedtls_mpi_free( &r );
+    mbedtls_mpi_free( &s );
+    return( ret );
+}
+#endif /* MBEDTLS_ECDSA_C */
+
 static int pkcs11_sign( void *ctx_arg,
                         mbedtls_md_type_t md_alg,
                         const unsigned char *hash, size_t hash_len,
@@ -146,9 +238,9 @@ static int pkcs11_sign( void *ctx_arg,
                         void *p_rng )
 {
     mbedtls_pk_pkcs11_context_t *ctx = ctx_arg;
-    CK_RV rv;
-    CK_MECHANISM mechanism = {0, NULL_PTR, 0};
-    CK_ULONG ck_sig_len;
+    int ret;
+
+    *sig_len = 0;
 
     /* This function takes size_t arguments but the underlying layer
        takes unsigned long. Either type may be smaller than the other.
@@ -163,118 +255,70 @@ static int pkcs11_sign( void *ctx_arg,
     {
 #if defined(MBEDTLS_RSA_C)
     case MBEDTLS_PK_RSA:
-        ck_sig_len = ( ctx->bit_length + 7 ) / 8;
-        // FIXME: these mechanisms perform hashing as well as signing.
-        // But here we get the hash as input. So we need to invoke
-        // CKM_RSA_PKCS. But CKM_RSA_PKCS doesn't perform the hash
-        // encoding, only a part of the padding.
-        switch( md_alg )
+        /* There is no mechanism in PKCS#11 that computes a PKCS#1 v1.5
+         * signature from a hash value and a hash type, only mechanisms
+         * that include the hash calculation and a mechanism that expects
+         * a DigestInfo (encoded hash that isn't padded). So we use the
+         * mechanism that expects a DigestInfo, and calculate the DigestInfo
+         * ourselves if needed. */
+        if( md_alg == MBEDTLS_MD_NONE )
         {
-        case MBEDTLS_MD_MD5:
-            mechanism.mechanism = CKM_MD5_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA1:
-            mechanism.mechanism = CKM_SHA1_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA256:
-            mechanism.mechanism = CKM_SHA256_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA384:
-            mechanism.mechanism = CKM_SHA384_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA512:
-            mechanism.mechanism = CKM_SHA512_RSA_PKCS;
-            break;
-        default:
-            return( MBEDTLS_ERR_PK_INVALID_ALG );
+            ret = pkcs11_sign_rsa( ctx, hash, hash_len, sig, sig_len );
+        }
+        else
+        {
+            unsigned char digest_info[MBEDTLS_RSA_PKCS1_DIGESTINFO_MAX_SIZE];
+            unsigned char *p = digest_info + sizeof( digest_info );
+            size_t digest_info_len;
+            if( mbedtls_rsa_emsa_pkcs1_v15_encode_digestinfo(
+                    &p, digest_info,
+                    md_alg, hash, hash_len ) != 0 )
+                return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
+            digest_info_len = digest_info + sizeof( digest_info ) - p;
+            ret = pkcs11_sign_rsa( ctx, p, digest_info_len, sig, sig_len );
         }
         break;
 #endif /* MBEDTLS_RSA_C */
 #if defined(MBEDTLS_ECDSA_C)
     case MBEDTLS_PK_ECKEY:
-        ck_sig_len = MBEDTLS_ECDSA_MAX_SIG_LEN( ctx->bit_length );
-        mechanism.mechanism = CKM_ECDSA;
+        ret = pkcs11_sign_ecdsa( ctx, hash, hash_len, sig, sig_len );
         break;
 #endif /* MBEDTLS_ECDSA_C */
     default:
         return( MBEDTLS_ERR_PK_UNKNOWN_PK_ALG );
     }
 
-    rv = C_SignInit( ctx->hSession, &mechanism, ctx->hPrivateKey );
-    if( rv != CKR_OK )
-        goto exit;
-    rv = C_Sign( ctx->hSession, (CK_BYTE_PTR) hash, hash_len,
-                 sig, &ck_sig_len );
-    if( rv != CKR_OK )
-        goto exit;
+    if( ret != 0 )
+        memset( sig, 0, *sig_len );
+    return( ret );
+}
 
-    if( mechanism.mechanism == CKM_ECDSA )
-    {
-        /* The signature from the token contains r and s concatenated,
-         * each in the form of a big-endian byte sequence, with r and s
-         * having the same length as the base point.
-         *
-         * A standard ECDSA signature is encoded in ASN.1:
-         *   SEQUENCE {
-         *     r INTEGER,
-         *     s INTEGER
-         *   }
-         *
-         * Perform the conversion using existing utility functions,
-         * with temporary bignums.
-         */
-        uint16_t byte_len = ( ( ctx->bit_length + 7 ) / 8 );
-        size_t sig_size = MBEDTLS_ECDSA_MAX_SIG_LEN( ctx->bit_length );
-        mbedtls_mpi r, s;
-        mbedtls_mpi_init( &r );
-        mbedtls_mpi_init( &s );
-        rv = CKR_OK;
-        if( ck_sig_len != 2 * byte_len )
-        {
-            /* Bad data from the token */
-            rv = CKR_GENERAL_ERROR;
-            goto ecdsa_exit;
-        }
-        if( mbedtls_mpi_read_binary( &r, sig, byte_len ) != 0 ||
-            mbedtls_mpi_read_binary( &s, sig + byte_len, byte_len ) != 0 )
-        {
-            rv = CKR_HOST_MEMORY;
-            goto ecdsa_exit;
-        }
-        /* The signature buffer is guaranteed to have enough room for
-           the encoded signature by the pk_sign interface. */
-        if( mbedtls_ecdsa_signature_to_asn1( &r, &s, sig, sig_len, sig_size ) != 0 )
-        {
-            rv = CKR_GENERAL_ERROR;
-            goto ecdsa_exit;
-        }
-    ecdsa_exit:
-        mbedtls_mpi_free( &r );
-        mbedtls_mpi_free( &s );
-        if( rv != CKR_OK )
-            goto exit;
-    }
-    else
-    {
-        *sig_len = ck_sig_len;
-    }
+static int pkcs11_verify_core( mbedtls_pk_pkcs11_context_t *ctx,
+                               CK_MECHANISM_TYPE mechanism_type,
+                               const unsigned char *payload, size_t payload_len,
+                               const unsigned char *sig, size_t sig_len )
+{
+    CK_MECHANISM mechanism = {mechanism_type, NULL_PTR, 0};
+    CK_RV rv;
+
+    rv = C_VerifyInit( ctx->hSession, &mechanism, ctx->hPublicKey );
+    if( rv != CKR_OK )
+        goto exit;
+    rv = C_Verify( ctx->hSession, (CK_BYTE_PTR) payload, payload_len,
+                   (CK_BYTE_PTR) sig, sig_len );
+    if( rv != CKR_OK )
+        goto exit;
 
 exit:
-    if( rv != CKR_OK )
-        memset( sig, 0, ck_sig_len );
     return( pkcs11_err_to_mbedtls_pk_err( rv ) );
 }
 
 static int pkcs11_verify( void *ctx_arg,
-                        mbedtls_md_type_t md_alg,
-                        const unsigned char *hash, size_t hash_len,
-                        const unsigned char *sig, size_t sig_len)
+                          mbedtls_md_type_t md_alg,
+                          const unsigned char *hash, size_t hash_len,
+                          const unsigned char *sig, size_t sig_len)
 {
     mbedtls_pk_pkcs11_context_t *ctx = ctx_arg;
-    CK_RV rv;
-    CK_MECHANISM mechanism = {0, NULL_PTR, 0};
-    unsigned char *decoded_sig = NULL;
-    size_t decoded_sig_len;
 
     /* This function takes size_t arguments but the underlying layer
        takes unsigned long. Either type may be smaller than the other.
@@ -287,63 +331,55 @@ static int pkcs11_verify( void *ctx_arg,
     {
 #if defined(MBEDTLS_RSA_C)
     case MBEDTLS_PK_RSA:
-        switch( md_alg )
+        /* There is no mechanism in PKCS#11 that computes a PKCS#1 v1.5
+         * signature from a hash value and a hash type, only mechanisms
+         * that include the hash calculation and a mechanism that expects
+         * a DigestInfo (encoded hash that isn't padded). So we use the
+         * mechanism that expects a DigestInfo, and calculate the DigestInfo
+         * ourselves if needed. */
+        if( md_alg == MBEDTLS_MD_NONE )
         {
-        case MBEDTLS_MD_MD5:
-            mechanism.mechanism = CKM_MD5_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA1:
-            mechanism.mechanism = CKM_SHA1_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA256:
-            mechanism.mechanism = CKM_SHA256_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA384:
-            mechanism.mechanism = CKM_SHA384_RSA_PKCS;
-            break;
-        case MBEDTLS_MD_SHA512:
-            mechanism.mechanism = CKM_SHA512_RSA_PKCS;
-            break;
-        default:
-            return( MBEDTLS_ERR_PK_INVALID_ALG );
+            return( pkcs11_verify_core( ctx, CKM_RSA_PKCS,
+                                        hash, hash_len,
+                                        sig, sig_len ) );
+        }
+        else
+        {
+            unsigned char digest_info[MBEDTLS_RSA_PKCS1_DIGESTINFO_MAX_SIZE];
+            unsigned char *p = digest_info + sizeof( digest_info );
+            size_t digest_info_len;
+            if( mbedtls_rsa_emsa_pkcs1_v15_encode_digestinfo(
+                    &p, digest_info,
+                    md_alg, hash, hash_len ) != 0 )
+                return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
+            digest_info_len = digest_info + sizeof( digest_info ) - p;
+            return( pkcs11_verify_core( ctx, CKM_RSA_PKCS,
+                                        p, digest_info_len,
+                                        sig, sig_len ) );
         }
         break;
 #endif /* MBEDTLS_RSA_C */
 #if defined(MBEDTLS_ECDSA_C)
     case MBEDTLS_PK_ECKEY:
-        mechanism.mechanism = CKM_ECDSA;
+    {
+        uint16_t byte_len = ( ( ctx->bit_length + 7 ) / 8 );
+        unsigned char decoded_sig[2 * MBEDTLS_ECP_MAX_BYTES];
+        size_t decoded_sig_len;
+        int ret;
+        ret = mbedtls_ecdsa_signature_to_raw( sig, sig_len, byte_len,
+                                              decoded_sig, 2 * byte_len,
+                                              &decoded_sig_len );
+        if( ret != 0 )
+            return( ret );
+        return( pkcs11_verify_core( ctx, CKM_ECDSA,
+                                    hash, hash_len,
+                                    decoded_sig, decoded_sig_len ) );
         break;
+    }
 #endif /* MBEDTLS_ECDSA_C */
     default:
         return( MBEDTLS_ERR_PK_UNKNOWN_PK_ALG );
     }
-    if( mechanism.mechanism == CKM_ECDSA )
-    {
-        uint16_t byte_len = ( ( ctx->bit_length + 7 ) / 8 );
-        decoded_sig = mbedtls_calloc( 1, 2 * byte_len );
-        if( decoded_sig == NULL )
-        {
-            return( MBEDTLS_ERR_PK_ALLOC_FAILED );
-        }
-        if( mbedtls_ecdsa_signature_to_raw( sig, sig_len, byte_len,
-                                    decoded_sig, 2 * byte_len,
-                                    &decoded_sig_len ) != 0 )
-        {
-            rv = CKR_GENERAL_ERROR;
-            goto exit;
-        }
-    }
-    rv = C_VerifyInit( ctx->hSession, &mechanism, ctx->hPublicKey );
-    if( rv != CKR_OK )
-        goto exit;
-    rv = C_Verify( ctx->hSession, (CK_BYTE_PTR) hash, hash_len,
-           decoded_sig, decoded_sig_len );
-    if( rv != CKR_OK )
-        goto exit;
-
-exit:
-    mbedtls_free(decoded_sig);
-    return( pkcs11_err_to_mbedtls_pk_err( rv ) );
 }
 
 static const mbedtls_pk_info_t mbedtls_pk_pkcs11_info =
