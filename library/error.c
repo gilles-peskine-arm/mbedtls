@@ -89,6 +89,10 @@
 #include "mbedtls/dhm.h"
 #endif
 
+#if defined(MBEDTLS_ECJPAKE_C)
+#include "mbedtls/ecjpake.h"
+#endif
+
 #if defined(MBEDTLS_ECP_C)
 #include "mbedtls/ecp.h"
 #endif
@@ -643,6 +647,11 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
     if( use_ret == -(MBEDTLS_ERR_DES_HW_ACCEL_FAILED) )
         mbedtls_snprintf( buf, buflen, "DES - DES hardware accelerator failed" );
 #endif /* MBEDTLS_DES_C */
+
+#if defined(MBEDTLS_ECJPAKE_C)
+    if( use_ret == -(MBEDTLS_ERR_ECJPAKE_HW_ACCEL_FAILED) )
+        mbedtls_snprintf( buf, buflen, "ECJPAKE - ECJPAKE hardware accelerator failed" );
+#endif /* MBEDTLS_ECJPAKE_C */
 
 #if defined(MBEDTLS_ENTROPY_C)
     if( use_ret == -(MBEDTLS_ERR_ENTROPY_SOURCE_FAILED) )

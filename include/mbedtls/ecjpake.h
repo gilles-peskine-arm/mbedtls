@@ -44,6 +44,8 @@
 #include "ecp.h"
 #include "md.h"
 
+#define MBEDTLS_ERR_ECJPAKE_HW_ACCEL_FAILED               -0x0078  /**< ECJPAKE hardware accelerator failed */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
