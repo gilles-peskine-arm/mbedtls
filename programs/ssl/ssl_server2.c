@@ -2020,7 +2020,8 @@ reset:
     if( received_sigterm )
     {
         mbedtls_printf( " interrupted by SIGTERM\n" );
-        ret = 0;
+        if( ret == MBEDTLS_ERR_NET_INVALID_CONTEXT )
+            ret = 0;
         goto exit;
     }
 #endif
@@ -2057,7 +2058,8 @@ reset:
         if( received_sigterm )
         {
             mbedtls_printf( " interrupted by signal\n" );
-            ret = 0;
+            if( ret == MBEDTLS_ERR_NET_ACCEPT_FAILED )
+                ret = 0;
             goto exit;
         }
 #endif
