@@ -1,2 +1,14 @@
 PSA init/deinit
 init_deinit:
+
+PSA import/export raw: 0 bytes
+import_export:"":PSA_KEY_TYPE_RAW_DATA:0:0:PSA_SUCCESS:1
+
+PSA import/export raw: 1 bytes
+import_export:"2a":PSA_KEY_TYPE_RAW_DATA:8:0:PSA_SUCCESS:1
+
+PSA import/export raw: 1 bytes, larger buffer
+import_export:"2a":PSA_KEY_TYPE_RAW_DATA:8:1:PSA_SUCCESS:1
+
+PSA import/export raw: 2 bytes, buffer too small
+import_export:"2a2b":PSA_KEY_TYPE_RAW_DATA:16:-1:PSA_ERROR_BUFFER_TOO_SMALL:1
