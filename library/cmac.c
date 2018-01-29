@@ -212,6 +212,10 @@ int mbedtls_cipher_cmac_starts( mbedtls_cipher_context_t *ctx,
 
     if( ctx == NULL || ctx->cipher_info == NULL || key == NULL )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    /* Sanity check, to avoid buffer overflows if MBEDTLS_CIPHER_BLKSIZE_MAX
+     * is not correct in some configuration. */
+    if( ctx->cipher_info->block_size > MBEDTLS_CIPHER_BLKSIZE_MAX )
+        return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
     if( ( retval = mbedtls_cipher_setkey( ctx, key, (int)keybits,
                                           MBEDTLS_ENCRYPT ) ) != 0 )
@@ -226,6 +230,8 @@ int mbedtls_cipher_cmac_starts( mbedtls_cipher_context_t *ctx,
         case MBEDTLS_CIPHER_AES_256_ECB:
         case MBEDTLS_CIPHER_DES_EDE3_ECB:
             break;
+        /* If adding support for another block cipher, make sure to update
+         * the definition of MBEDTLS_CIPHER_BLKSIZE_MAX in cmac.h. */
         default:
             return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     }
