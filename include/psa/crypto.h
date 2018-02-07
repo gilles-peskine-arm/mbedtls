@@ -304,6 +304,12 @@ psa_status_t psa_export_key(psa_key_slot_t key,
 }
 #endif
 
+/* The file "crypto_struct.h" contains definitions for
+ * implementation-specific structs that are declared above. */
+#include "crypto_struct.h"
+
+/* The file "crypto_extra.h" contains vendor-specific definitions. This
+ * can include vendor-defined algorithms, extra functions, etc. */
 #include "crypto_extra.h"
 
 #endif /* PSA_CRYPTO_H */
