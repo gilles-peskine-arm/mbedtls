@@ -18,7 +18,7 @@
 /** \brief Key slot number.
  *
  * This type represents key slots. It must be an unsigned integral
- * type.* The choice of type is implementation-dependent.
+ * type. The choice of type is implementation-dependent.
  * 0 is not a valid key slot number. The meaning of other values is
  * implementation dependent.
  *
@@ -98,12 +98,12 @@ typedef enum {
  * Applications may call this function more than once. Once a call
  * succeeds, subsequent calls are guaranteed to succeed.
  *
- * \return * \c PSA_SUCCESS: success.
- *         * \c PSA_ERROR_INSUFFICIENT_MEMORY
- *         * \c PSA_ERROR_COMMUNICATION_FAILURE
- *         * \c PSA_ERROR_HARDWARE_FAILURE
- *         * \c PSA_ERROR_TAMPERING_DETECTED
- *         * \c PSA_ERROR_INSUFFICIENT_ENTROPY
+ * \retval PSA_SUCCESS
+ * \retval PSA_ERROR_INSUFFICIENT_MEMORY
+ * \retval PSA_ERROR_COMMUNICATION_FAILURE
+ * \retval PSA_ERROR_HARDWARE_FAILURE
+ * \retval PSA_ERROR_TAMPERING_DETECTED
+ * \retval PSA_ERROR_INSUFFICIENT_ENTROPY
  */
 psa_status_t psa_crypto_init(void);
 
@@ -113,6 +113,8 @@ psa_status_t psa_crypto_init(void);
  * @{
  */
 
+/** \brief Encoding of a key type.
+ */
 typedef uint32_t psa_key_type_t;
 
 #define PSA_KEY_TYPE_NONE                       ((psa_key_type_t)0x00000000)
@@ -135,7 +137,15 @@ typedef uint32_t psa_key_type_t;
     (((type) & (PSA_KEY_TYPE_CATEGORY_MASK | PSA_KEY_TYPE_PAIR_FLAG)) == \
      (PSA_KEY_TYPE_CATEGORY_ASYMMETRIC | PSA_KEY_TYPE_PAIR_FLAG))
 
-typedef uint32_t psa_algorithm_type_t;
+/** \brief Encoding of a cryptographic algorithm.
+ *
+ * For algorithms that can be applied to multiple key types, this type
+ * does not encode the key type. For example, for symmetric ciphers
+ * based on a block cipher, #psa_algorithm_t encodes the block cipher
+ * mode and the padding mode while the block cipher itself is encoded
+ * via #psa_key_type_t.
+ */
+typedef uint32_t psa_algorithm_t;
 
 #define PSA_ALG_VENDOR_FLAG                     ((psa_algorithm_t)0x80000000)
 #define PSA_ALG_CATEGORY_MASK                   ((psa_algorithm_t)0x7f000000)
@@ -150,6 +160,13 @@ typedef uint32_t psa_algorithm_type_t;
 
 #define PSA_ALG_IS_VENDOR_DEFINED(alg)                                  \
     (((alg) & PSA_ALG_VENDOR_FLAG) != 0)
+/** Whether the specified algorithm is a hash algorithm.
+ *
+ * \param alg An algorithm identifier (\c PSA_ALG_XXX value)
+ *
+ * \return 1 if \c alg is a hash algorithm, 0 otherwise.
+ *         This macro may return either 0 or 1 if \c alg is not a valid
+ *         algorithm identifier. */
 #define PSA_ALG_IS_HASH(alg)                                            \
     (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_HASH)
 #define PSA_ALG_IS_MAC(alg)                                             \
@@ -178,13 +195,26 @@ typedef uint32_t psa_algorithm_type_t;
  *
  * This function supports any output from psa_export_key().
  *
- * \return * \c PSA_SUCCESS: success.
- *         * \c PSA_ERROR_NOT_SUPPORTED
- *         * \c PSA_ERROR_INVALID_ARGUMENT
- *         * \c PSA_ERROR_INSUFFICIENT_MEMORY
- *         * \c PSA_ERROR_COMMUNICATION_FAILURE
- *         * \c PSA_ERROR_HARDWARE_FAILURE
- *         * \c PSA_ERROR_TAMPERING_DETECTED
+ * \param key         Slot where the key will be stored. This must be a
+ *                    valid slot for a key of the chosen type. It must
+ *                    be unoccupied.
+ * \param type        Key type (a \c PSA_KEY_TYPE_XXX value).
+ * \param data        Buffer containing the key data.
+ * \param data_length Size of the \c data buffer in bytes.
+ *
+ * \retval PSA_SUCCESS
+ *         Success.
+ * \retval PSA_ERROR_NOT_SUPPORTED
+ *         The key type or key size is not supported.
+ * \retval PSA_ERROR_INVALID_ARGUMENT
+ *         The key slot is invalid,
+ *         or the key data is not correctly formatted.
+ * \retval PSA_ERROR_OCCUPIED_SLOT
+           There is already a key in the specified slot.
+ * \retval PSA_ERROR_INSUFFICIENT_MEMORY
+ * \retval PSA_ERROR_COMMUNICATION_FAILURE
+ * \retval PSA_ERROR_HARDWARE_FAILURE
+ * \retval PSA_ERROR_TAMPERING_DETECTED
  */
 psa_status_t psa_import_key(psa_key_slot_t key,
                             psa_key_type_t type,
@@ -194,22 +224,31 @@ psa_status_t psa_import_key(psa_key_slot_t key,
 /**
  * \brief Destroy a key.
  *
- * \return * \c PSA_SUCCESS: success.
- *         * \c PSA_ERROR_EMPTY_SLOT
- *         * \c PSA_ERROR_COMMUNICATION_FAILURE
- *         * \c PSA_ERROR_HARDWARE_FAILURE
- *         * \c PSA_ERROR_TAMPERING_DETECTED
+ * \retval PSA_SUCCESS
+ * \retval PSA_ERROR_EMPTY_SLOT
+ * \retval PSA_ERROR_COMMUNICATION_FAILURE
+ * \retval PSA_ERROR_HARDWARE_FAILURE
+ * \retval PSA_ERROR_TAMPERING_DETECTED
  */
 psa_status_t psa_destroy_key(psa_key_slot_t key);
 
 /**
  * \brief Get basic metadata about a key.
  *
- * \return * \c PSA_SUCCESS: success.
- *         * \c PSA_ERROR_EMPTY_SLOT
- *         * \c PSA_ERROR_COMMUNICATION_FAILURE
- *         * \c PSA_ERROR_HARDWARE_FAILURE
- *         * \c PSA_ERROR_TAMPERING_DETECTED
+ * \param key           Slot whose content is queried. This must
+ *                      be an occupied key slot.
+ * \param type          On success, the key type (a \c PSA_KEY_TYPE_XXX value).
+ *                      This may be a null pointer, in which case the key type
+ *                      is not written.
+ * \param bits          On success, the key size in bits.
+ *                      This may be a null pointer, in which case the key size
+ *                      is not written.
+ *
+ * \retval PSA_SUCCESS
+ * \retval PSA_ERROR_EMPTY_SLOT
+ * \retval PSA_ERROR_COMMUNICATION_FAILURE
+ * \retval PSA_ERROR_HARDWARE_FAILURE
+ * \retval PSA_ERROR_TAMPERING_DETECTED
  */
 psa_status_t psa_get_key_information(psa_key_slot_t key,
                                      psa_key_type_t *type,
@@ -226,11 +265,32 @@ psa_status_t psa_get_key_information(psa_key_slot_t key,
  * identical: the implementation may choose a different representation
  * of the same key.
  *
- * \return * \c PSA_SUCCESS: success.
- *         * \c PSA_ERROR_EMPTY_SLOT
- *         * \c PSA_ERROR_COMMUNICATION_FAILURE
- *         * \c PSA_ERROR_HARDWARE_FAILURE
- *         * \c PSA_ERROR_TAMPERING_DETECTED
+ * For standard key types, the output format is as follows:
+ *
+ * - For symmetric keys (including MAC keys), the format is the
+ *   raw bytes of the key.
+ * - For DES, the key data consists of 8 bytes. The parity bits must be
+ *   correct.
+ * - For Triple-DES, the format is the concatenation of the
+ *   two or three DES keys.
+ * - For RSA key pairs keys (#PSA_KEY_TYPE_RSA_KEYPAIR), the format
+ *   is the non-encrypted DER representation defined by PKCS\#8 (RFC 5208)
+ *   as PrivateKeyInfo.
+ * - For RSA public keys (#PSA_KEY_TYPE_RSA_PUBLIC_KEY), the format
+ *   is the DER representation defined by X.509.
+ *
+ * \param key           Slot whose content is to be exported. This must
+ *                      be an occupied key slot.
+ * \param data          Buffer where the key data is to be written.
+ * \param data_size     Size of the \c data buffer in bytes.
+ * \param data_length   On success, the number of bytes
+ *                      that make up the key data.
+ *
+ * \retval PSA_SUCCESS
+ * \retval PSA_ERROR_EMPTY_SLOT
+ * \retval PSA_ERROR_COMMUNICATION_FAILURE
+ * \retval PSA_ERROR_HARDWARE_FAILURE
+ * \retval PSA_ERROR_TAMPERING_DETECTED
  */
 psa_status_t psa_export_key(psa_key_slot_t key,
                             uint8_t *data,
