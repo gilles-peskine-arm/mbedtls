@@ -282,6 +282,8 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
             mbedtls_snprintf( buf, buflen, "MD - Opening or reading of file failed" );
         if( use_ret == -(MBEDTLS_ERR_MD_HW_ACCEL_FAILED) )
             mbedtls_snprintf( buf, buflen, "MD - MD hardware accelerator failed" );
+        if( use_ret == -(MBEDTLS_ERR_MD_VERIFY_FAILED) )
+            mbedtls_snprintf( buf, buflen, "MD - Expected hash does not match actual hash" );
 #endif /* MBEDTLS_MD_C */
 
 #if defined(MBEDTLS_PEM_PARSE_C) || defined(MBEDTLS_PEM_WRITE_C)
