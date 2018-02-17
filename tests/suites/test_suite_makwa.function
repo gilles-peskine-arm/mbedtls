@@ -1,0 +1,82 @@
+/* BEGIN_HEADER */
+#include <string.h>
+#include "mbedtls/makwa.h"
+#include "mbedtls/md.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_MAKWA_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void makwa_compute_raw( int md_alg_arg, int work_factor,
+                        int pre_hash, int post_hash,
+                        char *n_hex,
+                        char *input_hex, char *salt_hex,
+                        char *expected_output_hex )
+{
+    mbedtls_md_type_t md_alg = md_alg_arg;
+    unsigned char input[300];
+    size_t input_length;
+    unsigned char salt[100];
+    size_t salt_length;
+    mbedtls_mpi n;
+    unsigned char expected_output[100];
+    unsigned char actual_output[100];
+    size_t output_length;
+
+    input_length = unhexify( input, input_hex );
+    salt_length = unhexify( salt, salt_hex );
+    output_length = unhexify( expected_output, expected_output_hex );
+    mbedtls_mpi_init( &n );
+    TEST_ASSERT( mbedtls_mpi_read_string( &n, 16, n_hex ) == 0 );
+
+    TEST_ASSERT( mbedtls_makwa_compute_raw( md_alg, &n, work_factor,
+                                            pre_hash, post_hash,
+                                            input, input_length,
+                                            salt, salt_length,
+                                            actual_output,
+                                            output_length ) == 0 );
+    TEST_ASSERT( memcmp( actual_output, expected_output,
+                         output_length ) == 0 );
+
+exit:
+    mbedtls_mpi_free( &n );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void makwa_verify_raw( int md_alg_arg, int work_factor,
+                       int pre_hash, int post_hash,
+                       char *n_hex,
+                       char *input_hex, char *salt_hex,
+                       char *expected_output_hex,
+                       int expected_status )
+{
+    mbedtls_md_type_t md_alg = md_alg_arg;
+    unsigned char input[300];
+    size_t input_length;
+    unsigned char salt[100];
+    size_t salt_length;
+    mbedtls_mpi n;
+    unsigned char expected_output[100];
+    size_t output_length;
+
+    input_length = unhexify( input, input_hex );
+    salt_length = unhexify( salt, salt_hex );
+    output_length = unhexify( expected_output, expected_output_hex );
+    mbedtls_mpi_init( &n );
+    TEST_ASSERT( mbedtls_mpi_read_string( &n, 16, n_hex ) == 0 );
+
+    /* Test correct output */
+    TEST_ASSERT( mbedtls_makwa_verify_raw(
+                     md_alg, &n, work_factor, pre_hash, post_hash,
+                     input, input_length, salt, salt_length,
+                     expected_output,
+                     output_length ) == expected_status );
+
+exit:
+    mbedtls_mpi_free( &n );
+}
+/* END_CASE */

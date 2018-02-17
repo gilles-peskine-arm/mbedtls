@@ -30,6 +30,7 @@ set(src_crypto
     gcm.c
     havege.c
     hmac_drbg.c
+    makwa.c
     md.c
     md2.c
     md4.c

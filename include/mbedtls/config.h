@@ -2044,6 +2044,26 @@
 #define MBEDTLS_HMAC_DRBG_C
 
 /**
+ * \def MBEDTLS_MAKWA_C
+ *
+ * Enable the Makwa password hashing algorithm.
+ *
+ * Module:   library/makwa.c
+ * Caller:
+ *
+ * Requires: MBEDTLS_BIGNUM_C
+ *           MBEDTLS_HMAC_DRBG_C
+ *           MBEDTLS_MD_C
+ *
+ * Enhanced by: MBEDTLS_BASE64_C to provide and compare Base64 output.
+ *
+ * Enhanced by: MBEDTLS_GENPRIME to generate Makwa parameters.
+ *
+ * Uncomment to enable the Makwa password hashing algorithm.
+ */
+#define MBEDTLS_MAKWA_C
+
+/**
  * \def MBEDTLS_MD_C
  *
  * Enable the generic message digest layer.

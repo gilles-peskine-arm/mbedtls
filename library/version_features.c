@@ -573,6 +573,9 @@ static const char *features[] = {
 #if defined(MBEDTLS_HMAC_DRBG_C)
     "MBEDTLS_HMAC_DRBG_C",
 #endif /* MBEDTLS_HMAC_DRBG_C */
+#if defined(MBEDTLS_MAKWA_C)
+    "MBEDTLS_MAKWA_C",
+#endif /* MBEDTLS_MAKWA_C */
 #if defined(MBEDTLS_MD_C)
     "MBEDTLS_MD_C",
 #endif /* MBEDTLS_MD_C */

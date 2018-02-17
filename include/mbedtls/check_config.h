@@ -246,6 +246,12 @@
 #error "MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_MAKWA_C) &&                                         \
+    ( !defined(MBEDTLS_BIGNUM_C) ||                                     \
+      !defined(MBEDTLS_HMAC_DRBG_C) || !defined(MBEDTLS_MD_C) )
+#error "MBEDTLS_MAKWA_C defined, but not all prerequisites"
+#endif
+
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) &&                          \
     ( !defined(MBEDTLS_PLATFORM_C) || !defined(MBEDTLS_PLATFORM_MEMORY) )
 #error "MBEDTLS_MEMORY_BUFFER_ALLOC_C defined, but not all prerequisites"
