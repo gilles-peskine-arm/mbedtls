@@ -65,6 +65,62 @@ static int mbedtls_safer_memcmp( const void *a, const void *b, size_t n )
     return( diff );
 }
 
+#if defined(MBEDTLS_GENPRIME)
+int mbedtls_makwa_generate_modulus_with_factors(
+    size_t n_bits,
+    mbedtls_mpi *n,
+    mbedtls_mpi *p, mbedtls_mpi *q,
+    int (*f_rng)(void *, unsigned char *, size_t),
+    void *p_rng )
+{
+    int ret;
+
+    if( n_bits % 2 != 0 )
+        return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+    if( n == NULL || p == NULL || q == NULL )
+        return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+
+    ret = mbedtls_mpi_gen_prime( p, n_bits / 2,
+                                 MBEDTLS_MPI_GEN_PRIME_FLAG_3_MOD_4,
+                                 f_rng, p_rng );
+    if( ret != 0 )
+        goto fail;
+    ret = mbedtls_mpi_gen_prime( q, n_bits / 2,
+                                 MBEDTLS_MPI_GEN_PRIME_FLAG_3_MOD_4,
+                                 f_rng, p_rng );
+    if( ret != 0 )
+        goto fail;
+    ret = mbedtls_mpi_mul_mpi( n, p, q );
+    if( ret != 0 )
+        goto fail;
+    return( 0 );
+
+fail:
+    mbedtls_mpi_free( p );
+    mbedtls_mpi_free( q );
+    mbedtls_mpi_free( n );
+    return( ret );
+}
+
+int mbedtls_makwa_generate_modulus(
+    size_t n_bits,
+    mbedtls_mpi *n,
+    int (*f_rng)(void *, unsigned char *, size_t),
+    void *p_rng )
+{
+    mbedtls_mpi tmp_p, tmp_q;
+    int ret;
+    mbedtls_mpi_init( &tmp_p );
+    mbedtls_mpi_init( &tmp_q );
+    ret = mbedtls_makwa_generate_modulus_with_factors( n_bits, n,
+                                                       &tmp_p, &tmp_q,
+                                                       f_rng, p_rng );
+    mbedtls_mpi_free( &tmp_p );
+    mbedtls_mpi_free( &tmp_q );
+    return( ret );
+}
+#endif /* MBEDTLS_GENPRIME */
+
 /* 2.3 KDF step 3 or 5: set k <- HMAC_k(v || step || input) */
 static int kdf_update_k( mbedtls_md_context_t *md_ctx,
                          size_t hash_length,

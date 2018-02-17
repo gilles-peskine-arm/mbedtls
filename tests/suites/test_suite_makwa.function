@@ -10,6 +10,48 @@
  * END_DEPENDENCIES
  */
 
+/* BEGIN_CASE depends_on:MBEDTLS_GENPRIME */
+void makwa_generate_modulus( int n_bits )
+{
+    mbedtls_mpi n1, n2, p, q;
+    rnd_pseudo_info rnd1, rnd2;
+    mbedtls_mpi_init( &n1 );
+    mbedtls_mpi_init( &n2 );
+    mbedtls_mpi_init( &p );
+    mbedtls_mpi_init( &q );
+    memset( &rnd1, 0, sizeof( rnd1 ) );
+    memset( &rnd2, 0, sizeof( rnd2 ) );
+
+    /* Run generate_modulus and generate_modulus_with_factors from the
+     * same RNG and check that they produce the same n. */
+    TEST_ASSERT( mbedtls_makwa_generate_modulus(
+                     n_bits, &n1,
+                     rnd_pseudo_rand, &rnd1 ) == 0 );
+    TEST_ASSERT( mbedtls_makwa_generate_modulus_with_factors(
+                     n_bits, &n2, &p, &q,
+                     rnd_pseudo_rand, &rnd2 ) == 0 );
+    TEST_ASSERT( mbedtls_mpi_cmp_mpi( &n1, &n2 ) == 0 );
+
+    /* Check that n = p * q and that p and q look fine. */
+    TEST_ASSERT( mbedtls_mpi_mul_mpi( &n2, &p, &q ) == 0 );
+    TEST_ASSERT( mbedtls_mpi_cmp_mpi( &n1, &n2 ) == 0 );
+    TEST_ASSERT( (int) mbedtls_mpi_bitlen( &p ) == n_bits / 2 );
+    TEST_ASSERT( (int) mbedtls_mpi_bitlen( &q ) == n_bits / 2 );
+    TEST_ASSERT( mbedtls_mpi_get_bit( &p, 0 ) == 1 );
+    TEST_ASSERT( mbedtls_mpi_get_bit( &q, 0 ) == 1 );
+    TEST_ASSERT( mbedtls_mpi_get_bit( &p, 1 ) == 1 );
+    TEST_ASSERT( mbedtls_mpi_get_bit( &q, 1 ) == 1 );
+    TEST_ASSERT( mbedtls_mpi_is_prime( &p, rnd_std_rand, NULL ) == 0 );
+    TEST_ASSERT( mbedtls_mpi_is_prime( &q, rnd_std_rand, NULL ) == 0 );
+
+exit:
+    mbedtls_mpi_free( &n1 );
+    mbedtls_mpi_free( &n2 );
+    mbedtls_mpi_free( &p );
+    mbedtls_mpi_free( &q );
+}
+/* END_CASE */
+
 /* BEGIN_CASE */
 void makwa_compute_raw( int md_alg_arg, int work_factor,
                         int pre_hash, int post_hash,

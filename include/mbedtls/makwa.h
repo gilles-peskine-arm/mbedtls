@@ -65,6 +65,72 @@
 extern "C" {
 #endif
 
+#if defined(MBEDTLS_GENPRIME)
+/**
+ * \brief               Generate a modulus parameter for Makwa
+ *                      and return its factors.
+ *
+ * See [General considerations](#modulus).
+ *
+ * The factors are not necessary for basic Makwa operation, only for the
+ * fast path and escrow features. Leaking the factors considerably
+ * weakens the security of the password hash, therefore you should use
+ * mbedtls_makwa_generate_modulus() unless you need these features.
+ *
+ * \param n_bits        Bit size of the generated modulus. This must be
+ *                      an even number.
+ * \param n             On success, contains the generated modulus
+ *                      n = p &times; q.
+ * \param p             On success, contains the prime \c p.
+ * \param q             On success, contains the prime \c q.
+ * \param f_rng         RNG function
+ * \param p_rng         RNG parameter
+ *
+ * \retval 0            Success
+ * \retval MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+ *                      Invalid parameter.
+ * \retval MBEDTLS_ERR_XXX
+ *                      Error from the bignum module,
+ *                      or error returned by \c f_rng.
+ */
+int mbedtls_makwa_generate_modulus_with_factors(
+    size_t n_bits,
+    mbedtls_mpi *n,
+    mbedtls_mpi *p, mbedtls_mpi *q,
+    int (*f_rng)(void *, unsigned char *, size_t),
+    void *p_rng );
+
+/**
+ * \brief               Generate a modulus parameter for Makwa.
+ *
+ * See [General considerations](#modulus).
+ *
+ * The factors are not necessary for basic Makwa operation, only for the
+ * fast path and escrow features. Leaking the factors considerably
+ * weakens the security of the password hash, therefore you should use
+ * mbedtls_makwa_generate_modulus() unless you need these features.
+ *
+ * \param n_bits        Bit size of the generated modulus. This must be
+ *                      an even number.
+ * \param n             On success, contains the generated modulus.
+ * \param f_rng         RNG function
+ * \param p_rng         RNG parameter
+ *
+ * \retval 0            Success
+ * \retval MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+ *                      Invalid parameter.
+ * \retval MBEDTLS_ERR_XXX
+ *                      Error from the bignum module,
+ *                      or error returned by \c f_rng.
+ */
+int mbedtls_makwa_generate_modulus(
+    size_t n_bits,
+    mbedtls_mpi *n,
+    int (*f_rng)(void *, unsigned char *, size_t),
+    void *p_rng );
+
+#endif /* MBEDTLS_GENPRIME */
+
 /** Integral type used to represent the work factor. */
 typedef unsigned mbedtls_makwa_work_factor_t;
 
