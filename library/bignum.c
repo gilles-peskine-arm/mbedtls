@@ -2189,7 +2189,7 @@ int mbedtls_mpi_is_prime( const mbedtls_mpi *X,
 /*
  * Prime number generation
  */
-int mbedtls_mpi_gen_prime( mbedtls_mpi *X, size_t nbits, int dh_flag,
+int mbedtls_mpi_gen_prime( mbedtls_mpi *X, size_t nbits, int flags,
                    int (*f_rng)(void *, unsigned char *, size_t),
                    void *p_rng )
 {
@@ -2200,6 +2200,12 @@ int mbedtls_mpi_gen_prime( mbedtls_mpi *X, size_t nbits, int dh_flag,
 
     if( nbits < 3 || nbits > MBEDTLS_MPI_MAX_BITS )
         return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+    if( ( flags & ~( MBEDTLS_MPI_GEN_PRIME_FLAG_DH |
+                     MBEDTLS_MPI_GEN_PRIME_FLAG_3_MOD_4 ) ) != 0 )
+        return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+    /* DH primes must be = 3 mod 4 */
+    if( flags & MBEDTLS_MPI_GEN_PRIME_FLAG_DH )
+        flags |= MBEDTLS_MPI_GEN_PRIME_FLAG_3_MOD_4;
 
     mbedtls_mpi_init( &Y );
 
@@ -2213,15 +2219,19 @@ int mbedtls_mpi_gen_prime( mbedtls_mpi *X, size_t nbits, int dh_flag,
     mbedtls_mpi_set_bit( X, nbits-1, 1 );
 
     X->p[0] |= 1;
+    if( flags & ( MBEDTLS_MPI_GEN_PRIME_FLAG_3_MOD_4 ) )
+        X->p[0] |= 2;
 
-    if( dh_flag == 0 )
+    if( ( flags & MBEDTLS_MPI_GEN_PRIME_FLAG_DH ) == 0 )
     {
+        mbedtls_mpi_sint delta =
+            flags & MBEDTLS_MPI_GEN_PRIME_FLAG_3_MOD_4 ? 4 : 2;
         while( ( ret = mbedtls_mpi_is_prime( X, f_rng, p_rng ) ) != 0 )
         {
             if( ret != MBEDTLS_ERR_MPI_NOT_ACCEPTABLE )
                 goto cleanup;
 
-            MBEDTLS_MPI_CHK( mbedtls_mpi_add_int( X, X, 2 ) );
+            MBEDTLS_MPI_CHK( mbedtls_mpi_add_int( X, X, delta ) );
         }
     }
     else
@@ -2231,8 +2241,6 @@ int mbedtls_mpi_gen_prime( mbedtls_mpi *X, size_t nbits, int dh_flag,
          * is X = 2 mod 3 (which is equivalent to Y = 2 mod 3).
          * Make sure it is satisfied, while keeping X = 3 mod 4
          */
-
-        X->p[0] |= 2;
 
         MBEDTLS_MPI_CHK( mbedtls_mpi_mod_int( &r, X, 3 ) );
         if( r == 0 )
