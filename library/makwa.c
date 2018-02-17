@@ -31,6 +31,7 @@
 
 #if defined(MBEDTLS_MAKWA_C)
 
+#include "mbedtls/base64.h"
 #include "mbedtls/bignum.h"
 #include "mbedtls/makwa.h"
 #include "mbedtls/md.h"
@@ -405,5 +406,382 @@ int mbedtls_makwa_verify_raw( mbedtls_md_type_t md_alg,
     mbedtls_free( actual_output );
     return( ret );
 }
+
+#if defined(MBEDTLS_BASE64_C)
+
+/* B64 is Base64 without newlines and without trailing '='. (Ref: A.4.1) */
+static size_t b64_length( size_t bytes )
+{
+    return( bytes / 3 * 4 + ( bytes % 3 == 0 ? 0 : bytes % 3 + 1 ) );
+}
+#define B64_MAX_INPUT_LENGTH ( SIZE_MAX / 4 * 3 - 2 )
+
+/* Length of the Makwa string format output. Does not include a trailing
+ * null byte. (Ref: A.4.2) */
+static size_t makwa_b64_length( size_t salt_length, size_t output_length )
+{
+    size_t length = b64_length( 8 ) + 1 + 4 + 1 + 1;
+    if( salt_length >= B64_MAX_INPUT_LENGTH )
+        return( SIZE_MAX );
+    if( output_length >= B64_MAX_INPUT_LENGTH )
+        return( SIZE_MAX );
+    if( length + b64_length( salt_length ) < length )
+        return( SIZE_MAX );
+    length += b64_length( salt_length );
+    if( length + b64_length( output_length ) < length )
+        return( SIZE_MAX );
+    length += b64_length( output_length );
+    return( length );
+}
+
+/* Base64 encoding without trailing '=' for padding.
+ * Write a trailing null byte, but this byte is not included in *olen. */
+static int b64_encode( char *dst, size_t dlen, size_t *olen,
+                       const unsigned char *src, size_t slen )
+{
+    size_t swhole_len = slen - slen % 3;
+    int ret;
+    unsigned char *udst = (unsigned char *) dst;
+
+    /* First encode whole 3-byte blocks so that the output does not
+     * include padding, because there might not be enough room for the
+     * padding. */
+    ret = mbedtls_base64_encode( udst, dlen, olen, src, swhole_len );
+    if( ret != 0 )
+        return( ret );
+
+    /* Now encode the remaining 0-2 bytes. */
+    if( swhole_len != slen )
+    {
+        unsigned char trail[5];
+        size_t trail_len;
+        ret = mbedtls_base64_encode( trail, sizeof( trail ), &trail_len,
+                                     src + swhole_len, slen - swhole_len );
+        if( ret == 0 )
+        {
+            unsigned i;
+            for( i = 0; trail[i] != '='; i++ )
+                udst[( *olen )++] = trail[i];
+            udst[*olen] = 0;
+        }
+        mbedtls_zeroize( trail, sizeof( trail ) );
+    }
+
+    return( ret );
+}
+
+/* Decode B64 data from cursor up to the first occurrence of the terminator
+ * character. Allocate a buffer for the result and return the buffer through
+ * output and output_length. */
+static int b64_decode( const char **cursor, char terminator,
+                       unsigned char **buffer, size_t *output_length )
+{
+    char *end = strchr( *cursor, terminator );
+    size_t input_length;
+    size_t decoded_length;
+    int ret;
+
+    if( end == NULL )
+        return( MBEDTLS_ERR_MD_VERIFY_FAILED );
+    input_length = end - *cursor;
+
+    /* Allocate the output buffer. */
+    *output_length = input_length / 4 * 3;
+    switch( input_length % 4 )
+    {
+        case 0: break;
+        case 1: return( MBEDTLS_ERR_MD_VERIFY_FAILED );
+        case 2: *output_length += 1; break;
+        case 3: *output_length += 2; break;
+    }
+    *buffer = mbedtls_calloc( 1, *output_length );
+    if( *buffer == NULL )
+        return( MBEDTLS_ERR_MD_ALLOC_FAILED );
+
+    /* Decode all but the last partial block (if any). */
+    ret = mbedtls_base64_decode( *buffer, *output_length, &decoded_length,
+                                 (unsigned char *) ( *cursor ),
+                                 input_length - input_length % 4 );
+    if( ret != 0 )
+        goto fail;
+
+    if( input_length % 4 != 0 )
+    {
+        /* Decode the last partial block. */
+        unsigned char trail[4] = "====";
+        memcpy( trail, *cursor + input_length - input_length % 4,
+                input_length % 4 );
+        ret = mbedtls_base64_decode( *buffer + decoded_length,
+                                     *output_length - decoded_length,
+                                     &decoded_length,
+                                     trail, sizeof( trail ) );
+        mbedtls_zeroize( trail, input_length % 4 );
+        if( ret != 0 )
+            goto fail;
+    }
+
+    *cursor = end + 1;
+    return( 0 );
+
+fail:
+    mbedtls_zeroize( *buffer, *output_length );
+    mbedtls_free( *buffer );
+    *buffer = NULL;
+    if( ret == MBEDTLS_ERR_BASE64_INVALID_CHARACTER )
+        ret = MBEDTLS_ERR_MD_VERIFY_FAILED;
+    return( ret );
+}
+
+/* Calculate B64(H_8(N)), the Base64 encoding of the checksum of the
+ * modulus. (Ref: A.4.2) */
+static int modulus_checksum( mbedtls_md_type_t md_alg, const mbedtls_mpi *n,
+                             char *dst, size_t dsize )
+{
+    const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type( md_alg );
+    size_t n_byte_size = mbedtls_mpi_size( n );
+    unsigned char *n_bytes;
+    size_t base64_length;
+    int ret;
+
+    if( md_info == NULL )
+        return( MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE );
+    if( n_byte_size < 8 )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    n_bytes = mbedtls_calloc( 1, n_byte_size );
+    if( n_bytes == NULL )
+        return( MBEDTLS_ERR_MD_ALLOC_FAILED );
+
+    ret = mbedtls_mpi_write_binary( n, n_bytes, n_byte_size );
+    if( ret != 0 )
+        goto exit;
+    ret = makwa_kdf( md_info,
+                     n_bytes, n_byte_size, NULL, 0, NULL, 0,
+                     n_bytes, 8 );
+    if( ret != 0 )
+        goto exit;
+
+    ret = b64_encode( dst, dsize, &base64_length, n_bytes, 8 );
+    if( ret == 0 )
+        ret = base64_length;
+
+exit:
+    if( n_bytes != NULL )
+        mbedtls_zeroize( n_bytes, n_byte_size );
+    mbedtls_free( n_bytes );
+    return( ret );
+}
+
+/* The full Makwa computation, with the result encoded as a printable
+ * string as defined in Appendix A.4. */
+int mbedtls_makwa_compute_base64( mbedtls_md_type_t md_alg,
+                                  const mbedtls_mpi *n, unsigned work_factor,
+                                  int pre_hash, int post_hash,
+                                  const unsigned char *input,
+                                  size_t input_length,
+                                  const unsigned char *salt,
+                                  size_t salt_length,
+                                  size_t raw_output_length,
+                                  char *output,
+                                  size_t output_buffer_size )
+{
+    int ret;
+    size_t base64_output_length =
+        makwa_b64_length( salt_length, raw_output_length );
+    unsigned char *raw_output = NULL;
+    char *cursor = output;
+    char *end = output + output_buffer_size;
+    size_t chunk_length;
+    unsigned zeta;
+    unsigned delta;
+
+    /* Enforce the minimum output length required by the specification. */
+    if( raw_output_length < 10 )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    /* Check that there is enough room for the output plus a trailing
+     * null byte. */
+    if( base64_output_length == SIZE_MAX )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    if( output_buffer_size < base64_output_length + 1 )
+        return( MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL );
+
+    /* Decompose the work factor into zeta * 2^delta */
+    delta = 0;
+    for( zeta = work_factor; zeta > 3; zeta >>= 1 )
+        ++delta;
+    if( zeta != 2 && zeta != 3 )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    if( delta > 99 )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+
+    /* Write B64(H_8(N)) || "_" */
+    ret = modulus_checksum( md_alg, n, cursor, end - cursor );
+    if( ret < 0 )
+        goto exit;
+    cursor += ret;
+    *( cursor++ ) = '_';
+
+    /* Write F || "_" */
+    *( cursor++ ) = ( pre_hash ? post_hash ? 'b' : 'r' :
+                                 post_hash ? 's' : 'n' );
+    *( cursor++ ) = '0' + zeta;
+    *( cursor++ ) = '0' + ( delta / 10 );
+    *( cursor++ ) = '0' + ( delta % 10 );
+    *( cursor++ ) = '_';
+
+    /* Write B64(salt) || "_" */
+    ret = b64_encode( cursor, end - cursor, &chunk_length,
+                      salt, salt_length );
+    if( ret != 0 )
+        goto exit;
+    cursor += chunk_length;
+    *( cursor++ ) = '_';
+
+    /* Write B64(raw_output) */
+    raw_output = mbedtls_calloc( 1, raw_output_length );
+    if( raw_output == NULL )
+    {
+        ret = MBEDTLS_ERR_MD_ALLOC_FAILED;
+        goto exit;
+    }
+    ret = mbedtls_makwa_compute_raw( md_alg, n, work_factor,
+                                     pre_hash, post_hash,
+                                     input, input_length, salt, salt_length,
+                                     raw_output, raw_output_length );
+    if( ret != 0 )
+        goto exit;
+    ret = b64_encode( cursor, end - cursor, &chunk_length,
+                      raw_output, raw_output_length / 3 * 3 );
+    if( ret != 0 )
+        goto exit;
+    cursor += chunk_length;
+
+exit:
+    if( raw_output != NULL )
+        mbedtls_zeroize( raw_output, raw_output_length );
+    mbedtls_free( raw_output );
+    if( ret != 0 )
+        memset( output, 0, output_buffer_size );
+    return( ret );
+}
+
+/* Parse the work factor from the string format (Ref: A.4.2). The work
+ * factor z*2^dd is encoded as "zdd" with "z" and "dd" encoded in decimal
+ * as 1 and 2 digits respectively. */
+static int parse_work_factor( const char *cursor, unsigned *work_factor )
+{
+    unsigned zeta, delta;
+    unsigned i;
+
+    /* Parse a 1-digit decimal number and a 2-digit decimal number. */
+    for( i = 0; i <= 2; i++ )
+    {
+        if( cursor[i] < '0' || cursor[i] > '9' )
+            return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    }
+    zeta = cursor[0] - '0';
+    delta = ( cursor[1] - '0' ) * 10 + ( cursor[2] - '0' );
+
+    /* Check that zeta is permitted. */
+    if( zeta != 2 && zeta != 3)
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    /* Check that delta is supported, i.e. that there won't be any overflow
+     * when calculating work_factor. */
+    if( delta > CHAR_BIT * sizeof( *work_factor ) - 2 )
+    {
+        /* A work factor that doesn't fit in unsigned int is
+         * absurdly large, but permitted by the specification. */
+        return( MBEDTLS_ERR_MD_FEATURE_UNAVAILABLE );
+    }
+    *work_factor = zeta << delta;
+    return( 0 );
+}
+
+/* Verify a password against a reference output from the Makwa algorithm
+ * formatted as a printable string as defined in Appendix A.4. */
+int mbedtls_makwa_verify_base64( mbedtls_md_type_t md_alg,
+                                 const mbedtls_mpi *n,
+                                 const unsigned char *input,
+                                 size_t input_length,
+                                 const char *expected_output )
+{
+    char encoded_n[12];
+    unsigned work_factor;
+    int pre_hash, post_hash;
+    unsigned char *salt = NULL;
+    size_t salt_length;
+    unsigned char *raw_output = NULL;
+    size_t raw_output_length;
+    const char *cursor = expected_output;
+    int ret;
+
+    /* Parse and check B64(H_8(N)) || "_" */
+    ret = modulus_checksum( md_alg, n, encoded_n, sizeof( encoded_n ) );
+    if( ret < 0 )
+        goto exit;
+    if( cursor[ret] != '_' )
+    {
+        ret = MBEDTLS_ERR_MD_BAD_INPUT_DATA;
+        goto exit;
+    }
+    if( strncmp( cursor, encoded_n, ret ) != 0 )
+    {
+        ret = MBEDTLS_ERR_MD_VERIFY_FAILED;
+        goto exit;
+    }
+    cursor += ret + 1;
+
+    /* Parse and check F || "_" */
+    switch( *cursor )
+    {
+        case 'n': pre_hash = 0; post_hash = 0; break;
+        case 'r': pre_hash = 1; post_hash = 0; break;
+        case 's': pre_hash = 0; post_hash = 1; break;
+        case 'b': pre_hash = 1; post_hash = 1; break;
+        default:
+            ret = MBEDTLS_ERR_MD_BAD_INPUT_DATA;
+            goto exit;
+    }
+    ++cursor;
+    ret = parse_work_factor( cursor, &work_factor );
+    if( ret != 0 )
+        goto exit;
+    cursor += 3;
+    if( *cursor != '_' )
+    {
+        ret = MBEDTLS_ERR_MD_BAD_INPUT_DATA;
+        goto exit;
+    }
+    ++cursor;
+
+    /* Parse B64(salt) || "_" */
+    ret = b64_decode( &cursor, '_', &salt, &salt_length );
+    if( ret != 0 )
+        goto exit;
+
+    /* Parse B64(output) */
+    ret = b64_decode( &cursor, 0, &raw_output, &raw_output_length );
+    if( ret != 0 )
+        goto exit;
+    /* 10 is the minimum hash size specified for the Base64 format. */
+    if( raw_output_length < 10 )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+
+    ret = mbedtls_makwa_verify_raw( md_alg, n, work_factor,
+                                    pre_hash, post_hash,
+                                    input, input_length,
+                                    salt, salt_length,
+                                    raw_output, raw_output_length );
+
+exit:
+    if( salt != NULL )
+        mbedtls_zeroize( salt, salt_length );
+    mbedtls_free( salt );
+    if( raw_output != NULL )
+        mbedtls_zeroize( raw_output, raw_output_length );
+    mbedtls_free( raw_output );
+    return( ret );
+}
+
+#endif /* MBEDTLS_BASE64_C */
 
 #endif /* MBEDTLS_MAKWA_C */

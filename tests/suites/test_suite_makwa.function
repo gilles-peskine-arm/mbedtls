@@ -1,5 +1,6 @@
 /* BEGIN_HEADER */
 #include <string.h>
+#include "mbedtls/base64.h"
 #include "mbedtls/makwa.h"
 #include "mbedtls/md.h"
 /* END_HEADER */
@@ -75,6 +76,90 @@ void makwa_verify_raw( int md_alg_arg, int work_factor,
                      input, input_length, salt, salt_length,
                      expected_output,
                      output_length ) == expected_status );
+
+exit:
+    mbedtls_mpi_free( &n );
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_BASE64_C */
+void makwa_compute_base64( int md_alg_arg, int work_factor,
+                           int pre_hash, int post_hash,
+                           char *n_hex,
+                           char *input_hex, char *salt_hex,
+                           int output_length,
+                           char *expected_output )
+{
+    mbedtls_md_type_t md_alg = md_alg_arg;
+    unsigned char input[300];
+    size_t input_length;
+    unsigned char salt[100];
+    size_t salt_length;
+    mbedtls_mpi n;
+    char actual_output[500];
+
+    input_length = unhexify( input, input_hex );
+    salt_length = unhexify( salt, salt_hex );
+    mbedtls_mpi_init( &n );
+    TEST_ASSERT( mbedtls_mpi_read_string( &n, 16, n_hex ) == 0 );
+
+    TEST_ASSERT( mbedtls_makwa_compute_base64(
+                     md_alg, &n, work_factor,
+                     pre_hash, post_hash,
+                     input, input_length,
+                     salt, salt_length,
+                     output_length,
+                     actual_output, sizeof( actual_output ) ) == 0 );
+    TEST_ASSERT( strcmp( actual_output, expected_output ) == 0 );
+
+exit:
+    mbedtls_mpi_free( &n );
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_BASE64_C */
+void makwa_verify_base64( int md_alg_arg, char *n_hex,
+                          char *input_hex, char *expected_output,
+                          int expected_status )
+{
+    mbedtls_md_type_t md_alg = md_alg_arg;
+    unsigned char input[300];
+    size_t input_length;
+    mbedtls_mpi n;
+
+    input_length = unhexify( input, input_hex );
+    mbedtls_mpi_init( &n );
+    TEST_ASSERT( mbedtls_mpi_read_string( &n, 16, n_hex ) == 0 );
+
+    /* If the first character of the work factor exponent (delta) is '?'",
+     * calculate the work factor from platform data. */
+    if( expected_output[14] == '?' )
+    {
+        mbedtls_makwa_work_factor_t w;
+        unsigned delta = 0;
+        switch( expected_output[15] )
+        {
+            case '^':
+                /* Smallest delta that overflows mbedtls_makwa_work_factor_t. */
+                for( w = -1; w >= 3; w >>= 1 )
+                    ++delta;
+                break;
+            case 'm':
+                /* Smallest delta such that 3*2^delta does not fit in a bignum. */
+                for( w = MBEDTLS_MPI_MAX_BITS; w > 2; w >>= 1 )
+                    ++delta;
+                break;
+            default:
+                TEST_ASSERT( ! "Unsupported work factor substitution" );
+        }
+        expected_output[14] = '0' + delta / 10;
+        expected_output[15] = '0' + delta % 10;
+    }
+
+    TEST_ASSERT( mbedtls_makwa_verify_base64(
+                     md_alg, &n,
+                     input, input_length,
+                     expected_output ) == expected_status );
 
 exit:
     mbedtls_mpi_free( &n );
