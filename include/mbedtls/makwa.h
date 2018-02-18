@@ -131,6 +131,37 @@ int mbedtls_makwa_generate_modulus(
 
 #endif /* MBEDTLS_GENPRIME */
 
+/**
+ * \brief               The Makwa KDF (key derivation function).
+ *
+ * This function calculates
+ * `H_{output_length}(inputs[0] || ... || inputs[nb_inputs-1])`
+ * where `||` is the concatenation operator and the length of each
+ * `inputs[i]` is `input_lengths[i]` bytes.
+ *
+ * \param md_info       Hash class to use.
+ * \param inputs        Array of inputs.
+ * \param input_lengths Array of input sizes: `input_lengths[i]` is the number
+ *                      of bytes to read from `inputs[i]`.
+ * \param nb_inputs     Number of items in the \c inputs and \c input_lengths
+ *                      arrays.
+ * \param output        Output buffer.
+ * \param output_length Size of \c output in bytes.
+ *
+ * \retval 0            Success.
+ * \retval MBEDTLS_ERR_MD_BAD_INPUT_DATA
+ *                      One of the parameters is invalid.
+ * \retval MBEDTLS_ERR_MD_ALLOC_FAILED
+ *                      There was insufficient memory for the calculation.
+ * \retval MBEDTLS_ERR_XXX
+ *                      Any error from the underlying hash function.
+ */
+int mbedtls_makwa_kdf( const mbedtls_md_info_t *md_info,
+                       const unsigned char *const *inputs,
+                       const size_t *input_lengths,
+                       size_t nb_inputs,
+                       unsigned char *output, size_t output_length );
+
 /** Integral type used to represent the work factor. */
 typedef unsigned mbedtls_makwa_work_factor_t;
 

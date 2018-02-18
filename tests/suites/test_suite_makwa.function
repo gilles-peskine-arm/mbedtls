@@ -6,7 +6,7 @@
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
- * depends_on:MBEDTLS_MAKWA_C
+ * depends_on:MBEDTLS_MAKWA_C:MBEDTLS_MD_C
  * END_DEPENDENCIES
  */
 
@@ -49,6 +49,66 @@ exit:
     mbedtls_mpi_free( &n2 );
     mbedtls_mpi_free( &p );
     mbedtls_mpi_free( &q );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void makwa_kdf( int md_alg_arg,
+                char *input0_hex, char *input1_hex, char *input2_hex,
+                char *expected_output_hex )
+{
+    const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type( md_alg_arg );
+    const unsigned char *inputs[3] = { NULL, NULL, NULL };
+    size_t input_lengths[3];
+    size_t nb_inputs = 0;
+    unsigned char *expected_output;
+    unsigned char *actual_output;
+    size_t output_length;
+
+    TEST_ASSERT( md_info != NULL );
+    if( input0_hex[0] != '-' )
+    {
+        unsigned char *input = mbedtls_calloc( 1, strlen( input0_hex ) / 2 );
+        TEST_ASSERT( input != NULL );
+        input_lengths[nb_inputs] = unhexify( input, input0_hex );
+        inputs[nb_inputs] = input;
+        ++nb_inputs;
+    }
+    if( input1_hex[0] != '-' )
+    {
+        unsigned char *input = mbedtls_calloc( 1, strlen( input1_hex ) / 2 );
+        TEST_ASSERT( input != NULL );
+        input_lengths[nb_inputs] = unhexify( input, input1_hex );
+        inputs[nb_inputs] = input;
+        ++nb_inputs;
+    }
+    if( input2_hex[0] != '-' )
+    {
+        unsigned char *input = mbedtls_calloc( 1, strlen( input2_hex ) / 2 );
+        TEST_ASSERT( input != NULL );
+        input_lengths[nb_inputs] = unhexify( input, input2_hex );
+        inputs[nb_inputs] = input;
+        ++nb_inputs;
+    }
+    output_length = strlen( expected_output_hex ) / 2;
+    expected_output = mbedtls_calloc( 1, output_length );
+    TEST_ASSERT( expected_output != NULL );
+    output_length = unhexify( expected_output, expected_output_hex );
+    actual_output = mbedtls_calloc( 1, output_length );
+    TEST_ASSERT( actual_output != NULL );
+
+    TEST_ASSERT( mbedtls_makwa_kdf( md_info,
+                                    inputs, input_lengths, nb_inputs,
+                                    actual_output, output_length ) == 0 );
+    TEST_ASSERT( memcmp( actual_output, expected_output,
+                         output_length ) == 0 );
+
+exit:
+    mbedtls_free( (void*) inputs[0] );
+    mbedtls_free( (void*) inputs[1] );
+    mbedtls_free( (void*) inputs[2] );
+    mbedtls_free( expected_output );
+    mbedtls_free( actual_output );
 }
 /* END_CASE */
 

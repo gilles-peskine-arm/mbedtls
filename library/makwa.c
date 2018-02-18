@@ -127,14 +127,12 @@ static int kdf_update_k( mbedtls_md_context_t *md_ctx,
                          unsigned char *k,
                          const unsigned char *v,
                          unsigned char step,
-                         const unsigned char *input0,
-                         size_t input0_length,
-                         const unsigned char *input1,
-                         size_t input1_length,
-                         const unsigned char *input2,
-                         size_t input2_length )
+                         const unsigned char *const* inputs,
+                         const size_t *input_lengths,
+                         size_t nb_inputs )
 {
     int ret;
+    size_t i;
     ret = mbedtls_md_hmac_starts( md_ctx, k, hash_length );
     if( ret != 0 )
         return( ret );
@@ -144,15 +142,12 @@ static int kdf_update_k( mbedtls_md_context_t *md_ctx,
     ret = mbedtls_md_hmac_update( md_ctx, &step, 1 );
     if( ret != 0 )
         return( ret );
-    ret = mbedtls_md_hmac_update( md_ctx, input0, input0_length );
-    if( ret != 0 )
-        return( ret );
-    ret = mbedtls_md_hmac_update( md_ctx, input1, input1_length );
-    if( ret != 0 )
-        return( ret );
-    ret = mbedtls_md_hmac_update( md_ctx, input2, input2_length );
-    if( ret != 0 )
-        return( ret );
+    for( i = 0; i < nb_inputs; i++ )
+    {
+        ret = mbedtls_md_hmac_update( md_ctx, inputs[i], input_lengths[i] );
+        if( ret != 0 )
+            return( ret );
+    }
     ret = mbedtls_md_hmac_finish( md_ctx, k );
     if( ret != 0 )
         return( ret );
@@ -179,11 +174,11 @@ static int kdf_update_v( mbedtls_md_context_t *md_ctx,
 }
 
 /* 2.3 The KDF: H_{output_length}(input) */
-static int makwa_kdf( const mbedtls_md_info_t *md_info,
-                      const unsigned char *input0, size_t input0_length,
-                      const unsigned char *input1, size_t input1_length,
-                      const unsigned char *input2, size_t input2_length,
-                      unsigned char *output, size_t output_length )
+int mbedtls_makwa_kdf( const mbedtls_md_info_t *md_info,
+                       const unsigned char *const *inputs,
+                       const size_t *input_lengths,
+                       size_t nb_inputs,
+                       unsigned char *output, size_t output_length )
 {
     unsigned char k[MBEDTLS_MD_MAX_SIZE];
     unsigned char v[MBEDTLS_MD_MAX_SIZE];
@@ -211,9 +206,7 @@ static int makwa_kdf( const mbedtls_md_info_t *md_info,
 
     /* 3. Compute K <- HMAC_K(V || 0x00 || m) */
     ret = kdf_update_k( &md_ctx, hash_length, k, v, 0,
-                        input0, input0_length,
-                        input1, input1_length,
-                        input2, input2_length );
+                        inputs, input_lengths, nb_inputs );
     if( ret != 0 )
         goto exit;
 
@@ -224,9 +217,7 @@ static int makwa_kdf( const mbedtls_md_info_t *md_info,
 
     /* 5. Compute K <- HMAC_K(V || 0x01 || m) */
     ret = kdf_update_k( &md_ctx, hash_length, k, v, 1,
-                        input0, input0_length,
-                        input1, input1_length,
-                        input2, input2_length );
+                        inputs, input_lengths, nb_inputs );
     if( ret != 0 )
         goto exit;
 
@@ -269,15 +260,17 @@ static int makwa_make_x( const mbedtls_md_info_t *md_info,
 {
     int ret;
     unsigned char bytes[MBEDTLS_MPI_MAX_SIZE];
+    const unsigned char *kdf_inputs[3] = { salt, input, &input_length };
+    size_t kdf_input_lengths[3] = { salt_length, input_length, 1 };
 
     /* Double-check that k is supported */
     if( k > MBEDTLS_MPI_MAX_SIZE )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
     /* 1. Padding: let S = H_{k-2-u}(salt || input || input_length) */
-    ret = makwa_kdf( md_info,
-                     salt, salt_length, input, input_length, &input_length, 1,
-                     bytes + 1, k - 2 - input_length );
+    ret = mbedtls_makwa_kdf( md_info,
+                             kdf_inputs, kdf_input_lengths, 3,
+                             bytes + 1, k - 2 - input_length );
     if( ret != 0 )
         return( ret );
 
@@ -403,9 +396,10 @@ static int makwa_core_and_post( const mbedtls_md_info_t *md_info,
         if( ret == 0 )
         {
             /* 2.7 Post-Hashing */
-            ret = makwa_kdf( md_info, primary_output, primary_output_length,
-                             NULL, 0, NULL, 0,
-                             output, output_length );
+            const unsigned char *po = primary_output;
+            ret = mbedtls_makwa_kdf( md_info,
+                                     &po, &primary_output_length, 1,
+                                     output, output_length );
         }
         mbedtls_zeroize( primary_output, primary_output_length );
         return( ret );
@@ -443,9 +437,8 @@ int mbedtls_makwa_compute_raw( mbedtls_md_type_t md_alg,
         /* 2.5 Input Pre-Hashing: hashed_input <- H_{64}(input) */
         size_t hash_length = mbedtls_md_get_size( md_info );
         unsigned char hashed_input[64];
-        ret = makwa_kdf( md_info, input, input_length,
-                         NULL, 0, NULL, 0,
-                         hashed_input, sizeof( hashed_input ) );
+        ret = mbedtls_makwa_kdf( md_info, &input, &input_length, 1,
+                                 hashed_input, sizeof( hashed_input ) );
         if( ret != 0 )
             return( ret );
         /* 2.6 Core Hashing + 2.7 Post-Hashing */
@@ -642,9 +635,9 @@ static int modulus_checksum( mbedtls_md_type_t md_alg, const mbedtls_mpi *n,
     ret = mbedtls_mpi_write_binary( n, n_bytes, n_byte_size );
     if( ret != 0 )
         goto exit;
-    ret = makwa_kdf( md_info,
-                     n_bytes, n_byte_size, NULL, 0, NULL, 0,
-                     n_bytes, 8 );
+    ret = mbedtls_makwa_kdf( md_info,
+                             (const unsigned char **) &n_bytes, &n_byte_size, 1,
+                             n_bytes, 8 );
     if( ret != 0 )
         goto exit;
 
