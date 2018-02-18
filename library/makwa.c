@@ -304,6 +304,17 @@ static int makwa_core( const mbedtls_md_info_t *md_info,
     int ret;
     mbedtls_mpi x;
     mbedtls_mpi e;
+    mbedtls_mpi r;
+    /* We'll need to calculate x^{2^{w+1}} mod n. The straightforward way is
+     * to call mbedtls_mpi_exp_mod() with the exponent 2^{w+1}, but this
+     * requires a lot of memory and may be over the MPI size limit. So
+     * we'll repeated elevations to the 2^exp_steps power. Larger exp_steps
+     * give better performance at the expense of memory. Use the size of n
+     * as an indication of how much memory it's sensible to use. This gives
+     * near-optimal performance because n must be at least 1273 bits and
+     * that makes it large enough that going beyond only gives a tiny
+     * performance benefit. */
+    unsigned exp_step = mbedtls_mpi_size( n );
 
     /* Let u = input_length */
     /* Let k = primary_output_length */
@@ -322,6 +333,7 @@ static int makwa_core( const mbedtls_md_info_t *md_info,
 
     mbedtls_mpi_init( &x );
     mbedtls_mpi_init( &e );
+    mbedtls_mpi_init( &r );
 
     /* Steps 1-3: build x from input and salt */
     ret = makwa_make_x( md_info, input, input_length, salt, salt_length,
@@ -329,16 +341,35 @@ static int makwa_core( const mbedtls_md_info_t *md_info,
     if( ret != 0 )
         goto exit;
 
-    /* 4. Compute y = x^{2^{w+1}} mod n */
-    /* First let e = 2^{w+1} */
+    /* 4. Compute y = x^{2^{w+1}} mod n (stored back in x) */
+    /* Let w = q * exp_step + r. Then
+     *    x^{2^{w+1}} = ((...(x^{2^exp_step})...)^{2^exp_step})^{2^{r+1}}
+     *                         `-----------------------------'
+     *                                   q times
+     */
+    if( work_factor > exp_step )
+    {
+        ret = mbedtls_mpi_lset( &e, 1 );
+        if( ret != 0 )
+            goto exit;
+        ret = mbedtls_mpi_shift_l( &e, exp_step );
+        if( ret != 0 )
+            goto exit;
+        while( work_factor > exp_step )
+        {
+            ret = mbedtls_mpi_exp_mod( &x, &x, &e, n, &r );
+            if( ret != 0 )
+                goto exit;
+            work_factor -= exp_step;
+        }
+    }
     ret = mbedtls_mpi_lset( &e, 1 );
     if( ret != 0 )
         goto exit;
     ret = mbedtls_mpi_shift_l( &e, work_factor + 1 );
     if( ret != 0 )
         goto exit;
-    /* Calculate x^e and store the result back in x. */
-    ret = mbedtls_mpi_exp_mod( &x, &x, &e, n, NULL );
+    ret = mbedtls_mpi_exp_mod( &x, &x, &e, n, &r );
     if( ret != 0 )
         goto exit;
 
@@ -348,6 +379,7 @@ static int makwa_core( const mbedtls_md_info_t *md_info,
 exit:
     mbedtls_mpi_free( &x );
     mbedtls_mpi_free( &e );
+    mbedtls_mpi_free( &r );
     return( ret );
 }
 

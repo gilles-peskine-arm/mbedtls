@@ -186,11 +186,6 @@ void makwa_verify_base64( int md_alg_arg, char *n_hex,
                 for( w = -1; w >= 3; w >>= 1 )
                     ++delta;
                 break;
-            case 'm':
-                /* Smallest delta such that 3*2^delta does not fit in a bignum. */
-                for( w = MBEDTLS_MPI_MAX_BITS; w > 2; w >>= 1 )
-                    ++delta;
-                break;
             default:
                 TEST_ASSERT( ! "Unsupported work factor substitution" );
         }
