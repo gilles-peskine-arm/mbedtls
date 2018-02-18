@@ -435,7 +435,6 @@ int mbedtls_makwa_compute_raw( mbedtls_md_type_t md_alg,
     if( pre_hash )
     {
         /* 2.5 Input Pre-Hashing: hashed_input <- H_{64}(input) */
-        size_t hash_length = mbedtls_md_get_size( md_info );
         unsigned char hashed_input[64];
         ret = mbedtls_makwa_kdf( md_info, &input, &input_length, 1,
                                  hashed_input, sizeof( hashed_input ) );
@@ -443,7 +442,7 @@ int mbedtls_makwa_compute_raw( mbedtls_md_type_t md_alg,
             return( ret );
         /* 2.6 Core Hashing + 2.7 Post-Hashing */
         return( makwa_core_and_post( md_info, post_hash, n, work_factor,
-                                     hashed_input, hash_length,
+                                     hashed_input, sizeof( hashed_input ),
                                      salt, salt_length,
                                      primary_output_length,
                                      output, output_length ) );
