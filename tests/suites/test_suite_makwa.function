@@ -65,8 +65,8 @@ void makwa_compute_raw( int md_alg_arg, int work_factor,
     unsigned char salt[100];
     size_t salt_length;
     mbedtls_mpi n;
-    unsigned char expected_output[100];
-    unsigned char actual_output[100];
+    unsigned char expected_output[600];
+    unsigned char actual_output[600];
     size_t output_length;
 
     input_length = unhexify( input, input_hex );
@@ -103,7 +103,7 @@ void makwa_verify_raw( int md_alg_arg, int work_factor,
     unsigned char salt[100];
     size_t salt_length;
     mbedtls_mpi n;
-    unsigned char expected_output[100];
+    unsigned char expected_output[600];
     size_t output_length;
 
     input_length = unhexify( input, input_hex );
@@ -138,7 +138,7 @@ void makwa_compute_base64( int md_alg_arg, int work_factor,
     unsigned char salt[100];
     size_t salt_length;
     mbedtls_mpi n;
-    char actual_output[500];
+    char actual_output[800];
 
     input_length = unhexify( input, input_hex );
     salt_length = unhexify( salt, salt_hex );
