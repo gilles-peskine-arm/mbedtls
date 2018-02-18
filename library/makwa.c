@@ -730,7 +730,7 @@ int mbedtls_makwa_compute_base64( mbedtls_md_type_t md_alg,
     if( ret != 0 )
         goto exit;
     ret = b64_encode( cursor, end - cursor, &chunk_length,
-                      raw_output, raw_output_length / 3 * 3 );
+                      raw_output, raw_output_length );
     if( ret != 0 )
         goto exit;
     cursor += chunk_length;
