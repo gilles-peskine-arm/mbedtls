@@ -33,5 +33,10 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+struct psa_key_policy_s
+{
+    psa_key_usage_t usage;
+    psa_algorithm_t alg;
+};
 
 #endif /* PSA_CRYPTO_STRUCT_H */
