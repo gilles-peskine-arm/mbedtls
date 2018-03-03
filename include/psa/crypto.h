@@ -263,7 +263,7 @@ psa_status_t psa_get_key_information(psa_key_slot_t key,
  * If a key is created with psa_import_key() and then exported with
  * this function, it is not guaranteed that the resulting data is
  * identical: the implementation may choose a different representation
- * of the same key.
+ * of the same key if the format permits it.
  *
  * For standard key types, the output format is as follows:
  *
@@ -273,7 +273,7 @@ psa_status_t psa_get_key_information(psa_key_slot_t key,
  *   correct.
  * - For Triple-DES, the format is the concatenation of the
  *   two or three DES keys.
- * - For RSA key pairs keys (#PSA_KEY_TYPE_RSA_KEYPAIR), the format
+ * - For RSA key pairs (#PSA_KEY_TYPE_RSA_KEYPAIR), the format
  *   is the non-encrypted DER representation defined by PKCS\#8 (RFC 5208)
  *   as PrivateKeyInfo.
  * - For RSA public keys (#PSA_KEY_TYPE_RSA_PUBLIC_KEY), the format
@@ -288,6 +288,7 @@ psa_status_t psa_get_key_information(psa_key_slot_t key,
  *
  * \retval PSA_SUCCESS
  * \retval PSA_ERROR_EMPTY_SLOT
+ * \retval PSA_ERROR_NOT_PERMITTED
  * \retval PSA_ERROR_COMMUNICATION_FAILURE
  * \retval PSA_ERROR_HARDWARE_FAILURE
  * \retval PSA_ERROR_TAMPERING_DETECTED
