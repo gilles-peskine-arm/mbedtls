@@ -31,10 +31,8 @@ void import( char *hex, int type, int expected_status )
     unsigned char *data = NULL;
     size_t data_size;
 
-    data_size = strlen( hex ) / 2;
-    data = mbedtls_calloc( 1, data_size );
+    data = unhexify_alloc( hex, &data_size );
     TEST_ASSERT( data != NULL );
-    data_size = unhexify( data, hex );
     TEST_ASSERT( psa_crypto_init( ) == PSA_SUCCESS );
 
     status = psa_import_key( slot, type, data, data_size );
@@ -69,10 +67,8 @@ void import_export( char *hex, int type_arg,
     psa_key_type_t got_type;
     size_t got_bits;
 
-    data_size = strlen( hex ) / 2;
-    data = mbedtls_calloc( 1, data_size );
+    data = unhexify_alloc( hex, &data_size );
     TEST_ASSERT( data != NULL );
-    data_size = unhexify( data, hex );
     export_size = (ssize_t) data_size + export_size_delta;
     exported = mbedtls_calloc( 1, export_size );
     TEST_ASSERT( exported != NULL );
