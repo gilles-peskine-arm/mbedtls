@@ -285,6 +285,7 @@ psa_status_t psa_import_key(psa_key_slot_t key,
 
     if( type == PSA_KEY_TYPE_RAW_DATA )
     {
+        /* Ensure that a bytes-to-bit conversion won't overflow. */
         if( data_length > SIZE_MAX / 8 )
             return( PSA_ERROR_NOT_SUPPORTED );
         slot->data.raw.data = mbedtls_calloc( 1, data_length );
@@ -319,7 +320,7 @@ psa_status_t psa_destroy_key(psa_key_slot_t key)
     else
     {
         /* Shouldn't happen: the key type is not any type that we
-         * put it. */
+         * put in. */
         return( PSA_ERROR_TAMPERING_DETECTED );
     }
 
@@ -351,7 +352,7 @@ psa_status_t psa_get_key_information(psa_key_slot_t key,
     else
     {
         /* Shouldn't happen: the key type is not any type that we
-         * put it. */
+         * put in. */
         return( PSA_ERROR_TAMPERING_DETECTED );
     }
 
@@ -381,6 +382,9 @@ psa_status_t psa_export_key(psa_key_slot_t key,
     }
     else
     {
+        /* This shouldn't happen in the reference implementation, but
+           it is valid for a special-purpose implementation to omit
+           support for exporting certain key types. */
         return( PSA_ERROR_NOT_SUPPORTED );
     }
 }
