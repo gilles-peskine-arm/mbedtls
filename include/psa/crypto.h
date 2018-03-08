@@ -179,11 +179,12 @@ typedef uint32_t psa_algorithm_t;
     (((alg) & PSA_ALG_VENDOR_FLAG) != 0)
 /** Whether the specified algorithm is a hash algorithm.
  *
- * \param alg An algorithm identifier (\c PSA_ALG_XXX value)
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
  *
  * \return 1 if \c alg is a hash algorithm, 0 otherwise.
  *         This macro may return either 0 or 1 if \c alg is not a valid
- *         algorithm identifier. */
+ *         algorithm identifier.
+ */
 #define PSA_ALG_IS_HASH(alg)                                            \
     (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_HASH)
 #define PSA_ALG_IS_MAC(alg)                                             \
@@ -355,11 +356,41 @@ psa_status_t psa_export_public_key(psa_key_slot_t key,
 /** \brief Encoding of permitted usage on a key. */
 typedef uint32_t psa_key_usage_t;
 
+/** Whether the key may be exported.
+ *
+ * A public key or the public part of a key pair may always be exported
+ * regardless of the value of this permission flag.
+ *
+ * If a key does not have export permission, implementations shall not
+ * allow the key to be exported in plain form from the cryptoprocessor,
+ * whether through psa_export_key() or through a proprietary interface.
+ * The key may however be exportable in a wrapped form, i.e. in a form
+ * where it is encrypted by another key.
+ */
 #define PSA_KEY_USAGE_EXPORT                    ((psa_key_usage_t)0x00000001)
 
+/** Whether the key may be used to encrypt a message.
+ *
+ * For a key pair, this concerns the public key.
+ */
 #define PSA_KEY_USAGE_ENCRYPT                   ((psa_key_usage_t)0x00000100)
+
+/** Whether the key may be used to decrypt a message.
+ *
+ * For a key pair, this concerns the private key.
+ */
 #define PSA_KEY_USAGE_DECRYPT                   ((psa_key_usage_t)0x00000200)
+
+/** Whether the key may be used to sign a message.
+ *
+ * For a key pair, this concerns the private key.
+ */
 #define PSA_KEY_USAGE_SIGN                      ((psa_key_usage_t)0x00000400)
+
+/** Whether the key may be used to verify a message signature.
+ *
+ * For a key pair, this concerns the public key.
+ */
 #define PSA_KEY_USAGE_VERIFY                    ((psa_key_usage_t)0x00000800)
 
 /** The type of the key policy data structure.
@@ -373,6 +404,12 @@ typedef struct psa_key_policy_s psa_key_policy_t;
  * usage of the key. */
 void psa_key_policy_init(psa_key_policy_t *policy);
 
+/** \brief Set the standard fields of a policy structure.
+ *
+ * Note that this function does not make any consistency check of the
+ * parameters. The values are only checked when applying the policy to
+ * a key slot with psa_set_key_policy().
+ */
 void psa_key_policy_set_usage(psa_key_policy_t *policy,
                               psa_key_usage_t usage,
                               psa_algorithm_t alg);
@@ -386,10 +423,15 @@ psa_algorithm_t psa_key_policy_get_algorithm(psa_key_policy_t *policy);
  * This function must be called on an empty key slot, before importing,
  * generating or creating a key in the slot. Changing the policy of an
  * existing key is not permitted.
+ *
+ * Implementations may set restrictions on supported key policies
+ * depending on the key type and the key slot.
  */
 psa_status_t psa_set_key_policy(psa_key_slot_t key,
                                 const psa_key_policy_t *policy);
 
+/** \brief Get the usage policy for a key slot.
+ */
 psa_status_t psa_get_key_policy(psa_key_slot_t key,
                                 psa_key_policy_t *policy);
 
