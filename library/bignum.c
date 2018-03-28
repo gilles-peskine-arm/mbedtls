@@ -1178,6 +1178,9 @@ void mpi_mul_hlp( size_t i, mbedtls_mpi_uint *s, mbedtls_mpi_uint *d, mbedtls_mp
 
 #if defined(MBEDTLS_MPI_SQR)
 
+#if 1
+#include <execinfo.h>
+#endif
 /*
  * Squarification helper: X = A * A
  */
@@ -1188,6 +1191,14 @@ static int mpi_sqr_hlp( mbedtls_mpi *X, const mbedtls_mpi *A )
     mbedtls_mpi TA;
     mbedtls_mpi_uint r0, r1;
     mbedtls_mpi_uint d0 = 0, d1 = 0, d2 = 0;
+
+#if 1
+    {
+        static void* pointers[30];
+        int n = backtrace( pointers, sizeof( pointers ) / sizeof( pointers[0] ));
+        backtrace_symbols_fd( pointers, n, 3 );
+    }
+#endif
 
     for( n = A->n; n > 0; n-- )
         if( A->p[n - 1] != 0 )
