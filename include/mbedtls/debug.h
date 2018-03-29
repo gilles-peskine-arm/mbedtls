@@ -112,6 +112,9 @@ void mbedtls_debug_set_threshold( int threshold );
  * \attention       This function is intended for INTERNAL usage within the
  *                  library only.
  */
+#if defined(__GNUC__)
+__attribute__((format(__printf__, 5, 6)))
+#endif
 void mbedtls_debug_print_msg( const mbedtls_ssl_context *ssl, int level,
                               const char *file, int line,
                               const char *format, ... );
