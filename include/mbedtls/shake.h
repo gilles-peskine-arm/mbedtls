@@ -42,7 +42,8 @@
 extern "C" {
 #endif
 
-#define MBEDTLS_ERR_SHAKE_BAD_INPUT_DATA   -0x001F /**< Invalid input parameter(s). */
+#define MBEDTLS_ERR_SHAKE_BAD_INPUT_DATA                  -0x0065  /**< Bad input parameters to function. */
+#define MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED                 -0x0067  /**< SHAKE hardware accelerator failed. */
 
 /**
  * \brief Designators for algorithms in the SHA-3 family.
@@ -114,6 +115,8 @@ void mbedtls_shake_clone( mbedtls_shake_context *dst,
  *                 mbedtls_shake_init() or after calling
  *                 mbedtls_shake_update() or mbedtls_shake_process() or
  *                 mbedtls_shake_ouput(),
+ * \retval #MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED
+ *                 Failure reported by a hardware accelerator.
  */
 int mbedtls_shake_starts( mbedtls_shake_context *ctx,
                           mbedtls_shake_type_t type );
@@ -130,6 +133,8 @@ int mbedtls_shake_starts( mbedtls_shake_context *ctx,
  *                 \p ctx is \c NULL,
  *                 or mbedtls_shake_starts() has not been called previously,
  *                 or mbedtls_shake_output() has been called on \p ctx.
+ * \retval #MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED
+ *                 Failure reported by a hardware accelerator.
  */
 int mbedtls_shake_update( mbedtls_shake_context *ctx,
                           const unsigned char* input,
@@ -149,6 +154,8 @@ int mbedtls_shake_update( mbedtls_shake_context *ctx,
  * \retval #MBEDTLS_ERR_SHAKE_BAD_INPUT_DATA
  *                 \p ctx or \p output is \c NULL,
  *                 or mbedtls_shake_starts() has not been called previously,
+ * \retval #MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED
+ *                 Failure reported by a hardware accelerator.
  */
 int mbedtls_shake_output( mbedtls_shake_context *ctx,
                           unsigned char* output,
@@ -168,6 +175,8 @@ int mbedtls_shake_output( mbedtls_shake_context *ctx,
  *                 \p ctx or \p output is \c NULL.
  *                 or mbedtls_shake_starts() has not been called previously,
  *                 or mbedtls_shake_output() has been called on \p ctx.
+ * \retval #MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED
+ *                 Failure reported by a hardware accelerator.
  */
 int mbedtls_shake_process( mbedtls_shake_context *ctx,
                            const unsigned char* input );
@@ -186,6 +195,8 @@ int mbedtls_shake_process( mbedtls_shake_context *ctx,
  * \retval #MBEDTLS_ERR_SHAKE_BAD_INPUT_DATA
  *                 \p ctx or \p output is \c NULL,
  *                 or \c type is invalid.
+ * \retval #MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED
+ *                 Failure reported by a hardware accelerator.
  */
 int mbedtls_shake( const unsigned char* input,
                    size_t ilen,

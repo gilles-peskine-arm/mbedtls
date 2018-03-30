@@ -37,8 +37,9 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#define MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA -0x001B /**< Invalid input parameter(s). */
-#define MBEDTLS_ERR_KECCAK_BAD_STATE      -0x001D /**< Requested operation cannot be performed with the current context state. */
+#define MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA                 -0x001B  /**< Bad input parameters to function. */
+#define MBEDTLS_ERR_KECCAK_BAD_STATE                      -0x001D  /**< The requested operation cannot be performed with the current context state. */
+#define MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED                -0x001F  /**< SHAKE hardware accelerator failed. */
 
 #define MBEDTLS_KECCAK_F_STATE_SIZE_BITS  ( 1600U )
 #define MBEDTLS_KECCAK_F_STATE_SIZE_BYTES ( 1600U / 8U )
@@ -110,6 +111,8 @@ void mbedtls_keccak_f_clone( mbedtls_keccak_f_context *dst,
  * \retval 0            Success.
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx is \c NULL.
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_f_permute( mbedtls_keccak_f_context *ctx );
 
@@ -127,6 +130,8 @@ int mbedtls_keccak_f_permute( mbedtls_keccak_f_context *ctx );
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p data is \c NULL,
  *                      or \p size_bits is larger than 1600.
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_f_xor_binary( mbedtls_keccak_f_context *ctx,
                                  const unsigned char *data,
@@ -146,6 +151,8 @@ int mbedtls_keccak_f_xor_binary( mbedtls_keccak_f_context *ctx,
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p data is \c NULL,
  *                      or \p size is larger than 20.
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_f_read_binary( mbedtls_keccak_f_context *ctx,
                                   unsigned char *data,
@@ -233,6 +240,8 @@ void mbedtls_keccak_sponge_clone( mbedtls_keccak_sponge_context *dst,
  *                      mbedtls_keccak_sponge_init() or after calling
  *                      mbedtls_keccak_sponge_absorb() or
  *                      mbedtls_keccak_sponge_squeeze(),
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_sponge_starts( mbedtls_keccak_sponge_context *ctx,
                                   size_t capacity,
@@ -258,6 +267,8 @@ int mbedtls_keccak_sponge_starts( mbedtls_keccak_sponge_context *ctx,
  *                      been previously called.
  *                      Alternatively, mbedtls_keccak_sponge_starts() has
  *                      not yet been called to set up the context.
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_sponge_absorb( mbedtls_keccak_sponge_context *ctx,
         const unsigned char* data,
@@ -282,6 +293,8 @@ int mbedtls_keccak_sponge_absorb( mbedtls_keccak_sponge_context *ctx,
  * \retval #MBEDTLS_ERR_KECCAK_BAD_STATE
  *                      mbedtls_keccak_sponge_starts() has not yet been called
  *                      to set up the context.
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_sponge_squeeze( mbedtls_keccak_sponge_context *ctx,
         unsigned char* data,
@@ -308,6 +321,8 @@ int mbedtls_keccak_sponge_squeeze( mbedtls_keccak_sponge_context *ctx,
  * \retval 0            Success.
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p input is \c NULL.
+ * \retval #MBEDTLS_ERR_KECCAK_HW_ACCEL_FAILED
+ *                      Failure reported by a hardware accelerator.
  */
 int mbedtls_keccak_sponge_process( mbedtls_keccak_sponge_context *ctx,
                                    const unsigned char *input );
