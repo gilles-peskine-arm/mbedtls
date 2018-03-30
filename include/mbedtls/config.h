@@ -2263,17 +2263,32 @@
 #define MBEDTLS_HMAC_DRBG_C
 
 /**
- * \def MBEDTLS_NIST_KW_C
+ * \def MBEDTLS_KECCAKF_C
  *
- * Enable the Key Wrapping mode for 128-bit block ciphers,
- * as defined in NIST SP 800-38F. Only KW and KWP modes
- * are supported. At the moment, only AES is approved by NIST.
+ * Enable the SHA-3 cryptographic hash algorithms.
  *
- * Module:  library/nist_kw.c
+ * Module:  library/keccakf.c
+ * Caller:  library/keccak_sponge.c
  *
- * Requires: MBEDTLS_AES_C and MBEDTLS_CIPHER_C
+ * This module adds support for the Keccak-f[1600] permutation.
+ * This module is required by for the Keccak Sponge module.
  */
-//#define MBEDTLS_NIST_KW_C
+#define MBEDTLS_KECCAKF_C
+
+/**
+ * \def MBEDTLS_KECCAKF_C
+ *
+ * Enable the Sponge construction based on Keccak-f[1600].
+ *
+ * Module:  library/keccak_sponge.c
+ * Caller:  library/sha3.c
+ *
+ * Requires: MBEDTKS_KECCAKF_C
+ *
+ * This module adds support for the sponge construction based on Keccak-f[1600].
+ * This module is required by for the SHA-3 module.
+ */
+#define MBEDTLS_KECCAK_SPONGE_C
 
 /**
  * \def MBEDTLS_MD_C
@@ -2377,6 +2392,19 @@
  * This module provides networking routines.
  */
 #define MBEDTLS_NET_C
+
+/**
+ * \def MBEDTLS_NIST_KW_C
+ *
+ * Enable the Key Wrapping mode for 128-bit block ciphers,
+ * as defined in NIST SP 800-38F. Only KW and KWP modes
+ * are supported. At the moment, only AES is approved by NIST.
+ *
+ * Module:  library/nist_kw.c
+ *
+ * Requires: MBEDTLS_AES_C and MBEDTLS_CIPHER_C
+ */
+//#define MBEDTLS_NIST_KW_C
 
 /**
  * \def MBEDTLS_OID_C
@@ -2679,34 +2707,6 @@
  * This module adds support for SHAKE128 and SHAKE256.
  */
 #define MBEDTLS_SHAKE_C
-
-/**
- * \def MBEDTLS_KECCAKF_C
- *
- * Enable the SHA-3 cryptographic hash algorithms.
- *
- * Module:  library/keccakf.c
- * Caller:  library/keccak_sponge.c
- *
- * This module adds support for the Keccak-f[1600] permutation.
- * This module is required by for the Keccak Sponge module.
- */
-#define MBEDTLS_KECCAKF_C
-
-/**
- * \def MBEDTLS_KECCAKF_C
- *
- * Enable the Sponge construction based on Keccak-f[1600].
- *
- * Module:  library/keccak_sponge.c
- * Caller:  library/sha3.c
- *
- * Requires: MBEDTKS_KECCAKF_C
- *
- * This module adds support for the sponge construction based on Keccak-f[1600].
- * This module is required by for the SHA-3 module.
- */
-#define MBEDTLS_KECCAK_SPONGE_C
 
 /**
  * \def MBEDTLS_SSL_CACHE_C
