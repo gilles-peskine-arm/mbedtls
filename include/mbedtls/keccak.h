@@ -41,8 +41,8 @@
 #define MBEDTLS_ERR_KECCAK_NOT_SETUP      -0x001D /**< mbedtls_keccak_sponge_starts has not been called. */
 #define MBEDTLS_ERR_KECCAK_BAD_STATE      -0x001F /**< Requested operation cannot be performed with the current context state. */
 
-#define MBEDTLS_KECCAKF_STATE_SIZE_BITS  ( 1600U )
-#define MBEDTLS_KECCAKF_STATE_SIZE_BYTES ( 1600U / 8U )
+#define MBEDTLS_KECCAK_F_STATE_SIZE_BITS  ( 1600U )
+#define MBEDTLS_KECCAK_F_STATE_SIZE_BYTES ( 1600U / 8U )
 
 #include <stdint.h>
 #include <stddef.h>
@@ -70,7 +70,7 @@ typedef struct
     uint64_t state[5][5];
     uint64_t temp[5][5];
 }
-mbedtls_keccakf_context;
+mbedtls_keccak_f_context;
 #endif /* !defined(MBEDTLS_KECCAK_F_ALT) */
 
 /**
@@ -78,21 +78,21 @@ mbedtls_keccakf_context;
  *
  *                      This function should always be called first.
  *                      It prepares the context for other
- *                      mbedtls_keccakf_xxx functions.
+ *                      mbedtls_keccak_f_xxx functions.
  *
  * \param ctx           The Keccak-f[1600] context to initialize.
  */
-void mbedtls_keccakf_init( mbedtls_keccakf_context *ctx );
+void mbedtls_keccak_f_init( mbedtls_keccak_f_context *ctx );
 
 /**
  * \brief               Free and clear the internal structures of \p ctx.
  *
  *                      This function can be called at any time after
- *                      mbedtls_keccakf_init().
+ *                      mbedtls_keccak_f_init().
  *
  * \param ctx           The Keccak-f[1600] context to clear.
  */
-void mbedtls_keccakf_free( mbedtls_keccakf_context *ctx );
+void mbedtls_keccak_f_free( mbedtls_keccak_f_context *ctx );
 
 /**
  * \brief               Clone (the state of) a Keccak-f[1600] context.
@@ -100,8 +100,8 @@ void mbedtls_keccakf_free( mbedtls_keccakf_context *ctx );
  * \param dst           The destination context.
  * \param src           The context to clone.
  */
-void mbedtls_keccakf_clone( mbedtls_keccakf_context *dst,
-                            const mbedtls_keccakf_context *src );
+void mbedtls_keccak_f_clone( mbedtls_keccak_f_context *dst,
+                             const mbedtls_keccak_f_context *src );
 
 /**
  * \brief               Apply the Keccak permutation.
@@ -112,7 +112,7 @@ void mbedtls_keccakf_clone( mbedtls_keccakf_context *dst,
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx is \c NULL.
  */
-int mbedtls_keccakf_permute( mbedtls_keccakf_context *ctx );
+int mbedtls_keccak_f_permute( mbedtls_keccak_f_context *ctx );
 
 /**
  * \brief               XOR binary bits into the Keccak state.
@@ -129,9 +129,9 @@ int mbedtls_keccakf_permute( mbedtls_keccakf_context *ctx );
  *                      \p ctx or \p data is \c NULL,
  *                      or \p size_bits is larger than 1600.
  */
-int mbedtls_keccakf_xor_binary( mbedtls_keccakf_context *ctx,
-                                const unsigned char *data,
-                                size_t size_bits );
+int mbedtls_keccak_f_xor_binary( mbedtls_keccak_f_context *ctx,
+                                 const unsigned char *data,
+                                 size_t size_bits );
 
 /**
  * \brief               Read bytes from the Keccak state.
@@ -148,9 +148,9 @@ int mbedtls_keccakf_xor_binary( mbedtls_keccakf_context *ctx,
  *                      \p ctx or \p data is \c NULL,
  *                      or \p size is larger than 20.
  */
-int mbedtls_keccakf_read_binary( mbedtls_keccakf_context *ctx,
-                                 unsigned char *data,
-                                 size_t size );
+int mbedtls_keccak_f_read_binary( mbedtls_keccak_f_context *ctx,
+                                  unsigned char *data,
+                                  size_t size );
 
 #if !defined(MBEDTLS_KECCAK_SPONGE_ALT)
 /**
@@ -164,7 +164,7 @@ int mbedtls_keccakf_read_binary( mbedtls_keccakf_context *ctx,
  */
 typedef struct
 {
-    mbedtls_keccakf_context keccakf_ctx;
+    mbedtls_keccak_f_context keccak_f_ctx;
     unsigned char queue[1600 / 8]; /* store partial block data (absorbing) or pending output data (squeezing) */
     size_t queue_len;              /* queue length (in bits) */
     size_t rate;                   /* sponge rate (in bits) */
