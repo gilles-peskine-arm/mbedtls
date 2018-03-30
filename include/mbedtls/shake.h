@@ -31,6 +31,9 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+#define MBEDTLS_ERR_SHAKE_BAD_INPUT_DATA                  -0x0065  /**< Bad input parameters to function. */
+#define MBEDTLS_ERR_SHAKE_HW_ACCEL_FAILED                 -0x0067  /**< SHAKE hardware accelerator failed. */
+
 #if !defined(MBEDTLS_SHAKE_ALT)
 // Regular implementation
 
@@ -39,8 +42,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define MBEDTLS_ERR_SHAKE_BAD_INPUT_DATA   -0x001F /**< Invalid input parameter(s). */
 
 typedef enum
 {

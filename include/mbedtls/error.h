@@ -71,8 +71,7 @@
  * HMAC_DRBG 4                  0x0003-0x0009
  * CCM       3                  0x000D-0x0011
  * ARC4      1                  0x0019-0x0019
- * KECCAK    2                  0x001B-0x001D
- * SHAKE     1                  0x001F-0x001F
+ * KECCAK    3                  0x001B-0x001F
  * MD2       1                  0x002B-0x002B
  * MD4       1                  0x002D-0x002D
  * MD5       1                  0x002F-0x002F
@@ -80,9 +79,10 @@
  * SHA1      1                  0x0035-0x0035
  * SHA256    1                  0x0037-0x0037
  * SHA512    1                  0x0039-0x0039
- * SHA-3     1                  0x003B-0x003B
  * CHACHA20  3                  0x0051-0x0055
  * POLY1305  3                  0x0057-0x005B
+ * SHA-3     2                  0x0061-0x0063
+ * SHAKE     2                  0x0065-0x0067
  *
  * High-level module nr (3 bits - 0x0...-0x7...)
  * Name      ID  Nr of Errors
