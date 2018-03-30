@@ -633,9 +633,12 @@ static const char *features[] = {
 #if defined(MBEDTLS_HMAC_DRBG_C)
     "MBEDTLS_HMAC_DRBG_C",
 #endif /* MBEDTLS_HMAC_DRBG_C */
-#if defined(MBEDTLS_NIST_KW_C)
-    "MBEDTLS_NIST_KW_C",
-#endif /* MBEDTLS_NIST_KW_C */
+#if defined(MBEDTLS_KECCAKF_C)
+    "MBEDTLS_KECCAKF_C",
+#endif /* MBEDTLS_KECCAKF_C */
+#if defined(MBEDTLS_KECCAK_SPONGE_C)
+    "MBEDTLS_KECCAK_SPONGE_C",
+#endif /* MBEDTLS_KECCAK_SPONGE_C */
 #if defined(MBEDTLS_MD_C)
     "MBEDTLS_MD_C",
 #endif /* MBEDTLS_MD_C */
@@ -654,6 +657,9 @@ static const char *features[] = {
 #if defined(MBEDTLS_NET_C)
     "MBEDTLS_NET_C",
 #endif /* MBEDTLS_NET_C */
+#if defined(MBEDTLS_NIST_KW_C)
+    "MBEDTLS_NIST_KW_C",
+#endif /* MBEDTLS_NIST_KW_C */
 #if defined(MBEDTLS_OID_C)
     "MBEDTLS_OID_C",
 #endif /* MBEDTLS_OID_C */
@@ -711,12 +717,6 @@ static const char *features[] = {
 #if defined(MBEDTLS_SHAKE_C)
     "MBEDTLS_SHAKE_C",
 #endif /* MBEDTLS_SHAKE_C */
-#if defined(MBEDTLS_KECCAKF_C)
-    "MBEDTLS_KECCAKF_C",
-#endif /* MBEDTLS_KECCAKF_C */
-#if defined(MBEDTLS_KECCAK_SPONGE_C)
-    "MBEDTLS_KECCAK_SPONGE_C",
-#endif /* MBEDTLS_KECCAK_SPONGE_C */
 #if defined(MBEDTLS_SSL_CACHE_C)
     "MBEDTLS_SSL_CACHE_C",
 #endif /* MBEDTLS_SSL_CACHE_C */
