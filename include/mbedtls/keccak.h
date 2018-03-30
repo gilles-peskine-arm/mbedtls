@@ -1,8 +1,8 @@
 /**
- * \file keccak_sponge.h
+ * \file keccak.h
  *
- * \brief The sponge cryptographic construction built on the Keccak-f[1600]
- *        permutation.
+ * \brief The Keccak-f[1600] permutation and the corresponding sponge
+ *        construction.
  *
  * Reference: National Institute of Standards and Technology (NIST).
  * _SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions._
@@ -28,8 +28,8 @@
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
-#ifndef MBEDTLS_KECCAK_SPONGE_H
-#define MBEDTLS_KECCAK_SPONGE_H
+#ifndef MBEDTLS_KECCAK_H
+#define MBEDTLS_KECCAK_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
@@ -37,18 +37,131 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "keccakf.h"
+#define MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA -0x001B /**< Invalid input parameter(s). */
+#define MBEDTLS_ERR_KECCAK_NOT_SETUP      -0x001D /**< mbedtls_keccak_sponge_starts has not been called. */
+#define MBEDTLS_ERR_KECCAK_BAD_STATE      -0x001F /**< Requested operation cannot be performed with the current context state. */
+
+#define MBEDTLS_KECCAKF_STATE_SIZE_BITS  ( 1600U )
+#define MBEDTLS_KECCAKF_STATE_SIZE_BYTES ( 1600U / 8U )
+
+#include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MBEDTLS_ERR_KECCAK_SPONGE_BAD_INPUT_DATA -0x001B /**< Bad input parameters to function. */
-#define MBEDTLS_ERR_KECCAK_SPONGE_NOT_SETUP      -0x001D /**< mbedtls_keccak_sponge_starts has not been called. */
-#define MBEDTLS_ERR_KECCAK_SPONGE_BAD_STATE      -0x001F /**< The requested operation cannot be performed with the current context state. */
+#if defined(MBEDTLS_KECCAK_F_ALT) || defined(MBEDTLS_KECCAK_SPONGE_ALT)
+#include "keccak_alt.h"
+#endif
+
+#if !defined(MBEDTLS_KECCAK_F_ALT)
+/**
+ * \brief               The context structure for Keccak-f[1600] operations.
+ *
+ * \note                This structure may change in future versions of the
+ *                      library. Hardware-accelerated implementations may
+ *                      use different structures. Therefore applications
+ *                      should not access the context directly, but instead
+ *                      should use the functions in this module.
+ */
+typedef struct
+{
+    uint64_t state[5][5];
+    uint64_t temp[5][5];
+}
+mbedtls_keccakf_context;
+#endif /* !defined(MBEDTLS_KECCAK_F_ALT) */
+
+/**
+ * \brief               Initialize a Keccak-f[1600] context.
+ *
+ *                      This function should always be called first.
+ *                      It prepares the context for other
+ *                      mbedtls_keccakf_xxx functions.
+ *
+ * \param ctx           The Keccak-f[1600] context to initialize.
+ */
+void mbedtls_keccakf_init( mbedtls_keccakf_context *ctx );
+
+/**
+ * \brief               Free and clear the internal structures of \p ctx.
+ *
+ *                      This function can be called at any time after
+ *                      mbedtls_keccakf_init().
+ *
+ * \param ctx           The Keccak-f[1600] context to clear.
+ */
+void mbedtls_keccakf_free( mbedtls_keccakf_context *ctx );
+
+/**
+ * \brief               Clone (the state of) a Keccak-f[1600] context.
+ *
+ * \param dst           The destination context.
+ * \param src           The context to clone.
+ */
+void mbedtls_keccakf_clone( mbedtls_keccakf_context *dst,
+                            const mbedtls_keccakf_context *src );
+
+/**
+ * \brief               Apply the Keccak permutation.
+ *
+ * \param ctx           The Keccak-f[1600] context to permute.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
+ *                      \p ctx is \c NULL.
+ */
+int mbedtls_keccakf_permute( mbedtls_keccakf_context *ctx );
+
+/**
+ * \brief               XOR binary bits into the Keccak state.
+ *
+ *                      The bytes are XORed starting from the beginning of the
+ *                      Keccak state.
+ *
+ * \param ctx           The Keccak-f[1600] context.
+ * \param data          Buffer containing the bytes to XOR into the Keccak state.
+ * \param size_bits     The number of bits to XOR into the state.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
+ *                      \p ctx or \p data is \c NULL,
+ *                      or \p size_bits is larger than 1600.
+ */
+int mbedtls_keccakf_xor_binary( mbedtls_keccakf_context *ctx,
+                                const unsigned char *data,
+                                size_t size_bits );
+
+/**
+ * \brief               Read bytes from the Keccak state.
+ *
+ *                      The bytes are read starting from the beginning of the
+ *                      Keccak state.
+ *
+ * \param ctx           The Keccak-f[1600] context.
+ * \param data          Output buffer.
+ * \param size          The number of bytes to read from the Keccak state.
+ *
+ * \retval 0            Success.
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
+ *                      \p ctx or \p data is \c NULL,
+ *                      or \p size is larger than 20.
+ */
+int mbedtls_keccakf_read_binary( mbedtls_keccakf_context *ctx,
+                                 unsigned char *data,
+                                 size_t size );
 
 #if !defined(MBEDTLS_KECCAK_SPONGE_ALT)
-
+/**
+ * \brief               The context structure for Keccak sponge operations.
+ *
+ * \note                This structure may change in future versions of the
+ *                      library. Hardware-accelerated implementations may
+ *                      use different structures. Therefore applications
+ *                      should not access the context directly, but instead
+ *                      should use the functions in this module.
+ */
 typedef struct
 {
     mbedtls_keccakf_context keccakf_ctx;
@@ -60,10 +173,7 @@ typedef struct
     unsigned char suffix;          /* suffix bits appended to message, before padding */
 }
 mbedtls_keccak_sponge_context;
-
-#else /* MBEDTLS_KECCAK_SPONGE_ALT */
-#include "keccak_sponge_alt.h"
-#endif /* MBEDTLS_KECCAK_SPONGE_ALT */
+#endif /* !defined(MBEDTLS_KECCAK_SPONGE_ALT) */
 
 /**
  * \brief               Initialize a Keccak sponge context.
@@ -100,7 +210,7 @@ void mbedtls_keccak_sponge_clone( mbedtls_keccak_sponge_context *dst,
  *                      mbedtls_keccak_sponge_init() and before calling the
  *                      absorb or squeeze functions. If this function has not
  *                      been called then the absorb/squeeze functions will
- *                      return #MBEDTLS_ERR_KECCAK_SPONGE_NOT_SETUP.
+ *                      return #MBEDTLS_ERR_KECCAK_NOT_SETUP.
  *
  * \param ctx           The sponge context to set up.
  * \param capacity      The sponge's capacity parameter. This determines the
@@ -115,11 +225,11 @@ void mbedtls_keccak_sponge_clone( mbedtls_keccak_sponge_context *dst,
  *                      8 is the maximum value.
  *
  * \retval 0            Success.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_INPUT_DATA
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx is \c NULL,
  *                      or \p capacity is out of range or not a multiple of 8,
  *                      or \p suffix_len is greater than 8.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_STATE
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_STATE
  *                      This function was called without a prior call to
  *                      mbedtls_keccak_sponge_init() or after calling
  *                      mbedtls_keccak_sponge_absorb() or
@@ -141,12 +251,12 @@ int mbedtls_keccak_sponge_starts( mbedtls_keccak_sponge_context *ctx,
  * \param size          The number of bytes to input.
  *
  * \retval 0            Success.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_INPUT_DATA
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p data is \c NULL.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_NOT_SETUP
+ * \retval #MBEDTLS_ERR_KECCAK_NOT_SETUP
  *                      mbedtls_keccak_sponge_starts() has not been called
  *                      on \p ctx.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_STATE
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_STATE
  *                      The sponge can no longer accept data for absorption.
  *                      This occurs when mbedtls_keccak_sponge_squeeze() has
  *                      been previously called.
@@ -171,12 +281,12 @@ int mbedtls_keccak_sponge_absorb( mbedtls_keccak_sponge_context *ctx,
  * \param size          The number of output bytes to produce.
  *
  * \retval 0            Success.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_INPUT_DATA
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p data is \c NULL.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_NOT_SETUP
+ * \retval #MBEDTLS_ERR_KECCAK_NOT_SETUP
  *                      mbedtls_keccak_sponge_starts() has not been called
  *                      on \p ctx.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_STATE
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_STATE
  *                      mbedtls_keccak_sponge_starts() has not yet been called
  *                      to set up the context.
  */
@@ -203,7 +313,7 @@ int mbedtls_keccak_sponge_squeeze( mbedtls_keccak_sponge_context *ctx,
  *                      mbedtls_keccak_sponge_starts().
  *
  * \retval 0            Success.
- * \retval #MBEDTLS_ERR_KECCAK_SPONGE_BAD_INPUT_DATA
+ * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p input is \c NULL.
  */
 int mbedtls_keccak_sponge_process( mbedtls_keccak_sponge_context *ctx,
@@ -213,4 +323,4 @@ int mbedtls_keccak_sponge_process( mbedtls_keccak_sponge_context *ctx,
 }
 #endif
 
-#endif /* MBEDTLS_KECCAK_SPONGE_H */
+#endif /* MBEDTLS_KECCAK_H */

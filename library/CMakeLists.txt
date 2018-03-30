@@ -34,8 +34,7 @@ set(src_crypto
     havege.c
     hkdf.c
     hmac_drbg.c
-    keccak_sponge.c
-    keccakf.c
+    keccak.c
     md.c
     md2.c
     md4.c

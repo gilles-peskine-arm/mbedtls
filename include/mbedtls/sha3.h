@@ -37,7 +37,7 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "keccak_sponge.h"
+#include "keccak.h"
 
 #ifdef __cplusplus
 extern "C" {
