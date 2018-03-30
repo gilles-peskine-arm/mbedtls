@@ -38,8 +38,7 @@
 #endif
 
 #define MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA -0x001B /**< Invalid input parameter(s). */
-#define MBEDTLS_ERR_KECCAK_NOT_SETUP      -0x001D /**< mbedtls_keccak_sponge_starts has not been called. */
-#define MBEDTLS_ERR_KECCAK_BAD_STATE      -0x001F /**< Requested operation cannot be performed with the current context state. */
+#define MBEDTLS_ERR_KECCAK_BAD_STATE      -0x001D /**< Requested operation cannot be performed with the current context state. */
 
 #define MBEDTLS_KECCAK_F_STATE_SIZE_BITS  ( 1600U )
 #define MBEDTLS_KECCAK_F_STATE_SIZE_BYTES ( 1600U / 8U )
@@ -210,7 +209,7 @@ void mbedtls_keccak_sponge_clone( mbedtls_keccak_sponge_context *dst,
  *                      mbedtls_keccak_sponge_init() and before calling the
  *                      absorb or squeeze functions. If this function has not
  *                      been called then the absorb/squeeze functions will
- *                      return #MBEDTLS_ERR_KECCAK_NOT_SETUP.
+ *                      return #MBEDTLS_ERR_KECCAK_BAD_STATE.
  *
  * \param ctx           The sponge context to set up.
  * \param capacity      The sponge's capacity parameter. This determines the
@@ -253,9 +252,6 @@ int mbedtls_keccak_sponge_starts( mbedtls_keccak_sponge_context *ctx,
  * \retval 0            Success.
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p data is \c NULL.
- * \retval #MBEDTLS_ERR_KECCAK_NOT_SETUP
- *                      mbedtls_keccak_sponge_starts() has not been called
- *                      on \p ctx.
  * \retval #MBEDTLS_ERR_KECCAK_BAD_STATE
  *                      The sponge can no longer accept data for absorption.
  *                      This occurs when mbedtls_keccak_sponge_squeeze() has
@@ -283,9 +279,6 @@ int mbedtls_keccak_sponge_absorb( mbedtls_keccak_sponge_context *ctx,
  * \retval 0            Success.
  * \retval #MBEDTLS_ERR_KECCAK_BAD_INPUT_DATA
  *                      \p ctx or \p data is \c NULL.
- * \retval #MBEDTLS_ERR_KECCAK_NOT_SETUP
- *                      mbedtls_keccak_sponge_starts() has not been called
- *                      on \p ctx.
  * \retval #MBEDTLS_ERR_KECCAK_BAD_STATE
  *                      mbedtls_keccak_sponge_starts() has not yet been called
  *                      to set up the context.
