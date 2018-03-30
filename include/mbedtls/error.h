@@ -70,8 +70,7 @@
  * PBKDF2    1  0x007C-0x007C
  * HMAC_DRBG 4                  0x0003-0x0009
  * CCM       3                  0x000D-0x0011
- * Keccak-f  1                  0x0015-0x0015
- * Sponge    3                  0x001B-0x001F
+ * Keccak    3                  0x001B-0x001F
  * ARC4      1                  0x0019-0x0019
  * MD2       1                  0x002B-0x002B
  * MD4       1                  0x002D-0x002D
