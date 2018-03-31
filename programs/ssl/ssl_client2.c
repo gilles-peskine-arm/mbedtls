@@ -111,6 +111,7 @@ int main( void )
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
 typedef int *certificate_type_list_t;
 #define DFL_CERTIFICATE_TYPE_LIST NULL
+#define DFL_ALLOWED_PUBLIC_KEY_FILES NULL
 #endif
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
@@ -229,11 +230,17 @@ typedef int *certificate_type_list_t;
 #endif
 
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
-#define USAGE_SSL_RAW_PUBLIC_KEY \
+#define USAGE_SSL_RAW_PUBLIC_KEY_NOIO \
     "    client_certificate_types=%%d,%%d...   default: -\n"            \
     "    server_certificate_types=%%d,%%d...   default: -\n"            \
     "                                        0=X.509, 2=raw_public_key\n" \
     "                                        - instead of list = don't send (default)\n"
+#if defined(MBEDTLS_FS_IO)
+#define USAGE_SSL_RAW_PUBLIC_KEY USAGE_SSL_RAW_PUBLIC_KEY_NOIO          \
+    "    allowed_public_key_files=%%s,%%s...   default: empty\n"
+#else
+#define USAGE_SSL_RAW_PUBLIC_KEY USAGE_SSL_RAW_PUBLIC_KEY_NOIO
+#endif
 #else
 #define USAGE_SSL_RAW_PUBLIC_KEY ""
 #endif
@@ -312,6 +319,7 @@ struct options
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
     certificate_type_list_t client_certificate_types; /* client certificate types to advertise */
     certificate_type_list_t server_certificate_types; /* server certificate types to advertise */
+    char *allowed_public_key_files; /* comma-separated list of file names; each file contains a DER-encoded public key */
 #endif
     int force_ciphersuite[2];   /* protocol/ciphersuite to use, or all      */
     int renegotiation;          /* enable / disable renegotiation           */
@@ -418,6 +426,70 @@ static int my_verify( void *data, mbedtls_x509_crt *crt, int depth, uint32_t *fl
 }
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
 
+#if defined(MBEDTLS_FS_IO) && defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+/** Load files into memory without interpreting them. filenames is a
+   comma-separated list of filenames. *buffers is set to a pointer to
+   a null-terminated array of pointers to the files' contents. */
+static int mbedtls_load_file_list( unsigned char *const **buffers,
+                                   char *filenames )
+{
+    char *path;
+    unsigned char **buffer_array;
+    size_t file_count = 0;
+    char *fn_start;
+    size_t max_fn_length = 0;
+    size_t fn_length;
+    int ret;
+
+    /* Count file names and determine their maximum length */
+    while( *filenames == ',' )
+        ++filenames;
+    for( fn_start = filenames; *fn_start; fn_start += fn_length + 1 )
+    {
+        fn_length = 0;
+        while( fn_start[fn_length] != 0 && fn_start[fn_length] != ',' )
+            ++fn_length;
+        if( fn_length != 0 )
+        {
+            if( fn_length > max_fn_length )
+                max_fn_length = fn_length;
+            ++file_count;
+        }
+        fn_start += fn_length + 1;
+        while( *fn_start == ',' )
+            ++fn_start;
+    }
+
+    /* Allocate buffers */
+    buffer_array = mbedtls_calloc( file_count + 1, sizeof( *buffer_array ) );
+    if( *buffer_array == NULL )
+    {
+        return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
+    }
+    *buffers = buffer_array;
+    path = mbedtls_calloc( max_fn_length + 1, sizeof( char ) );
+    if( path == NULL )
+    {
+        return( MBEDTLS_ERR_SSL_ALLOC_FAILED );
+    }
+
+    /* Read file data */
+    for( ; file_count != 0; --file_count, ++buffer_array )
+    {
+        size_t file_size;
+        memcpy( path, fn_start, fn_length );
+        path[fn_length] = 0;
+        ret = mbedtls_pk_load_file( path, buffer_array, &file_size );
+        if( ret != 0 )
+            return( ret );
+        fn_start += fn_length;
+        while(*fn_start == ',')
+            ++fn_start;
+    }
+    return( 0 );
+}
+#endif
+
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
 static int opt_parse_certificate_types( certificate_type_list_t *list,
                                         char *arg )
@@ -498,6 +570,9 @@ int main( int argc, char *argv[] )
     mbedtls_x509_crt clicert;
     mbedtls_pk_context pkey;
 #endif
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+    unsigned char *const *allowed_public_keys = NULL;
+#endif
     char *p, *q;
     const int *list;
 
@@ -559,6 +634,7 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
     opt.client_certificate_types = DFL_CERTIFICATE_TYPE_LIST;
     opt.server_certificate_types = DFL_CERTIFICATE_TYPE_LIST;
+    opt.allowed_public_key_files = DFL_ALLOWED_PUBLIC_KEY_FILES;
 #endif
     opt.force_ciphersuite[0]= DFL_FORCE_CIPHER;
     opt.renegotiation       = DFL_RENEGOTIATION;
@@ -667,6 +743,8 @@ int main( int argc, char *argv[] )
                 goto usage;
             }
         }
+        else if( strcmp( p, "allowed_public_key_files" ) == 0 )
+            opt.allowed_public_key_files = q;
 #endif
         else if( strcmp( p, "force_ciphersuite" ) == 0 )
         {
@@ -1111,6 +1189,18 @@ int main( int argc, char *argv[] )
         goto exit;
     }
 
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT) && defined(MBEDTLS_FS_IO)
+    if( opt.allowed_public_key_files != NULL )
+    {
+        ret = mbedtls_load_file_list( &allowed_public_keys, opt.allowed_public_key_files );
+        if( ret != 0 )
+        {
+            mbedtls_printf( " failed\n  !  mbedtls_load_file_list(&allowed_public_key_files, ...) returned -0x%x\n\n", -ret );
+            goto exit;
+        }
+    }
+#endif
+
 #if defined(MBEDTLS_FS_IO)
     if( strlen( opt.key_file ) )
         if( strcmp( opt.key_file, "none" ) == 0 )
@@ -1186,6 +1276,10 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     if( opt.debug_level > 0 )
         mbedtls_ssl_conf_verify( &conf, my_verify, NULL );
+#endif
+
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+    mbedtls_ssl_conf_allowed_peer_keys( &conf, allowed_public_keys );
 #endif
 
     if( opt.auth_mode != DFL_AUTH_MODE )

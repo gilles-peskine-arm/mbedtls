@@ -694,6 +694,7 @@ struct mbedtls_ssl_config
 #if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
     const int *client_certificate_type_list; /*!< allowed client certificate types; array terminated by MBEDTLS_TLS_CERT_TYPE_NONE */
     const int *server_certificate_type_list; /*!< allowed server certificate types; array terminated by MBEDTLS_TLS_CERT_TYPE_NONE */
+    const unsigned char *const * allowed_peer_keys; /*!< raw public keys that our peer may use; null-terminated array of pointers to DER encodings, or null for an empty list */
 #endif
 
     /*
@@ -1070,6 +1071,14 @@ void mbedtls_ssl_conf_verify( mbedtls_ssl_config *conf,
                      int (*f_vrfy)(void *, mbedtls_x509_crt *, int, uint32_t *),
                      void *p_vrfy );
 #endif /* MBEDTLS_X509_CRT_PARSE_C */
+
+#if defined(MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT)
+/**
+ * \brief          
+ */
+void mbedtls_ssl_conf_allowed_peer_keys( mbedtls_ssl_config *conf,
+                                         unsigned char *const *keys );
+#endif /* MBEDTLS_SSL_RAW_PUBLIC_KEY_SUPPORT */
 
 /**
  * \brief          Set the random number generator callback
