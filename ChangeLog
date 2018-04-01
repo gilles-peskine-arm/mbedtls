@@ -6,6 +6,9 @@ Features
    * Add new crypto primitives from RFC 7539: stream cipher Chacha20, one-time
    authenticator Poly1305 and AEAD construct Chacha20-Poly1305. Contributed by
    Daniel King (#485).
+   * Add support for the SHA-3 message digest algorithm family and the
+     SHAKE family of extendable output functions. Contributed by Daniel King
+     in #479.
 
 Bugfix
    * Fix the key_app_writer example which was writing a leading zero byte which
