@@ -3510,8 +3510,23 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
     unsigned char ver[2];
     unsigned char fake_pms[48], peer_pms[48];
     unsigned char mask;
-    size_t i, peer_pmslen;
+    size_t i;
+    size_t peer_pmslen = 0;
     unsigned int diff;
+
+    /* Initialize the first two bytes of peer_pms to something that
+     * will cause diff below to be nonzero if they are not overwritten.
+     * In principle this should be useless because
+     * ssl_decrypt_encrypted_pms() will write to peer_pms. However, in
+     * case of an operational error, ssl_decrypt_encrypted_pms() may
+     * leave peer_pms unmodified. This gives the correct behavior anyway
+     * because diff will be nonzero as soon as ret is nonzero and the
+     * behavior of the program only depends on whether diff is zero.
+     * However some bits of diff may depend on the
+     * otherwise-uninitialized part of peer_pms, and a memory analyzer
+     * such as Valgrind may reasonably complain about this. Hence this
+     * explicit initialization. */
+    peer_pms[0] = peer_pms[1] = ~0;
 
     ret = ssl_decrypt_encrypted_pms( ssl, p, end,
                                      peer_pms,
