@@ -37,6 +37,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#define mbedtls_calloc    calloc
+#define mbedtls_free       free
 #define mbedtls_time       time
 #define mbedtls_time_t     time_t
 #define mbedtls_printf     printf
@@ -112,6 +114,11 @@ int main( void )
     "    protect_hvr=0/1     default: 0 (don't protect HelloVerifyRequest)\n" \
     "    protect_len=%%d      default: (don't protect packets of this size)\n" \
     "\n"                                                                    \
+    "    xor_client=N,OFFSET,HEX     xor packet from client with string\n"  \
+    "    xor_server=N,OFFSET,HEX     xor packet from client with string\n"  \
+    "                        Modify the Nth packet from byte OFFSET.\n"   \
+    "                        N>=1 counts received packets (before dup/drop).\n" \
+    "\n"                                                                    \
     "    seed=%%d             default: (use current time)\n"                \
     USAGE_PACK                                                              \
     "\n"
@@ -121,6 +128,23 @@ typedef enum
     CLIENT_TO_SERVER,
     SERVER_TO_CLIENT
 } direction_t;
+
+typedef enum
+{
+    MODIFICATION_TYPE_XOR
+} modification_type_t;
+
+struct modification_s;
+typedef struct modification_s
+{
+    struct modification_s *next;
+    direction_t direction : 1;
+    modification_type_t type : 15;
+    unsigned short packet;
+    unsigned short offset;
+    unsigned short length;
+    unsigned char *data;
+} modification_t;
 
 /*
  * global options
@@ -143,6 +167,7 @@ static struct options
     unsigned pack;              /* merge packets into single datagram for
                                  * at most \c merge milliseconds if > 0     */
     unsigned int seed;          /* seed for "random" events                 */
+    modification_t *modifications; /* packets to modify in flight           */
 } opt;
 
 static void exit_usage( const char *name, const char *value )
@@ -154,6 +179,62 @@ static void exit_usage( const char *name, const char *value )
 
     mbedtls_printf( USAGE );
     exit( 1 );
+}
+
+static int parse_modification( modification_t **head,
+                               direction_t direction,
+                               const char *arg )
+{
+    modification_t *new;
+    const char *p = arg;
+
+    new = mbedtls_calloc( 1, sizeof( modification_t ) );
+    if( new == NULL )
+        return( -1 );
+
+    new->direction = direction;
+    new->type = MODIFICATION_TYPE_XOR;
+    new->packet = strtoul( p, (char **) &p, 0 );
+    if( *p != ',' )
+        goto error;
+    ++p;
+    new->offset = strtoul( p, (char **) &p, 0 );
+    if( *p != ',' )
+        goto error;
+    ++p;
+    new->data = mbedtls_calloc( 1, strlen( p ) / 2 );
+    if( new->data == NULL )
+        goto error;
+    while( *p == ' ' )
+        ++p;
+    while( p[0] != 0 && p[1] != 0 )
+    {
+        unsigned long byte;
+        char digits[3];
+        const char *end;
+        digits[0] = p[0];
+        digits[1] = p[1];
+        digits[2] = 0;
+        byte = strtoul( digits, (char **) &end, 16 );
+        if( byte == ULONG_MAX )
+            goto error;
+        if( *end != 0 && *end != ' ' && *end != ',' )
+            goto error;
+        new->data[new->length] = byte;
+        ++new->length;
+        p += 2;
+        while( *p == ' ' )
+            ++p;
+    }
+
+    new->next = *head;
+    *head = new;
+    return( 0 );
+
+error:
+    mbedtls_free( new->data );
+    mbedtls_free( new );
+    return( -1 );
 }
 
 static void get_options( int argc, char *argv[] )
@@ -238,6 +319,18 @@ static void get_options( int argc, char *argv[] )
         {
             opt.protect_len = atoi( q );
             if( opt.protect_len < 0 )
+                exit_usage( p, q );
+        }
+        else if( strcmp( p, "xor_client" ) == 0 )
+        {
+            if( parse_modification( &opt.modifications,
+                                    CLIENT_TO_SERVER, q ) != 0 )
+                exit_usage( p, q );
+        }
+        else if( strcmp( p, "xor_server" ) == 0 )
+        {
+            if( parse_modification( &opt.modifications,
+                                    SERVER_TO_CLIENT, q ) != 0 )
                 exit_usage( p, q );
         }
         else if( strcmp( p, "seed" ) == 0 )
@@ -413,6 +506,7 @@ typedef struct
     mbedtls_net_context *dst;
     direction_t direction;
     const char *type;
+    unsigned modifications;
     unsigned len;
     unsigned char buf[MAX_MSG_SIZE];
 } packet;
@@ -432,6 +526,9 @@ void print_packet( const packet *p, const char *why )
     if( why != NULL )
         mbedtls_printf( "  " PRI_timestamp " dispatch %s %s (%u bytes): %s\n",
                         ELAPSED_TIME( ), way, p->type, p->len, why );
+    else if( p->modifications != 0 )
+        mbedtls_printf( "  " PRI_timestamp " dispatch %s %s (%u bytes, %u modifications)\n",
+                        ELAPSED_TIME( ), way, p->type, p->len, p->modifications );
     else
         mbedtls_printf( "  " PRI_timestamp " dispatch %s %s (%u bytes)\n",
                         ELAPSED_TIME( ), way, p->type, p->len );
@@ -535,7 +632,49 @@ void update_dropped( const packet *p )
     }
 }
 
+static unsigned apply_modifications( modification_t *modifications,
+                                     direction_t direction,
+                                     size_t n_packet,
+                                     unsigned char *buf,
+                                     size_t len )
+{
+    modification_t *mod;
+    size_t i;
+    unsigned count = 0;
+    for( mod = modifications; mod != NULL; mod = mod->next )
+    {
+        if( mod->direction != direction )
+            continue;
+        if( mod->packet != n_packet )
+            continue;
+        ++count;
+        switch( mod->type )
+        {
+            case MODIFICATION_TYPE_XOR:
+                if( mod->offset >= len )
+                    continue;
+                for( i = 0; i < mod->length && i + mod->offset < len; i++ )
+                    buf[mod->offset + i] ^= mod->data[i];
+                break;
+        }
+    }
+    return( count );
+}
+
+static void free_modifications( modification_t *modifications )
+{
+    modification_t *cur = modifications;
+    while( cur != NULL )
+    {
+        modification_t *next = cur->next;
+        mbedtls_free( cur->data );
+        mbedtls_free( cur );
+        cur = next;
+    }
+}
+
 int handle_message( direction_t direction,
+                    size_t n_packet,
                     mbedtls_net_context *dst,
                     mbedtls_net_context *src )
 {
@@ -554,6 +693,11 @@ int handle_message( direction_t direction,
     cur.type = msg_type( cur.buf, cur.len );
     cur.direction = direction;
     cur.dst  = dst;
+
+    cur.modifications = apply_modifications( opt.modifications,
+                                             direction, n_packet,
+                                             cur.buf, cur.len );
+
     print_packet( &cur, NULL );
 
     id = cur.len % sizeof( dropped );
@@ -617,6 +761,8 @@ int main( int argc, char *argv[] )
 
     int nb_fds;
     fd_set read_fds;
+    size_t n_client_packets = 0;
+    size_t n_server_packets = 0;
 
     mbedtls_net_init( &listen_fd );
     mbedtls_net_init( &client_fd );
@@ -772,14 +918,16 @@ accept:
 
         if( FD_ISSET( client_fd.fd, &read_fds ) )
         {
-            if( ( ret = handle_message( CLIENT_TO_SERVER,
+            ++n_client_packets;
+            if( ( ret = handle_message( CLIENT_TO_SERVER, n_client_packets,
                                         &server_fd, &client_fd ) ) != 0 )
                 goto accept;
         }
 
         if( FD_ISSET( server_fd.fd, &read_fds ) )
         {
-            if( ( ret = handle_message( SERVER_TO_CLIENT,
+            ++n_server_packets;
+            if( ( ret = handle_message( SERVER_TO_CLIENT, n_server_packets,
                                         &client_fd, &server_fd ) ) != 0 )
                 goto accept;
         }
@@ -798,6 +946,7 @@ exit:
     }
 #endif
 
+    free_modifications( opt.modifications );
     mbedtls_net_free( &client_fd );
     mbedtls_net_free( &server_fd );
     mbedtls_net_free( &listen_fd );
