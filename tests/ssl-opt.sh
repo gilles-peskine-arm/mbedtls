@@ -836,6 +836,24 @@ run_test    "SHA-256 allowed by default in client certificate" \
             "$P_CLI key_file=data_files/cli-rsa.key crt_file=data_files/cli-rsa-sha256.crt" \
             0
 
+# Negative tests (handling of corrupted messages)
+
+# Corrupt the ClientKeyExchange message so that the server receives a
+# premaster secret that turns out to be invalid after decryption. The
+# server must continue with a random master secret, so the client and
+# server will have mismatching keys (defense against Bleichenbacher attack).
+# The connection ends when the server sees a message from the client whose
+# authentication tag is invalid because the two sides use different MAC keys.
+run_test    "Corrupted ClientKeyExchange: bad RSA decryption of premaster secret" \
+            -p "$P_PXY xor_client=3,99,01" \
+            "$P_SRV dtls=1 debug_level=2" \
+            "$P_CLI dtls=1 debug_level=2 \
+             force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
+            1 \
+            -S "ssl_parse_encrypted_pms" \
+            -s "<= parse client key exchange" \
+            -s "message mac does not match"
+
 # Tests for Truncated HMAC extension
 
 run_test    "Truncated HMAC: client default, server default" \

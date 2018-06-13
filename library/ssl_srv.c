@@ -3891,7 +3891,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
     {
         if( ( ret = ssl_parse_encrypted_pms( ssl, p, end, 0 ) ) != 0 )
         {
-            MBEDTLS_SSL_DEBUG_RET( 1, ( "ssl_parse_parse_encrypted_pms_secret" ), ret );
+            MBEDTLS_SSL_DEBUG_RET( 1, ( "ssl_parse_encrypted_pms" ), ret );
             return( ret );
         }
     }
