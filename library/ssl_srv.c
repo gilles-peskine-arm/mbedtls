@@ -3500,6 +3500,62 @@ static int ssl_decrypt_encrypted_pms( mbedtls_ssl_context *ssl,
     return( ret );
 }
 
+/* return diff ? 0xffffffff : 0x00 using bit operations to avoid branches */
+static unsigned extend_nonzero( unsigned value )
+{
+    /* MSVC has a warning about unary minus on unsigned, but this is
+     * well-defined and precisely what we want to do here */
+#if defined(_MSC_VER)
+#pragma warning( push )
+#pragma warning( disable : 4146 )
+#endif
+    return( - ( ( value | - value ) >> ( sizeof( unsigned int ) * 8 - 1 ) ) );
+#if defined(_MSC_VER)
+#pragma warning( pop )
+#endif
+}
+
+/**
+ * Distinguish padding errors from operational errors in constant time.
+ *
+ * The error code for a decryption can reflect three types of conditions:
+ * - Success: the operation could be carried out and the format of the
+ *   decrypted data is valid.
+ * - Invalid padding: the operation could be carried out but the format of
+ *   the decrypted data is invalid.
+ * - Operational error, such as insufficient memory, communication error with
+ *   an external cryptoprocessor, invalid configuration, etc.
+ *
+ * An adversary who can distinguish invalid padding from success can mount
+ * an oracle attack that allows them to recover the premaster secret. See
+ * Daniel Bleichenbacher, Chosen Ciphertext Attacks Against Protocols
+ * Based on the RSA Encryption Standard PKCS #1, 1998. Even timing can
+ * provide the attacker with the necessary information. Therefore this
+ * function strives not to have any branches that depend on whether the
+ * padding is correct.
+ *
+ * The return value of this function is not sensitive in the sense that it
+ * is ok to reveal it to an adversary. The value of \p bad on output is
+ * sensitive if this function returns 0.
+ *
+ * \param ret   An Mbed TLS error code (MBEDTLS_ERR_xxx).
+ * \param bad   Set to 0 on output if \p ret is 0, otherwise set to `~0`
+ *              (all-bits-one).
+ * \return      0 if \p ret is 0 or an error code that may indicate
+ *              invalid padding, otherwise \p ret.
+ */
+static int isolate_padding_errors( int ret, unsigned *bad )
+{
+    unsigned diff0 = (unsigned) ret ^ (unsigned) MBEDTLS_ERR_RSA_INVALID_PADDING;
+    unsigned mask0 = extend_nonzero( diff0 );
+    unsigned diff1 = (unsigned) ret ^ (unsigned) MBEDTLS_ERR_RSA_BAD_INPUT_DATA;
+    unsigned mask1 = extend_nonzero( diff1 );
+    unsigned diff2 = (unsigned) ret ^ (unsigned) MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    unsigned mask2 = extend_nonzero( diff2 );
+    *bad = extend_nonzero( ret );
+    return( mask0 & mask1 & mask2 & (unsigned) ret );
+}
+
 static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
                                     const unsigned char *p,
                                     const unsigned char *end,
@@ -3507,20 +3563,20 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
 {
     int ret;
     unsigned char *pms = ssl->handshake->premaster + pms_offset;
-    unsigned char ver[2];
     unsigned char fake_pms[48], peer_pms[48];
-    unsigned char mask;
     size_t i;
     size_t peer_pmslen = 0;
-    unsigned int diff;
+    unsigned char ver[2];
+    unsigned char mask; /* 0 if ok, ~0 if padding/header error */
+    unsigned int bad_decrypted_value; /* 0 if ok, ~0 if padding/header error */
 
     /* In case of a failure in decryption, the decryption may write less than
      * 2 bytes of output, but we always read the first two bytes. It doesn't
-     * matter in the end because diff will be nonzero in that case due to
-     * peer_pmslen being less than 48, and we only care whether diff is 0.
-     * But do initialize peer_pms for robustness anyway. This also makes
-     * memory analyzers happy (don't access uninitialized memory, even
-     * if it's an unsigned char). */
+     * matter in the end because bad_decrypted_value will be nonzero in that
+     * case due to peer_pmslen being less than 48, and we only care whether
+     * bad_decrypted_value is 0. But do initialize peer_pms for robustness
+     * anyway. This also makesmemory analyzers happy (don't access
+     * uninitialized memory, even if it's an unsigned char). */
     peer_pms[0] = peer_pms[1] = ~0;
 
     ret = ssl_decrypt_encrypted_pms( ssl, p, end,
@@ -3528,44 +3584,27 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
                                      &peer_pmslen,
                                      sizeof( peer_pms ) );
 
-#if defined(MBEDTLS_SSL_ASYNC_PRIVATE)
-    if ( ret == MBEDTLS_ERR_SSL_ASYNC_IN_PROGRESS )
+    ret = isolate_padding_errors( ret, &bad_decrypted_value );
+    if ( ret != 0 )
         return( ret );
-#endif /* MBEDTLS_SSL_ASYNC_PRIVATE */
 
-    mbedtls_ssl_write_version( ssl->handshake->max_major_ver,
-                               ssl->handshake->max_minor_ver,
-                               ssl->conf->transport, ver );
-
-    /* Avoid data-dependent branches while checking for invalid
-     * padding, to protect against timing-based Bleichenbacher-type
-     * attacks. */
-    diff  = (unsigned int) ret;
-    diff |= peer_pmslen ^ 48;
-    diff |= peer_pms[0] ^ ver[0];
-    diff |= peer_pms[1] ^ ver[1];
-
-    /* mask = diff ? 0xff : 0x00 using bit operations to avoid branches */
-    /* MSVC has a warning about unary minus on unsigned, but this is
-     * well-defined and precisely what we want to do here */
-#if defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4146 )
-#endif
-    mask = - ( ( diff | - diff ) >> ( sizeof( unsigned int ) * 8 - 1 ) );
-#if defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
-    /*
-     * Protection against Bleichenbacher's attack: invalid PKCS#1 v1.5 padding
-     * must not cause the connection to end immediately; instead, send a
-     * bad_record_mac later in the handshake.
+    /* Beyond this point, the decryption succeeded operationally, i.e.
+     * there was no error such as insufficient memory, communication
+     * error, configuration error, etc. The decryption may have failed
+     * due to invalid padding; this is conveyed in bad_decrypted_value,
+     * not in ret.
+     *
+     * For protection against Bleichenbacher's attack (see reference in
+     * the description of isolate_padding_errors() above), invalid PKCS#1 v1.5
+     * padding must not cause the connection to end immediately; instead,
+     * send a bad_record_mac later in the handshake.
+     *
      * To protect against timing-based variants of the attack, we must
      * not have any branch that depends on whether the decryption was
      * successful. In particular, always generate the fake premaster secret,
      * regardless of whether it will ultimately influence the output or not.
      */
+
     ret = ssl->conf->f_rng( ssl->conf->p_rng, fake_pms, sizeof( fake_pms ) );
     if( ret != 0 )
     {
@@ -3574,11 +3613,6 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
         return( ret );
     }
 
-#if defined(MBEDTLS_SSL_DEBUG_ALL)
-    if( diff != 0 )
-        MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad client key exchange message" ) );
-#endif
-
     if( sizeof( ssl->handshake->premaster ) < pms_offset ||
         sizeof( ssl->handshake->premaster ) - pms_offset < 48 )
     {
@@ -3586,6 +3620,23 @@ static int ssl_parse_encrypted_pms( mbedtls_ssl_context *ssl,
         return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
     }
     ssl->handshake->pmslen = 48;
+
+#if defined(MBEDTLS_SSL_DEBUG_ALL)
+    if( diff != 0 )
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad client key exchange message" ) );
+#endif
+
+    mbedtls_ssl_write_version( ssl->handshake->max_major_ver,
+                               ssl->handshake->max_minor_ver,
+                               ssl->conf->transport, ver );
+
+    /* If the decrypted secret doesn't have the right size or doesn't
+     * start with a correct header, treat this like invalid padding.
+     * Again, don't use data-dependent branches to avoid timing attacks. */
+    bad_decrypted_value |= peer_pmslen ^ 48;
+    bad_decrypted_value |= peer_pms[0] ^ ver[0];
+    bad_decrypted_value |= peer_pms[1] ^ ver[1];
+    mask = extend_nonzero( bad_decrypted_value );
 
     /* Set pms to either the true or the fake PMS, without
      * data-dependent branches. */
