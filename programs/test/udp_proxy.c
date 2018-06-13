@@ -116,6 +116,12 @@ int main( void )
     USAGE_PACK                                                              \
     "\n"
 
+typedef enum
+{
+    CLIENT_TO_SERVER,
+    SERVER_TO_CLIENT
+} direction_t;
+
 /*
  * global options
  */
@@ -405,31 +411,30 @@ static int dispatch_data( mbedtls_net_context *ctx,
 typedef struct
 {
     mbedtls_net_context *dst;
-    const char *way;
+    direction_t direction;
     const char *type;
     unsigned len;
     unsigned char buf[MAX_MSG_SIZE];
 } packet;
 
+#if defined(MBEDTLS_TIMING_C)
+#define PRI_timestamp "%05u"
+#define ELAPSED_TIME( ) ellapsed_time( )
+#else
+#define PRI_timestamp "%5c"
+#define ELAPSED_TIME( ) ' '
+#endif
+
 /* Print packet. Outgoing packets come with a reason (forward, dupl, etc.) */
 void print_packet( const packet *p, const char *why )
 {
-#if defined(MBEDTLS_TIMING_C)
-    if( why == NULL )
-        mbedtls_printf( "  %05u dispatch %s %s (%u bytes)\n",
-                ellapsed_time(), p->way, p->type, p->len );
+    const char *way = p->direction == SERVER_TO_CLIENT ? "S -> C" : "S <- C";
+    if( why != NULL )
+        mbedtls_printf( "  " PRI_timestamp " dispatch %s %s (%u bytes): %s\n",
+                        ELAPSED_TIME( ), way, p->type, p->len, why );
     else
-        mbedtls_printf( "  %05u dispatch %s %s (%u bytes): %s\n",
-                ellapsed_time(), p->way, p->type, p->len, why );
-#else
-    if( why == NULL )
-        mbedtls_printf( "        dispatch %s %s (%u bytes)\n",
-                p->way, p->type, p->len );
-    else
-        mbedtls_printf( "        dispatch %s %s (%u bytes): %s\n",
-                p->way, p->type, p->len, why );
-#endif
-
+        mbedtls_printf( "  " PRI_timestamp " dispatch %s %s (%u bytes)\n",
+                        ELAPSED_TIME( ), way, p->type, p->len );
     fflush( stdout );
 }
 
@@ -530,7 +535,7 @@ void update_dropped( const packet *p )
     }
 }
 
-int handle_message( const char *way,
+int handle_message( direction_t direction,
                     mbedtls_net_context *dst,
                     mbedtls_net_context *src )
 {
@@ -547,7 +552,7 @@ int handle_message( const char *way,
 
     cur.len  = ret;
     cur.type = msg_type( cur.buf, cur.len );
-    cur.way  = way;
+    cur.direction = direction;
     cur.dst  = dst;
     print_packet( &cur, NULL );
 
@@ -767,14 +772,14 @@ accept:
 
         if( FD_ISSET( client_fd.fd, &read_fds ) )
         {
-            if( ( ret = handle_message( "S <- C",
+            if( ( ret = handle_message( CLIENT_TO_SERVER,
                                         &server_fd, &client_fd ) ) != 0 )
                 goto accept;
         }
 
         if( FD_ISSET( server_fd.fd, &read_fds ) )
         {
-            if( ( ret = handle_message( "S -> C",
+            if( ( ret = handle_message( SERVER_TO_CLIENT,
                                         &client_fd, &server_fd ) ) != 0 )
                 goto accept;
         }
