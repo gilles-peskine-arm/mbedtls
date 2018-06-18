@@ -76,12 +76,12 @@ class FileWrapper(io.FileIO):
         super(FileWrapper, self).__init__(file_name, 'r')
         self.line_no = 0
 
-    def __next__(self):
+    def next(self):
         """
         Iterator return impl.
         :return: Line read from file.
         """
-        line = super(FileWrapper, self).__next__()
+        line = super(FileWrapper, self).next()
         if line:
             self.line_no += 1
             # Convert byte array to string with correct encoding
