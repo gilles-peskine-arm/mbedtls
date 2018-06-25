@@ -693,7 +693,7 @@ SRV_DELAY_SECONDS=0
 P_SRV="$P_SRV server_addr=127.0.0.1 server_port=$SRV_PORT"
 P_CLI="$P_CLI server_addr=127.0.0.1 server_port=+SRV_PORT"
 P_PXY="$P_PXY server_addr=127.0.0.1 server_port=$SRV_PORT listen_addr=127.0.0.1 listen_port=$PXY_PORT ${SEED:+"seed=$SEED"}"
-O_SRV="$O_SRV -accept $SRV_PORT -dhparam data_files/dhparams.pem"
+O_SRV="$O_SRV -accept $SRV_PORT"
 O_CLI="$O_CLI -connect localhost:+SRV_PORT"
 G_SRV="$G_SRV -p $SRV_PORT"
 G_CLI="$G_CLI -p +SRV_PORT localhost"
@@ -701,6 +701,17 @@ G_CLI="$G_CLI -p +SRV_PORT localhost"
 # Allow SHA-1, because many of our test certificates use it
 P_SRV="$P_SRV allow_sha1=1"
 P_CLI="$P_CLI allow_sha1=1"
+
+OPENSSL_VERSION=$($OPENSSL_CMD version)
+OPENSSL_VERSION=${OPENSSL_VERSION#* }
+OPENSSL_VERSION=${OPENSSL_VERSION%% *}
+# openssl s_server up to 1.0.2a uses a 512-bit prime for DH by default.
+# We require a 1024-bit prime.
+case $OPENSSL_VERSION in
+    0*|1.0.[01]|1.0.2|1.0.2[!b-z]*)
+        O_SRV="$O_SRV -dhparam data_files/dhparams.pem"
+        ;;
+esac
 
 # Also pick a unique name for intermediate files
 SRV_OUT="srv_out.$$"
