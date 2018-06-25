@@ -753,10 +753,20 @@ setup_arguments()
     esac
 
     P_SERVER_ARGS="server_port=$PORT server_addr=0.0.0.0 force_version=$MODE arc4=1"
-    O_SERVER_ARGS="-accept $PORT -cipher NULL,ALL -$MODE -dhparam data_files/dhparams.pem"
+    O_SERVER_ARGS="-accept $PORT -cipher NULL,ALL -$MODE"
     G_SERVER_ARGS="-p $PORT --http $G_MODE"
     G_SERVER_PRIO="NORMAL:+ARCFOUR-128:+NULL:+MD5:+PSK:+DHE-PSK:+ECDHE-PSK:+RSA-PSK:-VERS-TLS-ALL:$G_PRIO_MODE"
 
+    OPENSSL_VERSION=$($OPENSSL_CMD version)
+    OPENSSL_VERSION=${OPENSSL_VERSION#* }
+    OPENSSL_VERSION=${OPENSSL_VERSION%% *}
+    # openssl s_server up to 1.0.2a uses a 512-bit prime for DH by default.
+    # We require a 1024-bit prime.
+    case $OPENSSL_VERSION in
+        0*|1.0.[01]|1.0.2|1.0.2[!b-z]*)
+            O_SERVER_ARGS="$O_SERVER_ARGS -dhparam data_files/dhparams.pem"
+            ;;
+    esac
     # with OpenSSL 1.0.1h, -www, -WWW and -HTTP break DTLS handshakes
     if is_dtls "$MODE"; then
         O_SERVER_ARGS="$O_SERVER_ARGS"
