@@ -399,7 +399,7 @@ psa_status_t psa_export_key(psa_key_slot_t key,
 
 void mbedtls_psa_crypto_free( void )
 {
-    size_t key;
+    psa_key_slot_t key;
     for( key = 1; key < MBEDTLS_PSA_KEY_SLOT_COUNT; key++ )
         psa_destroy_key( key );
     mbedtls_ctr_drbg_free( &global_data.ctr_drbg );
