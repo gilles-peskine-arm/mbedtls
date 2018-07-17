@@ -69,7 +69,7 @@ void import_export( char *hex, int type_arg,
 
     data = unhexify_alloc( hex, &data_size );
     TEST_ASSERT( data != NULL );
-    export_size = (ssize_t) data_size + export_size_delta;
+    export_size = (ptrdiff_t) data_size + export_size_delta;
     exported = mbedtls_calloc( 1, export_size );
     TEST_ASSERT( exported != NULL );
     if( ! canonical_input )
