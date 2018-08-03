@@ -72,10 +72,16 @@ void ctr_drbg_validate_pr( char *add_init_string, char *entropy_string,
     add2_len = unhexify( add2, add2_string );
 
     test_offset_idx = 0;
+    /* CTR_DRBG_Instantiate(entropy[:entropy_len/3], nonce, perso, <ignored>)
+     * where nonce||perso = add_init[add_init_len] */
     TEST_ASSERT( mbedtls_ctr_drbg_seed_entropy_len( &ctx, mbedtls_test_entropy_func, entropy, add_init, add_init_len, 32 ) == 0 );
     mbedtls_ctr_drbg_set_prediction_resistance( &ctx, MBEDTLS_CTR_DRBG_PR_ON );
 
+    /* CTR_DRBG_Generate(result_len * 8 bits, add1[:add1_len]) -> buf */
+    /* Then reseed because of prediction resistance. */
     TEST_ASSERT( mbedtls_ctr_drbg_random_with_add( &ctx, buf, 16, add1, add1_len ) == 0 );
+    /* CTR_DRBG_Generate(result_len * 8 bits, add2[:add2_len]) -> buf */
+    /* Then reseed because of prediction resistance. */
     TEST_ASSERT( mbedtls_ctr_drbg_random_with_add( &ctx, buf, 16, add2, add2_len ) == 0 );
     hexify( output_str, buf, 16 );
     TEST_ASSERT( strcmp( (char *) output_str, result_str ) == 0 );
@@ -110,10 +116,15 @@ void ctr_drbg_validate_nopr( char *add_init_string, char *entropy_string,
     add2_len = unhexify( add2, add2_string );
 
     test_offset_idx = 0;
+    /* CTR_DRBG_Instantiate(entropy[:entropy_len/2], nonce, perso, <ignored>)
+     * where nonce||perso = add_init[add_init_len] */
     TEST_ASSERT( mbedtls_ctr_drbg_seed_entropy_len( &ctx, mbedtls_test_entropy_func, entropy, add_init, add_init_len, 32 ) == 0 );
 
+    /* CTR_DRBG_Generate(16 * 8 bits, add1[:add1_len]) -> buf */
     TEST_ASSERT( mbedtls_ctr_drbg_random_with_add( &ctx, buf, 16, add1, add1_len ) == 0 );
+    /* CTR_DRBG_Reseed(entropy[entropy_len/2:entropy_len], add_reseed[:add_reseed_len]) */
     TEST_ASSERT( mbedtls_ctr_drbg_reseed( &ctx, add_reseed, add_reseed_len ) == 0 );
+    /* CTR_DRBG_Generate(16 * 8 bits, add2[:add2_len]) -> buf */
     TEST_ASSERT( mbedtls_ctr_drbg_random_with_add( &ctx, buf, 16, add2, add2_len ) == 0 );
     hexify( output_str, buf, 16 );
     TEST_ASSERT( strcmp( (char *) output_str, result_str ) == 0 );
