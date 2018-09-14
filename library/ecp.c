@@ -1771,6 +1771,7 @@ cleanup:
 }
 #endif /* ECP_SHORTWEIERSTRASS */
 
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
 /*
  * R = m * P with shortcuts for m == 1 and m == -1
  * NOT constant-time - ONLY for short Weierstrass!
@@ -1846,6 +1847,7 @@ cleanup:
 
     return( ret );
 }
+#endif /* MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED */
 
 
 #if defined(ECP_MONTGOMERY)
