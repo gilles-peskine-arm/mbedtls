@@ -82,25 +82,6 @@
 static unsigned long add_count, dbl_count, mul_count;
 #endif
 
-#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)   ||   \
-    defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)   ||   \
-    defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)   ||   \
-    defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) ||   \
-    defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
-#define ECP_SHORTWEIERSTRASS
-#endif
-
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
-#define ECP_MONTGOMERY
-#endif
-
 /*
  * Curve types: internal for now, might be exposed later
  */
@@ -730,7 +711,7 @@ cleanup:
     while( mbedtls_mpi_cmp_mpi( &N, &grp->P ) >= 0 )        \
         MBEDTLS_MPI_CHK( mbedtls_mpi_sub_abs( &N, &N, &grp->P ) )
 
-#if defined(ECP_SHORTWEIERSTRASS)
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
 /*
  * For curves in short Weierstrass form, we do all the internal operations in
  * Jacobian coordinates.
@@ -1467,9 +1448,9 @@ cleanup:
     return( ret );
 }
 
-#endif /* ECP_SHORTWEIERSTRASS */
+#endif /* MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED */
 
-#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP__MONTGOMERY_ENABLED)
 /*
  * For Montgomery curves, we do all the internal arithmetic in projective
  * coordinates. Import/export of points uses only the x coordinates, which is
@@ -1670,7 +1651,7 @@ cleanup:
     return( ret );
 }
 
-#endif /* ECP_MONTGOMERY */
+#endif /* MBEDTLS_ECP__MONTGOMERY_ENABLED */
 
 /*
  * Multiplication R = m * P
@@ -1699,12 +1680,12 @@ int mbedtls_ecp_mul( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
     }
 
 #endif /* MBEDTLS_ECP_INTERNAL_ALT */
-#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP__MONTGOMERY_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
         ret = ecp_mul_mxz( grp, R, m, P, f_rng, p_rng );
 
 #endif
-#if defined(ECP_SHORTWEIERSTRASS)
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
         ret = ecp_mul_comb( grp, R, m, P, f_rng, p_rng );
 
@@ -1721,7 +1702,7 @@ cleanup:
     return( ret );
 }
 
-#if defined(ECP_SHORTWEIERSTRASS)
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
 /*
  * Check that an affine point is valid as a public key,
  * short weierstrass curves (SEC1 3.2.3.1)
@@ -1769,9 +1750,7 @@ cleanup:
 
     return( ret );
 }
-#endif /* ECP_SHORTWEIERSTRASS */
 
-#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
 /*
  * R = m * P with shortcuts for m == 1 and m == -1
  * NOT constant-time - ONLY for short Weierstrass!
@@ -1850,7 +1829,7 @@ cleanup:
 #endif /* MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED */
 
 
-#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP__MONTGOMERY_ENABLED)
 /*
  * Check validity of a public key for Montgomery curves with x-only schemes
  */
@@ -1864,7 +1843,7 @@ static int ecp_check_pubkey_mx( const mbedtls_ecp_group *grp, const mbedtls_ecp_
 
     return( 0 );
 }
-#endif /* ECP_MONTGOMERY */
+#endif /* MBEDTLS_ECP__MONTGOMERY_ENABLED */
 
 /*
  * Check that a point is valid as a public key
@@ -1875,11 +1854,11 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_po
     if( mbedtls_mpi_cmp_int( &pt->Z, 1 ) != 0 )
         return( MBEDTLS_ERR_ECP_INVALID_KEY );
 
-#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP__MONTGOMERY_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
         return( ecp_check_pubkey_mx( grp, pt ) );
 #endif
-#if defined(ECP_SHORTWEIERSTRASS)
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
         return( ecp_check_pubkey_sw( grp, pt ) );
 #endif
@@ -1891,7 +1870,7 @@ int mbedtls_ecp_check_pubkey( const mbedtls_ecp_group *grp, const mbedtls_ecp_po
  */
 int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *d )
 {
-#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP__MONTGOMERY_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
     {
         /* see RFC 7748 sec. 5 para. 5 */
@@ -1906,8 +1885,8 @@ int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *
 
         return( 0 );
     }
-#endif /* ECP_MONTGOMERY */
-#if defined(ECP_SHORTWEIERSTRASS)
+#endif /* MBEDTLS_ECP__MONTGOMERY_ENABLED */
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
     {
         /* see SEC1 3.2 */
@@ -1917,7 +1896,7 @@ int mbedtls_ecp_check_privkey( const mbedtls_ecp_group *grp, const mbedtls_mpi *
         else
             return( 0 );
     }
-#endif /* ECP_SHORTWEIERSTRASS */
+#endif /* MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED */
 
     return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 }
@@ -1934,7 +1913,7 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
     int ret;
     size_t n_size = ( grp->nbits + 7 ) / 8;
 
-#if defined(ECP_MONTGOMERY)
+#if defined(MBEDTLS_ECP__MONTGOMERY_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
     {
         /* [M225] page 5 */
@@ -1961,8 +1940,8 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
         }
     }
     else
-#endif /* ECP_MONTGOMERY */
-#if defined(ECP_SHORTWEIERSTRASS)
+#endif /* MBEDTLS_ECP__MONTGOMERY_ENABLED */
+#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
     if( ecp_get_type( grp ) == ECP_TYPE_SHORT_WEIERSTRASS )
     {
         /* SEC1 3.2.1: Generate d such that 1 <= n < N */
@@ -1996,7 +1975,7 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
                mbedtls_mpi_cmp_mpi( d, &grp->N ) >= 0 );
     }
     else
-#endif /* ECP_SHORTWEIERSTRASS */
+#endif /* MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED */
         return( MBEDTLS_ERR_ECP_BAD_INPUT_DATA );
 
 cleanup:
