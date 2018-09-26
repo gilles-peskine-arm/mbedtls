@@ -180,7 +180,8 @@ class IntegrityChecker(object):
             self.logger.addHandler(console)
 
     def check_files(self):
-        for root, dirs, files in sorted(os.walk(".")):
+        for root, dirs, files in os.walk("."):
+            dirs[:] = sorted(d for d in dirs if d != ".git")
             for filename in sorted(files):
                 filepath = os.path.join(root, filename)
                 if (os.path.join("yotta", "module") in filepath or
