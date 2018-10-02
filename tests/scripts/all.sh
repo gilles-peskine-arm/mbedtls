@@ -403,7 +403,7 @@ tests/scripts/check-names.sh
 if which doxygen >/dev/null; then
     msg "test: doxygen warnings" # ~ 3s
     cleanup
-    tests/scripts/doxygen.sh
+    record_status tests/scripts/doxygen.sh
 fi
 
 
