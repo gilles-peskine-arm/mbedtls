@@ -1,3 +1,7 @@
+HMAC-SHA3-224
+depends_on:MBEDTLS_SHA3_C
+mbedtls_md_hmac:"SHA3-224":28:"2a2a2a2a":"":""
+
 # Tests of the generic message digest interface
 MD process
 mbedtls_md_process:
