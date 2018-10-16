@@ -29,6 +29,8 @@ my %configs = (
     'config-thread.h' => {
         'opt' => '-f ECJPAKE.*nolog',
     },
+    'config-psa-crypto.h' => {
+    },
 );
 
 # If no config-name is provided, use all known configs.
