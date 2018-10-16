@@ -301,12 +301,18 @@ typedef int32_t psa_status_t;
  * depend on the validity of the padding. */
 #define PSA_ERROR_INVALID_PADDING       ((psa_status_t)16)
 
+/** The generator has insufficient capacity left.
+ *
+ * Once a function returns this error, attempts to read from the
+ * generator will always return this error. */
+#define PSA_ERROR_INSUFFICIENT_CAPACITY ((psa_status_t)17)
+
 /** An error occurred that does not correspond to any defined
  * failure cause.
  *
  * Implementations may use this error code if none of the other standard
  * error codes are applicable. */
-#define PSA_ERROR_UNKNOWN_ERROR         ((psa_status_t)17)
+#define PSA_ERROR_UNKNOWN_ERROR         ((psa_status_t)18)
 
 /**
  * \brief Library initialization.
