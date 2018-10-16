@@ -111,24 +111,57 @@ psa_status_t psa_crypto_init(void);
 
 typedef uint32_t psa_key_type_t;
 
-#define PSA_KEY_TYPE_NONE                       0x00000000
-#define PSA_KEY_TYPE_RAW_DATA                   0x00000001
-#define PSA_KEY_TYPE_RSA                        0x40000001
-#define PSA_KEY_TYPE_ECC_BASE                   0x40010000
+#define PSA_KEY_TYPE_NONE                       ((psa_key_type_t)0x00000000)
+#define PSA_KEY_TYPE_VENDOR_FLAG                ((psa_key_type_t)0x80000000)
 
-#define PSA_KEY_TYPE_VENDOR_FLAG                0x80000000
-#define PSA_KEY_TYPE_ASYMMETRIC_FLAG            0x40000000
-#define PSA_KEY_TYPE_ECC_TEST_MASK              0x7fff0000
-#define PSA_KEY_TYPE_ECC_TEST_VALUE             0x40010000
+#define PSA_KEY_TYPE_CATEGORY_MASK              ((psa_key_type_t)0x7e000000)
+#define PSA_KEY_TYPE_RAW_DATA                   ((psa_key_type_t)0x02000000)
+#define PSA_KEY_TYPE_CATEGORY_SYMMETRIC         ((psa_key_type_t)0x04000000)
+#define PSA_KEY_TYPE_CATEGORY_ASYMMETRIC        ((psa_key_type_t)0x06000000)
+#define PSA_KEY_TYPE_PAIR_FLAG                  ((psa_key_type_t)0x01000000)
 
-#define PSA_KEY_TYPE_IS_VENDOR(type) \
+#define PSA_KEY_TYPE_IS_VENDOR_DEFINED(type) \
     (((type) & PSA_KEY_TYPE_VENDOR_FLAG) != 0)
-#define PSA_KEY_TYPE_IS_ASYMMETRIC(type) \
-    (((type) & PSA_KEY_TYPE_ASYMMETRIC_FLAG) != 0)
-#define PSA_KEY_TYPE_IS_ECC(type) \
-    (((type) & PSA_KEY_TYPE_ECC_TEST_MASK) == PSA_KEY_TYPE_ECC_TEST_VALUE)
+#define PSA_KEY_TYPE_IS_ASYMMETRIC(type)                                \
+    (((type) & PSA_KEY_TYPE_CATEGORY_MASK) == PSA_KEY_TYPE_CATEGORY_ASYMMETRIC)
+#define PSA_KEY_TYPE_IS_PUBLIC_KEY(type)                                \
+    (((type) & (PSA_KEY_TYPE_CATEGORY_MASK | PSA_KEY_TYPE_PAIR_FLAG) == \
+      PSA_KEY_TYPE_CATEGORY_ASYMMETRIC))
+#define PSA_KEY_TYPE_IS_KEYPAIR(type)                                   \
+    (((type) & (PSA_KEY_TYPE_CATEGORY_MASK | PSA_KEY_TYPE_PAIR_FLAG)) == \
+     (PSA_KEY_TYPE_CATEGORY_ASYMMETRIC | PSA_KEY_TYPE_PAIR_FLAG))
 
 typedef uint32_t psa_algorithm_type_t;
+
+#define PSA_ALG_VENDOR_FLAG                     ((psa_algorithm_t)0x80000000)
+#define PSA_ALG_CATEGORY_MASK                   ((psa_algorithm_t)0x7f000000)
+#define PSA_ALG_CATEGORY_HASH                   ((psa_algorithm_t)0x01000000)
+#define PSA_ALG_CATEGORY_MAC                    ((psa_algorithm_t)0x02000000)
+#define PSA_ALG_CATEGORY_CIPHER                 ((psa_algorithm_t)0x04000000)
+#define PSA_ALG_CATEGORY_AEAD                   ((psa_algorithm_t)0x06000000)
+#define PSA_ALG_CATEGORY_SIGN                   ((psa_algorithm_t)0x10000000)
+#define PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION  ((psa_algorithm_t)0x12000000)
+#define PSA_ALG_CATEGORY_KEY_AGREEMENT          ((psa_algorithm_t)0x22000000)
+#define PSA_ALG_CATEGORY_KEY_DERIVATION         ((psa_algorithm_t)0x30000000)
+
+#define PSA_ALG_IS_VENDOR_DEFINED(alg)                                  \
+    (((alg) & PSA_ALG_VENDOR_FLAG) != 0)
+#define PSA_ALG_IS_HASH(alg)                                            \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_HASH)
+#define PSA_ALG_IS_MAC(alg)                                             \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_MAC)
+#define PSA_ALG_IS_CIPHER(alg)                                          \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_CIPHER)
+#define PSA_ALG_IS_AEAD(alg)                                            \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_AEAD)
+#define PSA_ALG_IS_SIGN(alg)                                            \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_SIGN)
+#define PSA_ALG_IS_ASYMMETRIC_ENCRYPTION(alg)                           \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION)
+#define PSA_ALG_IS_KEY_AGREEMENT(alg)                                   \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_KEY_AGREEMENT)
+#define PSA_ALG_IS_KEY_DERIVATION(alg)                                  \
+    (((alg) & PSA_ALG_CATEGORY_MASK) == PSA_ALG_CATEGORY_KEY_DERIVATION)
 
 /**@}*/
 
