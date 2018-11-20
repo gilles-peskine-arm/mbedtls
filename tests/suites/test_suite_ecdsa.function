@@ -1,4 +1,5 @@
 /* BEGIN_HEADER */
+#include "mbedtls/asn1.h"
 #include "mbedtls/ecdsa.h"
 /* END_HEADER */
 
@@ -174,15 +175,21 @@ void ecdsa_write_read_random( int id )
         TEST_ASSERT( sig[i] == 0x2a );
 
     /* try verification with invalid length */
-    TEST_ASSERT( mbedtls_ecdsa_read_signature( &ctx, hash, sizeof( hash ),
-                 sig, sig_len - 1 ) != 0 );
-    TEST_ASSERT( mbedtls_ecdsa_read_signature( &ctx, hash, sizeof( hash ),
-                 sig, sig_len + 1 ) != 0 );
+    TEST_ASSERT( mbedtls_ecdsa_read_signature(
+                     &ctx, hash, sizeof( hash ),
+                     sig, sig_len - 1 ) ==
+                 MBEDTLS_ERR_ECP_BAD_INPUT_DATA + MBEDTLS_ERR_ASN1_OUT_OF_DATA );
+    TEST_ASSERT( mbedtls_ecdsa_read_signature(
+                     &ctx, hash, sizeof( hash ),
+                     sig, sig_len + 1 ) ==
+                 MBEDTLS_ERR_ECP_SIG_LEN_MISMATCH );
 
     /* try invalid sequence tag */
     sig[0]++;
-    TEST_ASSERT( mbedtls_ecdsa_read_signature( &ctx, hash, sizeof( hash ),
-                 sig, sig_len ) != 0 );
+    TEST_ASSERT( mbedtls_ecdsa_read_signature(
+                     &ctx, hash, sizeof( hash ),
+                     sig, sig_len ) ==
+                 MBEDTLS_ERR_ECP_BAD_INPUT_DATA + MBEDTLS_ERR_ASN1_UNEXPECTED_TAG );
     sig[0]--;
 
     /* try modifying r */
