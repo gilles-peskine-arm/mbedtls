@@ -16,6 +16,7 @@ import os
 import argparse
 import logging
 import codecs
+import re
 import sys
 
 
@@ -132,6 +133,16 @@ class TabIssueTracker(IssueTracker):
         return b"\t" in line
 
 
+class MergeArtifactIssueTracker(IssueTracker):
+
+    def __init__(self):
+        super().__init__()
+        self.heading = "Merge artifact:"
+
+    def issue_with_line(self, line):
+        return re.match(br'\A(<<<<<<<|\|\|\|\|\|\|\||=======|>>>>>>>) ', line)
+
+
 class TodoIssueTracker(IssueTracker):
 
     def __init__(self):
@@ -168,6 +179,7 @@ class IntegrityChecker(object):
             LineEndingIssueTracker(),
             TrailingWhitespaceIssueTracker(),
             TabIssueTracker(),
+            MergeArtifactIssueTracker(),
             TodoIssueTracker(),
         ]
 
