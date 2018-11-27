@@ -153,6 +153,7 @@ static int rsa_check_context( mbedtls_rsa_context const *ctx, int is_priv,
                               int blinding_needed )
 {
 #if !defined(MBEDTLS_RSA_NO_CRT)
+BARF    
     /* blinding_needed is only used for NO_CRT to decide whether
      * P,Q need to be present or not. */
     ((void) blinding_needed);
