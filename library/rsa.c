@@ -199,6 +199,7 @@ static int rsa_check_context( mbedtls_rsa_context const *ctx, int is_priv,
         return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
 
 #if defined(MBEDTLS_RSA_NO_CRT)
+    BARF;    
     /* For private key operations, use D or DP & DQ
      * as (unblinded) exponents. */
     if( is_priv && mbedtls_mpi_cmp_int( &ctx->D, 0 ) <= 0 )
