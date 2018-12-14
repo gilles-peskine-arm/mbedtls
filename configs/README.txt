@@ -8,8 +8,6 @@ These files are complete replacements for the default config.h. To use one of
 them, you can pick one of the following methods:
 
 1. Replace the default file include/mbedtls/config.h with the chosen one.
-   (Depending on your compiler, you may need to adjust the line with
-   #include "mbedtls/check_config.h" then.)
 
 2. Define MBEDTLS_CONFIG_FILE and adjust the include path accordingly.
    For example, using make:
