@@ -1778,7 +1778,7 @@ int mbedtls_ecp_gen_keypair( mbedtls_ecp_group *grp, mbedtls_mpi *d, mbedtls_ecp
 #if defined(ECP_MONTGOMERY)
     if( ecp_get_type( grp ) == ECP_TYPE_MONTGOMERY )
     {
-        /* [M225] page 5 */
+        /* [Curve25519] page 5 */
         size_t b;
 
         MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( d, n_size, f_rng, p_rng ) );
