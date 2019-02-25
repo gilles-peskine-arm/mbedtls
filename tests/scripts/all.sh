@@ -222,9 +222,9 @@ cleanup()
     fi
 
     command make clean
-    cd crypto
-    command make clean
-    cd ..
+    if [ -n "$HAVE_CRYPTO_SUBMODULE" ]; then
+        command make -C crypto clean
+    fi
 
     # Remove CMake artefacts
     find . -name .git -prune -o \
@@ -236,11 +236,12 @@ cleanup()
     rm -f include/Makefile include/mbedtls/Makefile programs/*/Makefile
     git update-index --no-skip-worktree Makefile library/Makefile programs/Makefile tests/Makefile
     git checkout -- Makefile library/Makefile programs/Makefile tests/Makefile
-    cd crypto
-    rm -f include/Makefile include/mbedtls/Makefile programs/*/Makefile
-    git update-index --no-skip-worktree Makefile library/Makefile programs/Makefile tests/Makefile
-    git checkout -- Makefile library/Makefile programs/Makefile tests/Makefile
-    cd ..
+    if [ -n "$HAVE_CRYPTO_SUBMODULE" ]; then
+        rm -f crypto/include/Makefile crypto/include/mbedtls/Makefile
+        rm -f crypto/programs/*/Makefile
+        git -C crypto update-index --no-skip-worktree Makefile library/Makefile programs/Makefile tests/Makefile
+        git -C crypto checkout -- Makefile library/Makefile programs/Makefile tests/Makefile
+    fi
 
     if [ -f "$CONFIG_BAK" ]; then
         mv "$CONFIG_BAK" "$CONFIG_H"
@@ -396,10 +397,6 @@ pre_check_git () {
             exit 1
         fi
     fi
-    if ! [ -f crypto/Makefile ]; then
-        echo "Please initialize the crypto submodule" >&2
-        exit 1
-    fi
 }
 
 pre_check_seedfile () {
@@ -553,6 +550,26 @@ pre_check_tools () {
         *) set "$@" RUN_ARMCC=0;;
     esac
     "$@" scripts/output_env.sh
+}
+
+need_submodule () {
+    case $RUN_COMPONENTS in
+        *test_submodule*) return 0;;
+    esac
+    return 1
+}
+pre_check_submodule () {
+    # Require the submodule to be already initialized if we're going to
+    # run any component that requires it.
+    if [ -f crypto/Makefile ]; then
+        HAVE_CRYPTO_SUBMODULE=1
+    else
+        HAVE_CRYPTO_SUBMODULE=
+        if need_submodule; then
+            echo "Please initialize the crypto submodule" >&2
+            exit 1
+        fi
+    fi
 }
 
 
@@ -1399,6 +1416,7 @@ else
 fi
 pre_print_configuration
 pre_check_tools
+pre_check_submodule
 cleanup
 
 # Run the requested tests.
