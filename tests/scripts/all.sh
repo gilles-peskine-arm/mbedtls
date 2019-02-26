@@ -640,6 +640,11 @@ component_test_default_cmake_gcc_asan () {
     msg "test: main suites (inc. selftests) (ASan build)" # ~ 50s
     make test
 
+    for s in programs/*/*.sh; do
+        msg "test: sample program ${s#programs/} (ASan build)" # ~ 1s
+        if_build_succeeded "$s"
+    done
+
     msg "test: ssl-opt.sh (ASan build)" # ~ 1 min
     if_build_succeeded tests/ssl-opt.sh
 
