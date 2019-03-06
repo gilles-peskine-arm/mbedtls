@@ -89,7 +89,7 @@ class ContentIssueTracker(FileIssueTracker):
                         if tracker.should_check_file(basename)]
             for i, line in enumerate(iter(f.readline, b"")):
                 for tracker in trackers:
-                    if tracker.issue_with_line(line, filepath):
+                    if tracker.issue_with_line(line):
                         self.record_issue(filepath, i + 1, tracker.description)
 
 class PermissionIssueTracker(FileIssueTracker):
@@ -136,7 +136,7 @@ class LineEndingIssueTracker(LineIssueTracker):
 
     description = "Non-Unix line ending"
 
-    def issue_with_line(self, line, _filepath):
+    def issue_with_line(self, line):
         return b"\r" in line
 
 
@@ -149,7 +149,7 @@ class TrailingWhitespaceIssueTracker(LineIssueTracker):
     def should_check_file(filepath):
         return not filepath.endswith('.md')
 
-    def issue_with_line(self, line, _filepath):
+    def issue_with_line(self, line):
         return line.rstrip(b"\r\n") != line.rstrip()
 
 
@@ -163,7 +163,7 @@ class TabIssueTracker(LineIssueTracker):
         return not (basename.endswith('Makefile') or
                     basename == 'generate_visualc_files.pl')
 
-    def issue_with_line(self, line, _filepath):
+    def issue_with_line(self, line):
         return b"\t" in line
 
 
@@ -173,14 +173,14 @@ class MergeArtifactIssueTracker(LineIssueTracker):
 
     description = "Merge artifact"
 
-    def issue_with_line(self, line, _filepath):
+    def issue_with_line(self, line):
         # Detect leftover git conflict markers.
         if line.startswith(b'<<<<<<< ') or line.startswith(b'>>>>>>> '):
             return True
         if line.startswith(b'||||||| '): # from merge.conflictStyle=diff3
             return True
         if line.rstrip(b'\r\n') == b'=======' and \
-           not _filepath.endswith('.md'):
+           not self.filepath.endswith('.md'):
             return True
         return False
 
@@ -197,7 +197,7 @@ class TodoIssueTracker(LineIssueTracker):
             "pull_request_template.md",
         ]
 
-    def issue_with_line(self, line, _filepath):
+    def issue_with_line(self, line):
         return b"todo" in line.lower()
 
 
