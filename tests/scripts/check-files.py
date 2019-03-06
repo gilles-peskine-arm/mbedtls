@@ -16,6 +16,7 @@ import os
 import argparse
 import logging
 import codecs
+import re
 import sys
 
 
@@ -181,6 +182,34 @@ class TodoIssueTracker(LineIssueTracker):
             return "TODO present"
 
 
+class CCommentStyleTracker(LineIssueTracker):
+    """Check C comment style."""
+
+    description = "TODO present"
+
+    @staticmethod
+    def should_check_file(basename):
+        return basename.endswith(('.h', '.c', '.function'))
+
+    def __init__(self, basename):
+        super().__init__(basename)
+        self.in_comment = False
+
+    # match a comment or a string literal
+    _inline_re = re.compile(rb'//.*|/\*.*?\*/|"(?:[^\\"]|\\.)*"')
+
+    def issue_with_line(self, line):
+        issue = None
+        if self.in_comment and not line.startswith(b' *'):
+            issue = "Comment continuation lines must start with \" *\""
+        line = re.sub(self._inline_re, rb'', line)
+        if b'/*' in line:
+            self.in_comment = True
+        if b'*/' in line:
+            self.in_comment = False
+        return issue
+
+
 class IntegrityChecker(object):
     """Sanity-check files under the current directory."""
 
@@ -211,6 +240,7 @@ class IntegrityChecker(object):
                 TabIssueTracker,
                 MergeArtifactIssueTracker,
                 TodoIssueTracker,
+                CCommentStyleTracker,
             ])
         ]
 
