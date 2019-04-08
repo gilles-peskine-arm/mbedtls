@@ -56,7 +56,6 @@
 #include "mbedtls/pkcs5.h"
 #include "mbedtls/ecp.h"
 #include "mbedtls/ecjpake.h"
-#include "mbedtls/timing.h"
 #include "mbedtls/nist_kw.h"
 
 #include <string.h>
@@ -277,10 +276,6 @@ const selftest_t selftests[] =
 #endif
 #if defined(MBEDTLS_PKCS5_C)
     {"pkcs5", mbedtls_pkcs5_self_test},
-#endif
-/* Slower test after the faster ones */
-#if defined(MBEDTLS_TIMING_C)
-    {"timing", mbedtls_timing_self_test},
 #endif
 /* Heap test comes last */
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
