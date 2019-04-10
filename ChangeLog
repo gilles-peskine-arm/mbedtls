@@ -9,6 +9,10 @@ Features
      Contributed by Jack Lloyd and Fortanix Inc.
    * Add the Wi-SUN Field Area Network (FAN) device extended key usage.
 
+API Changes
+   * Remove the self-test from the timing module. Since this module is not
+     related to cryptography, it doesn't need a self-test.
+
 Bugfix
    * Fix private key DER output in the key_app_writer example. File contents
      were shifted by one byte, creating an invalid ASN.1 tag. Fixed by
