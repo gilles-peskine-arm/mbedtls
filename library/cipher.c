@@ -398,8 +398,10 @@ int mbedtls_cipher_set_iv( mbedtls_cipher_context_t *ctx,
 
     CIPHER_VALIDATE_RET( ctx != NULL );
     CIPHER_VALIDATE_RET( iv_len == 0 || iv != NULL );
+
     if( ctx->cipher_info == NULL )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if( ctx->psa_enabled == 1 )
     {
@@ -477,6 +479,8 @@ int mbedtls_cipher_update_ad( mbedtls_cipher_context_t *ctx,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     if( ctx->key_bitlen == 0 )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    if( ctx->iv_size == 0 )
+        return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if( ctx->psa_enabled == 1 )
@@ -535,6 +539,8 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
     if( ctx->cipher_info == NULL )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     if( ctx->key_bitlen == 0 )
+        return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    if( ctx->cipher_info->iv_size != 0 && ctx->iv_size == 0 )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
@@ -958,6 +964,8 @@ int mbedtls_cipher_finish( mbedtls_cipher_context_t *ctx,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     if( ctx->key_bitlen == 0 )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    if( ctx->cipher_info->iv_size != 0 && ctx->iv_size == 0 )
+        return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if( ctx->psa_enabled == 1 )
@@ -1126,6 +1134,8 @@ int mbedtls_cipher_write_tag( mbedtls_cipher_context_t *ctx,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     if( MBEDTLS_ENCRYPT != ctx->operation )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    if( ctx->iv_size == 0 )
+        return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if( ctx->psa_enabled == 1 )
@@ -1172,6 +1182,8 @@ int mbedtls_cipher_check_tag( mbedtls_cipher_context_t *ctx,
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
 
     if( ctx->key_bitlen == 0 )
+        return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
+    if( ctx->iv_size == 0 )
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     if( MBEDTLS_DECRYPT != ctx->operation )
     {
