@@ -620,6 +620,9 @@ component_test_default_out_of_box () {
 
     msg "selftest: make, default config (out-of-box)" # ~10s
     programs/test/selftest
+
+    msg "program demos: make, default config (out-of-box)" # ~10s
+    tests/scripts/run_demos.py
 }
 
 component_test_default_cmake_gcc_asan () {
@@ -629,6 +632,9 @@ component_test_default_cmake_gcc_asan () {
 
     msg "test: main suites (inc. selftests) (ASan build)" # ~ 50s
     make test
+
+    msg "program demos (ASan build)" # ~10s
+    tests/scripts/run_demos.py
 
     msg "test: ssl-opt.sh (ASan build)" # ~ 1 min
     if_build_succeeded tests/ssl-opt.sh
@@ -741,6 +747,9 @@ component_test_full_cmake_clang () {
     msg "test: main suites (full config)" # ~ 5s
     make test
 
+    msg "program demos (full config)" # ~10s
+    tests/scripts/run_demos.py
+
     msg "test: ssl-opt.sh default, ECJPAKE, SSL async (full config)" # ~ 1s
     if_build_succeeded tests/ssl-opt.sh -f 'Default\|ECJPAKE\|SSL async private'
 
@@ -767,6 +776,9 @@ component_build_deprecated () {
     # Build with -O -Wextra to catch a maximum of issues.
     make CC=clang CFLAGS='-O -Werror -Wall -Wextra' lib programs
     make CC=clang CFLAGS='-O -Werror -Wall -Wextra -Wno-unused-function' tests
+
+    msg "program demos: full config + DEPRECATED_REMOVED" # ~10s
+    tests/scripts/run_demos.py
 }
 
 component_test_depends_curves () {
@@ -1189,6 +1201,9 @@ component_test_memsan () {
 
     msg "test: main suites (MSan)" # ~ 10s
     make test
+
+    msg "program demos (MSan)" # ~20s
+    tests/scripts/run_demos.py
 
     msg "test: ssl-opt.sh (MSan)" # ~ 1 min
     if_build_succeeded tests/ssl-opt.sh
