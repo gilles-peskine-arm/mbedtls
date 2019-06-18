@@ -22,7 +22,9 @@ def run_demo(demo):
     return returncode == 0
 
 def run_demos(demos):
-    """Run the specified demos and print summary information about failures."""
+    """Run the specified demos and print summary information about failures.
+
+Return True if all demos passed and False if a demo fails."""
     failures = []
     for demo in demos:
         print('#### {} ####'.format(demo))
@@ -34,13 +36,17 @@ def run_demos(demos):
     print('{}/{} demos passed'.format(successes, len(demos)))
     if failures:
         print('Failures:', *failures)
+    return not failures
 
 def run_all_demos():
-    """Run all the available demos that are application in the current configuration."""
+    """Run all the available demos that are application in the current configuration.
+
+Return True if all demos passed and False if a demo fails."""
     all_demos = (glob.glob('programs/*/*_demo.sh') +
                  glob.glob('crypto/programs/*/*_demo.sh'))
-    run_demos([demo for demo in all_demos if is_demo_applicable(demo)])
+    applicable_demos = [demo for demo in all_demos if is_demo_applicable(demo)]
+    return run_demos(applicable_demos)
 
 if __name__ == '__main__':
-    run_all_demos()
-
+    if not run_all_demos():
+        exit(1)
