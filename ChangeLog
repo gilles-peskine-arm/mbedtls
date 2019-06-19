@@ -19,6 +19,9 @@ Bugfix
 
 Changes
    * Make `make clean` clean all programs always. Fixes #1862.
+   * Unify the example programs termination to call mbedtls_exit() instead of
+     using a return command. This has been done to enable customization of the
+     behavior in bare metal environments.
 
 = mbed TLS 2.7.11 branch released 2019-06-11
 
