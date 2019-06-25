@@ -193,3 +193,39 @@ exit:
     mbedtls_ssl_config_free( &conf );
 }
 /* END_CASE */
+
+/* BEGIN_CASE */
+void c99( )
+{
+    // This is a C99 comment.
+    void (*compiler_knows_restrict)( int *restrict p, int *restrict q ) = NULL;
+    typedef struct
+    {
+        int foo;
+        int bar[];
+    } incomplete_t;
+    incomplete_t *incomplete = NULL;
+    typedef struct
+    {
+        int foo;
+        int bar;
+    } stuff_t;
+    stuff_t stuff = {.bar = 1, .foo = 0};
+    typedef union
+    {
+        char c;
+        unsigned long ul;
+    } union_t;
+    union_t my_union = {.ul = 0x1100};
+    unsigned long long ull = 0x100000000;
+
+    TEST_ASSERT( compiler_knows_restrict == NULL );
+    TEST_ASSERT( incomplete == NULL );
+    TEST_ASSERT( stuff.foo == 0 );
+    TEST_ASSERT( my_union.ul == 0x1100 );
+    TEST_ASSERT( ull != 0 );
+
+    int declaration_after_statement = 1;
+    TEST_ASSERT( declaration_after_statement );
+}
+/* END_CASE */
