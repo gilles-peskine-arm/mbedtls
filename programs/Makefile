@@ -92,7 +92,12 @@ endif
 
 .PHONY: all clean list fuzz
 
-all: $(APPS) fuzz
+all: $(APPS)
+ifndef WINDOWS
+# APPS doesn't include the fuzzing programs, which aren't "normal"
+# sample or test programs, and don't build on Windows.
+all: fuzz
+endif
 
 fuzz:
 	$(MAKE) -C fuzz
