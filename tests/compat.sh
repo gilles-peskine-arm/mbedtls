@@ -216,16 +216,6 @@ filter_ciphersuites()
         G_CIPHERS=$( filter "$G_CIPHERS" )
     fi
 
-    # OpenSSL 1.0.1h doesn't support DTLS 1.2
-    if [ `minor_ver "$MODE"` -ge 3 ] && is_dtls "$MODE"; then
-        O_CIPHERS=""
-        case "$PEER" in
-            [Oo]pen*)
-                M_CIPHERS=""
-                ;;
-        esac
-    fi
-
     # For GnuTLS client -> mbed TLS server,
     # we need to force IPv4 by connecting to 127.0.0.1 but then auth fails
     if [ "X$VERIFY" = "XYES" ] && is_dtls "$MODE"; then
