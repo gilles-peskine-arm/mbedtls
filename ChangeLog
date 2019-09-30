@@ -11,6 +11,10 @@ API Changes
      mbedtls_ssl_export_keys_ext_t, so that the key exporter is discouraged
      from modifying the client/server hello.
 
+Bugfix
+   * Fix some false-positive uninitialized variable warnings. Fix
+     contributed by apple-ihack-geek in #2663.
+
 = mbed TLS 2.19.0 branch released 2019-09-06
 
 Security
