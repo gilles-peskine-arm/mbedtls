@@ -566,6 +566,7 @@ int main( int argc, char *argv[] )
         TIME_AND_TSC( "CTR_DRBG (NOPR)",
                 if( mbedtls_ctr_drbg_random( &ctr_drbg, buf, BUFSIZE ) != 0 )
                 mbedtls_exit(1) );
+        mbedtls_ctr_drbg_free( &ctr_drbg );
 
         if( mbedtls_ctr_drbg_seed( &ctr_drbg, myrand, NULL, NULL, 0 ) != 0 )
             mbedtls_exit(1);
