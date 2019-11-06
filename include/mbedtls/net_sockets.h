@@ -67,8 +67,15 @@
 
 #define MBEDTLS_NET_LISTEN_BACKLOG         10 /**< The backlog that listen() should use. */
 
-#define MBEDTLS_NET_PROTO_TCP 0 /**< The TCP transport protocol */
-#define MBEDTLS_NET_PROTO_UDP 1 /**< The UDP transport protocol */
+/** The TCP transport protocol.
+ * This is a suitable underlying transport for TLS.
+ */
+#define MBEDTLS_NET_PROTO_TCP 0
+
+/** The UDP transport protocol.
+ * This is a suitable underlying transport for DTLS.
+ */
+#define MBEDTLS_NET_PROTO_UDP 1
 
 #define MBEDTLS_NET_POLL_READ  1 /**< Used in \c mbedtls_net_poll to check for pending data  */
 #define MBEDTLS_NET_POLL_WRITE 2 /**< Used in \c mbedtls_net_poll to check if write possible */
@@ -91,64 +98,94 @@ typedef struct mbedtls_net_context
 mbedtls_net_context;
 
 /**
- * \brief          Initialize a context
- *                 Just makes the context ready to be used or freed safely.
+ * \brief          Initialize a context.
  *
- * \param ctx      Context to initialize
+ * You must call this function before calling any other function on the
+ * context, including mbedtls_net_free().
+ *
+ * \param ctx      The context to initialize.
  */
 void mbedtls_net_init( mbedtls_net_context *ctx );
 
 /**
- * \brief          Initiate a connection with host:port in the given protocol
+ * \brief          Initiate a client connection in the given protocol.
  *
- * \param ctx      Socket to use
- * \param host     Host to connect to
- * \param port     Port to connect to
- * \param proto    Protocol: MBEDTLS_NET_PROTO_TCP or MBEDTLS_NET_PROTO_UDP
+ * \param ctx      The context to use. It must have been initialized and
+ *                 must not be already in use.
+ * \param host     The host to connect to.
+ * \param port     The port to connect to.
+ * \param proto    The protocol. One of:
+ *                 - #MBEDTLS_NET_PROTO_TCP
+ *                 - #MBEDTLS_NET_PROTO_UDP
  *
- * \return         0 if successful, or one of:
- *                      MBEDTLS_ERR_NET_SOCKET_FAILED,
- *                      MBEDTLS_ERR_NET_UNKNOWN_HOST,
- *                      MBEDTLS_ERR_NET_CONNECT_FAILED
+ * \return         0 if successful.
+ * \return         #MBEDTLS_ERR_NET_SOCKET_FAILED if setting up the socket
+ *                 failed (`socket()` or `setsockopt()` failed).
+ * \return         #MBEDTLS_ERR_NET_UNKNOWN_HOST if the specified host does
+ *                 not exist (`getaddrinfo()` failed).
+ * \return         #MBEDTLS_ERR_NET_CONNECT_FAILED if connecting to the
+ *                 socket failed (`connect()` failed).
  *
- * \note           Sets the socket in connected mode even with UDP.
+ * \note           This function sets the socket in connected mode even
+ *                 with UDP.
  */
-int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host, const char *port, int proto );
+int mbedtls_net_connect( mbedtls_net_context *ctx,
+                         const char *host, const char *port, int proto );
 
 /**
- * \brief          Create a receiving socket on bind_ip:port in the chosen
- *                 protocol. If bind_ip == NULL, all interfaces are bound.
+ * \brief          Create a server socket in the given protocol.
  *
- * \param ctx      Socket to use
- * \param bind_ip  IP to bind to, can be NULL
- * \param port     Port number to use
- * \param proto    Protocol: MBEDTLS_NET_PROTO_TCP or MBEDTLS_NET_PROTO_UDP
+ * \param ctx      The context to use. It must have been initialized and
+ *                 must not be already in use.
+ * \param bind_ip  The IP address to bind to.
+ *                 This can be \c NULL to bind on all interfaces.
+ * \param port     The port number to listen on.
+ * \param proto    The protocol. One of:
+ *                 - #MBEDTLS_NET_PROTO_TCP
+ *                 - #MBEDTLS_NET_PROTO_UDP
  *
- * \return         0 if successful, or one of:
- *                      MBEDTLS_ERR_NET_SOCKET_FAILED,
- *                      MBEDTLS_ERR_NET_BIND_FAILED,
- *                      MBEDTLS_ERR_NET_LISTEN_FAILED
+ * \return         0 if successful.
+ * \return         #MBEDTLS_ERR_NET_SOCKET_FAILED if setting up the socket
+ *                 failed (`socket()` or `setsockopt()` failed).
+ * \return         #MBEDTLS_ERR_NET_UNKNOWN_HOST if the specified host does
+ *                 not exist (`getaddrinfo()` failed).
+ * \return         #MBEDTLS_ERR_NET_BIND_FAILED if connecting to the
+ *                 socket failed (`bind()` failed).
+ * \return         #MBEDTLS_ERR_NET_LISTEN_FAILED if connecting to the
+ *                 socket failed (`listen()` failed).
  *
- * \note           Regardless of the protocol, opens the sockets and binds it.
- *                 In addition, make the socket listening if protocol is TCP.
+ * \note           Regardless of the protocol, this function opens the sockets
+ *                 and binds it.
+ *                 In addition, this functions makes the socket listening
+ *                 if the protocol is TCP.
  */
-int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char *port, int proto );
+int mbedtls_net_bind( mbedtls_net_context *ctx,
+                      const char *bind_ip, const char *port, int proto );
 
 /**
- * \brief           Accept a connection from a remote client
+ * \brief           Accept a connection from a remote client.
  *
- * \param bind_ctx  Relevant socket
- * \param client_ctx Will contain the connected client socket
- * \param client_ip Will contain the client IP address, can be NULL
- * \param buf_size  Size of the client_ip buffer
- * \param ip_len    Will receive the size of the client IP written,
- *                  can be NULL if client_ip is null
+ * \param bind_ctx  The listening context to use. It must have been set up
+ *                  with mbedtls_net_bind().
+ * \param client_ctx The context for the connection. It must have been
+ *                  initialized and must not be already in use.
+ * \param client_ip If this is non-null, it will contain the client IP address
+ *                  on successful return.
+ * \param buf_size  The size of the \p client_ip buffer.
+ * \param ip_len    On successful output, the length of the client IP address
+ *                  stored in \p client_ip.
+ *                  This can be \p NULL if client_ip is \p NULL.
  *
- * \return          0 if successful, or
- *                  MBEDTLS_ERR_NET_ACCEPT_FAILED, or
- *                  MBEDTLS_ERR_NET_BUFFER_TOO_SMALL if buf_size is too small,
- *                  MBEDTLS_ERR_SSL_WANT_READ if bind_fd was set to
- *                  non-blocking and accept() would block.
+ * \return          0 if successful.
+ * \return          #MBEDTLS_ERR_NET_ACCEPT_FAILED if setting up a connection
+ *                  failed (`setsockopt()` or `accept()` failed).
+ * \return          #MBEDTLS_ERR_SSL_WANT_READ if \p bind_fd was set to
+ *                  non-blocking and `accept()` would block.
+ * \return          #MBEDTLS_ERR_NET_BUFFER_TOO_SMALL if \p buf_size is
+ *                  too small.
+ *
+ * \note            If this function fails, you must call
+ *                  mbedtls_net_free() on \p client_ctx.
  */
 int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
                         mbedtls_net_context *client_ctx,
