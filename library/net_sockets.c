@@ -202,10 +202,21 @@ static int plug_socket( mbedtls_net_context *ctx,
     /* Do name resolution with both IPv6 and IPv4 */
     memset( &hints, 0, sizeof( hints ) );
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = proto == MBEDTLS_NET_PROTO_UDP ? SOCK_DGRAM : SOCK_STREAM;
-    hints.ai_protocol = proto == MBEDTLS_NET_PROTO_UDP ? IPPROTO_UDP : IPPROTO_TCP;
     if( conn != CONN_CONNECT && host == NULL )
         hints.ai_flags = AI_PASSIVE;
+    switch( proto )
+    {
+        case MBEDTLS_NET_PROTO_TCP:
+            hints.ai_socktype = SOCK_STREAM;
+            hints.ai_protocol = IPPROTO_TCP;
+            break;
+        case MBEDTLS_NET_PROTO_UDP:
+            hints.ai_socktype = SOCK_DGRAM;
+            hints.ai_protocol = IPPROTO_UDP;
+            break;
+        default:
+            return( MBEDTLS_ERR_NET_BAD_INPUT_DATA );
+    }
 
     if( getaddrinfo( host, port, &hints, &addr_list ) != 0 )
         return( MBEDTLS_ERR_NET_UNKNOWN_HOST );

@@ -125,6 +125,7 @@ void mbedtls_net_init( mbedtls_net_context *ctx );
  *                 not exist (`getaddrinfo()` failed).
  * \return         #MBEDTLS_ERR_NET_CONNECT_FAILED if connecting to the
  *                 socket failed (`connect()` failed).
+ * \return         #MBEDTLS_ERR_NET_BAD_INPUT_DATA if \p proto is invalid.
  *
  * \note           This function sets the socket in connected mode even
  *                 with UDP.
@@ -153,6 +154,7 @@ int mbedtls_net_connect( mbedtls_net_context *ctx,
  *                 socket failed (`bind()` failed).
  * \return         #MBEDTLS_ERR_NET_LISTEN_FAILED if connecting to the
  *                 socket failed (`listen()` failed).
+ * \return         #MBEDTLS_ERR_NET_BAD_INPUT_DATA if \p proto is invalid.
  *
  * \note           Regardless of the protocol, this function opens the sockets
  *                 and binds it.
