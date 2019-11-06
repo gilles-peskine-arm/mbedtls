@@ -141,11 +141,57 @@ void mbedtls_net_init( mbedtls_net_context *ctx )
     ctx->fd = -1;
 }
 
-/*
- * Initiate a TCP connection with host:port and the given protocol
- */
-int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
-                         const char *port, int proto )
+typedef enum
+{
+    CONN_CONNECT,
+    CONN_BIND,
+    CONN_LISTEN,
+} connection_type;
+
+static int open_socket( const struct addrinfo *cur, int *fd,
+                        connection_type conn )
+{
+    *fd = MSVC_INT_CAST socket( cur->ai_family, cur->ai_socktype,
+                                cur->ai_protocol );
+    if( *fd < 0 )
+        return( MBEDTLS_ERR_NET_SOCKET_FAILED );
+
+    switch( conn )
+    {
+        case CONN_CONNECT:
+            if( connect( *fd, cur->ai_addr, MSVC_INT_CAST cur->ai_addrlen ) != 0 )
+                return( MBEDTLS_ERR_NET_CONNECT_FAILED );
+            break;
+
+        case CONN_BIND:
+        case CONN_LISTEN:
+            {
+                int n = 1;
+                if( setsockopt( *fd, SOL_SOCKET, SO_REUSEADDR,
+                                &n, sizeof( n ) ) != 0 )
+                {
+                    return( MBEDTLS_ERR_NET_SOCKET_FAILED );
+                }
+            }
+
+            if( bind( *fd, cur->ai_addr, MSVC_INT_CAST cur->ai_addrlen ) != 0 )
+                return( MBEDTLS_ERR_NET_BIND_FAILED );
+
+            if( conn == CONN_LISTEN )
+            {
+                if( listen( *fd, MBEDTLS_NET_LISTEN_BACKLOG ) != 0 )
+                    return( MBEDTLS_ERR_NET_LISTEN_FAILED );
+            }
+
+            break;
+    }
+
+    return( 0 );
+}
+
+static int plug_socket( mbedtls_net_context *ctx,
+                        const char *host, const char *port, int proto,
+                        connection_type conn )
 {
     int ret;
     struct addrinfo hints, *addr_list, *cur;
@@ -158,30 +204,21 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = proto == MBEDTLS_NET_PROTO_UDP ? SOCK_DGRAM : SOCK_STREAM;
     hints.ai_protocol = proto == MBEDTLS_NET_PROTO_UDP ? IPPROTO_UDP : IPPROTO_TCP;
+    if( conn != CONN_CONNECT && host == NULL )
+        hints.ai_flags = AI_PASSIVE;
 
     if( getaddrinfo( host, port, &hints, &addr_list ) != 0 )
         return( MBEDTLS_ERR_NET_UNKNOWN_HOST );
 
-    /* Try the sockaddrs until a connection succeeds */
+    /* Try the sockaddrs until a connection/binding succeeds */
     ret = MBEDTLS_ERR_NET_UNKNOWN_HOST;
     for( cur = addr_list; cur != NULL; cur = cur->ai_next )
     {
-        ctx->fd = (int) socket( cur->ai_family, cur->ai_socktype,
-                            cur->ai_protocol );
-        if( ctx->fd < 0 )
-        {
-            ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
-            continue;
-        }
-
-        if( connect( ctx->fd, cur->ai_addr, MSVC_INT_CAST cur->ai_addrlen ) == 0 )
-        {
-            ret = 0;
+        ret = open_socket( cur, &ctx->fd, conn );
+        if( ret == 0 )
             break;
-        }
-
-        close( ctx->fd );
-        ret = MBEDTLS_ERR_NET_CONNECT_FAILED;
+        if( ctx->fd < 0 )
+            close( ctx->fd );
     }
 
     freeaddrinfo( addr_list );
@@ -190,75 +227,24 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
 }
 
 /*
+ * Initiate a TCP connection with host:port and the given protocol
+ */
+int mbedtls_net_connect( mbedtls_net_context *ctx,
+                         const char *host, const char *port, int proto )
+{
+    return( plug_socket( ctx, host, port, proto, CONN_CONNECT ) );
+}
+
+/*
  * Create a listening socket on bind_ip:port
  */
-int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char *port, int proto )
+int mbedtls_net_bind( mbedtls_net_context *ctx,
+                      const char *bind_ip, const char *port, int proto )
 {
-    int n, ret;
-    struct addrinfo hints, *addr_list, *cur;
-
-    if( ( ret = net_prepare() ) != 0 )
-        return( ret );
-
-    /* Bind to IPv6 and/or IPv4, but only in the desired protocol */
-    memset( &hints, 0, sizeof( hints ) );
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = proto == MBEDTLS_NET_PROTO_UDP ? SOCK_DGRAM : SOCK_STREAM;
-    hints.ai_protocol = proto == MBEDTLS_NET_PROTO_UDP ? IPPROTO_UDP : IPPROTO_TCP;
-    if( bind_ip == NULL )
-        hints.ai_flags = AI_PASSIVE;
-
-    if( getaddrinfo( bind_ip, port, &hints, &addr_list ) != 0 )
-        return( MBEDTLS_ERR_NET_UNKNOWN_HOST );
-
-    /* Try the sockaddrs until a binding succeeds */
-    ret = MBEDTLS_ERR_NET_UNKNOWN_HOST;
-    for( cur = addr_list; cur != NULL; cur = cur->ai_next )
-    {
-        ctx->fd = (int) socket( cur->ai_family, cur->ai_socktype,
-                            cur->ai_protocol );
-        if( ctx->fd < 0 )
-        {
-            ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
-            continue;
-        }
-
-        n = 1;
-        if( setsockopt( ctx->fd, SOL_SOCKET, SO_REUSEADDR,
-                        (const char *) &n, sizeof( n ) ) != 0 )
-        {
-            close( ctx->fd );
-            ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
-            continue;
-        }
-
-        if( bind( ctx->fd, cur->ai_addr, MSVC_INT_CAST cur->ai_addrlen ) != 0 )
-        {
-            close( ctx->fd );
-            ret = MBEDTLS_ERR_NET_BIND_FAILED;
-            continue;
-        }
-
-        /* Listen only makes sense for TCP */
-        if( proto == MBEDTLS_NET_PROTO_TCP )
-        {
-            if( listen( ctx->fd, MBEDTLS_NET_LISTEN_BACKLOG ) != 0 )
-            {
-                close( ctx->fd );
-                ret = MBEDTLS_ERR_NET_LISTEN_FAILED;
-                continue;
-            }
-        }
-
-        /* Bind was successful */
-        ret = 0;
-        break;
-    }
-
-    freeaddrinfo( addr_list );
-
-    return( ret );
-
+    /* Listen only makes sense for TCP */
+    connection_type conn =
+        proto == MBEDTLS_NET_PROTO_TCP ? CONN_LISTEN : CONN_BIND;
+    return( plug_socket( ctx, bind_ip, port, proto, conn ) );
 }
 
 #if ( defined(_WIN32) || defined(_WIN32_WCE) ) && !defined(EFIX64) && \
