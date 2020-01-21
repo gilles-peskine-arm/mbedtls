@@ -431,6 +431,15 @@ int execute_tests( int argc , const char ** argv )
         return( 1 );
     }
 
+    if( outcome_file_name != NULL )
+    {
+        outcome_file = fopen( outcome_file_name, "a" );
+        if( outcome_file == NULL )
+        {
+            mbedtls_fprintf( stderr, "Unable to open outcome file. Continuing anyway.\n" );
+        }
+    }
+
     while( arg_index < argc )
     {
         next_arg = argv[arg_index];
@@ -483,6 +492,8 @@ int execute_tests( int argc , const char ** argv )
         {
             mbedtls_fprintf( stderr, "Failed to open test file: %s\n",
                              test_filename );
+            if( outcome_file != NULL )
+                fclose( outcome_file );
             return( 1 );
         }
 
