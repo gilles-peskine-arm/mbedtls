@@ -17,6 +17,11 @@ Security
      unless the RNG is broken, and could result in information disclosure or
      denial of service (application crash or extra resource consumption).
      Reported by Peter and Auke (found using static analysis).
+   * Parse all RSA parameters from private keys instead of recalculating
+     some of them. The recalculation could expose the private key through
+     a side channel. Found by Alejandro Cabrera Aldaya and Billy Brumley.
+     Reported and fix contributed by Jack Lloyd and Fortanix Inc in
+     ARMmbed/mbed-crypto#352.
 
 Features
    * The new build option MBEDTLS_SHA512_NO_SHA384 allows building SHA-512
@@ -35,6 +40,8 @@ Bugfix
    * Fix an unchecked call to mbedtls_md() in the x509write module.
    * Fix build failure with MBEDTLS_ZLIB_SUPPORT enabled. Reported by
      Jack Lloyd in #2859. Fix submitted by jiblime in #2963.
+   * Fix a possible error code mangling in psa_mac_verify_finish() when
+     a cryptographic accelerator fails. ARMmbed/mbed-crypto#345
 
 = mbed TLS 2.20.0 branch released 2020-01-15
 
