@@ -805,6 +805,7 @@ component_test_no_platform () {
     msg "build: full config except platform/fsio/net, make, gcc, C99" # ~ 30s
     scripts/config.py full
     scripts/config.py unset MBEDTLS_PLATFORM_C
+    scripts/config.py unset MBEDTLS_NET_C
     scripts/config.py unset MBEDTLS_PLATFORM_MEMORY
     scripts/config.py unset MBEDTLS_PLATFORM_PRINTF_ALT
     scripts/config.py unset MBEDTLS_PLATFORM_FPRINTF_ALT
@@ -812,10 +813,11 @@ component_test_no_platform () {
     scripts/config.py unset MBEDTLS_PLATFORM_TIME_ALT
     scripts/config.py unset MBEDTLS_PLATFORM_EXIT_ALT
     scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
+    scripts/config.py unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
     scripts/config.py unset MBEDTLS_FS_IO
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_SE_C
     scripts/config.py unset MBEDTLS_PSA_CRYPTO_STORAGE_C
     scripts/config.py unset MBEDTLS_PSA_ITS_FILE_C
+    scripts/config.py unset MBEDTLS_PSA_CRYPTO_STORAGE_ITS_C
     # Note, _DEFAULT_SOURCE needs to be defined for platforms using glibc version >2.19,
     # to re-enable platform integration features otherwise disabled in C99 builds
     make CC=gcc CFLAGS='-Werror -Wall -Wextra -std=c99 -pedantic -O0 -D_DEFAULT_SOURCE' lib programs
@@ -926,9 +928,9 @@ component_test_aes_fewer_tables_and_rom_tables () {
 
 component_test_ctr_drbg_aes_256_sha_256 () {
     msg "build: full + MBEDTLS_ENTROPY_FORCE_SHA256 (ASan build)"
-    scripts/config.pl full
-    scripts/config.pl unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
-    scripts/config.pl set MBEDTLS_ENTROPY_FORCE_SHA256
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
+    scripts/config.py set MBEDTLS_ENTROPY_FORCE_SHA256
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -938,9 +940,9 @@ component_test_ctr_drbg_aes_256_sha_256 () {
 
 component_test_ctr_drbg_aes_128_sha_512 () {
     msg "build: full + MBEDTLS_CTR_DRBG_USE_128_BIT_KEY (ASan build)"
-    scripts/config.pl full
-    scripts/config.pl unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
-    scripts/config.pl set MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
+    scripts/config.py set MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -950,10 +952,10 @@ component_test_ctr_drbg_aes_128_sha_512 () {
 
 component_test_ctr_drbg_aes_128_sha_256 () {
     msg "build: full + MBEDTLS_CTR_DRBG_USE_128_BIT_KEY + MBEDTLS_ENTROPY_FORCE_SHA256 (ASan build)"
-    scripts/config.pl full
-    scripts/config.pl unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
-    scripts/config.pl set MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
-    scripts/config.pl set MBEDTLS_ENTROPY_FORCE_SHA256
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_MEMORY_BUFFER_ALLOC_C
+    scripts/config.py set MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
+    scripts/config.py set MBEDTLS_ENTROPY_FORCE_SHA256
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
