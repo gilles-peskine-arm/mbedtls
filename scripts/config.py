@@ -164,9 +164,11 @@ def include_in_full(name):
     if re.search(r'PLATFORM_[A-Z0-9]+_ALT', name):
         return True
     if name in [
+            'MBEDTLS_CTR_DRBG_USE_128_BIT_KEY',
             'MBEDTLS_DEPRECATED_REMOVED',
             'MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED',
             'MBEDTLS_ECP_RESTARTABLE',
+            'MBEDTLS_ENTROPY_FORCE_SHA256', # Variant toggle, tested separately
             'MBEDTLS_HAVE_SSE2',
             'MBEDTLS_MEMORY_BACKTRACE',
             'MBEDTLS_MEMORY_BUFFER_ALLOC_C',
@@ -175,20 +177,17 @@ def include_in_full(name):
             'MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES',
             'MBEDTLS_NO_PLATFORM_ENTROPY',
             'MBEDTLS_NO_UDBL_DIVISION',
-            'MBEDTLS_PKCS11_C',
             'MBEDTLS_PLATFORM_NO_STD_FUNCTIONS',
+            'MBEDTLS_PSA_CRYPTO_KEY_FILE_ID_ENCODES_OWNER',
+            'MBEDTLS_PSA_CRYPTO_SE_C',
             'MBEDTLS_PSA_CRYPTO_SPM',
             'MBEDTLS_PSA_INJECT_ENTROPY',
-            'MBEDTLS_REMOVE_3DES_CIPHERSUITES',
-            'MBEDTLS_REMOVE_ARC4_CIPHERSUITES',
             'MBEDTLS_RSA_NO_CRT',
+            'MBEDTLS_SHA512_NO_SHA384',
             'MBEDTLS_SSL_HW_RECORD_ACCEL',
             'MBEDTLS_SSL_PROTO_SSL3',
             'MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO',
             'MBEDTLS_TEST_NULL_ENTROPY',
-            'MBEDTLS_X509_ALLOW_EXTENSIONS_NON_V3',
-            'MBEDTLS_X509_ALLOW_UNSUPPORTED_CRITICAL_EXTENSION',
-            'MBEDTLS_ZLIB_SUPPORT',
     ]:
         return False
     if name.endswith('_ALT'):
@@ -210,11 +209,9 @@ def keep_in_baremetal(name):
             'MBEDTLS_HAVEGE_C',
             'MBEDTLS_HAVE_TIME',
             'MBEDTLS_HAVE_TIME_DATE',
-            'MBEDTLS_MEMORY_BACKTRACE',
-            'MBEDTLS_MEMORY_BUFFER_ALLOC_C',
-            'MBEDTLS_NET_C',
             'MBEDTLS_PLATFORM_FPRINTF_ALT',
             'MBEDTLS_PLATFORM_TIME_ALT',
+            'MBEDTLS_PSA_CRYPTO_SE_C',
             'MBEDTLS_PSA_CRYPTO_STORAGE_C',
             'MBEDTLS_PSA_ITS_FILE_C',
             'MBEDTLS_THREADING_C',

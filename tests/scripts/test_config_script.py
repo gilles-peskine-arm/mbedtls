@@ -76,7 +76,7 @@ def guess_presets_from_help(help_text):
             words.remove('set')
             words.remove('unset')
             return words
-    # Try the output format from config.pl
+    # Try the output format from config.py
     hits = re.findall(r'\n +([-\w]+) +- ', help_text)
     if hits:
         return hits

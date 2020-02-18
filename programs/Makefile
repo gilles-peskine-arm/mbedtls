@@ -14,14 +14,14 @@ LOCAL_LDFLAGS = -L../library 			\
 		-lmbedx509$(SHARED_SUFFIX)	\
 		-lmbedcrypto$(SHARED_SUFFIX)
 
-LOCAL_LDFLAGS += -L../crypto/library
-LOCAL_CFLAGS += -I../crypto/include
-LOCAL_CXXFLAGS += -I../crypto/include
+include ../3rdparty/Makefile.inc
+LOCAL_CFLAGS+=$(THIRDPARTY_INCLUDES)
 
-INCLUDING_FROM_MBEDTLS:=1
-include ../crypto/3rdparty/Makefile.inc
-LOCAL_CFLAGS += $(patsubst -I../3rdparty/%, -I../crypto/3rdparty/%, $(THIRDPARTY_INCLUDES))
-LOCAL_CFLAGS += $(patsubst -I../3rdparty/%, -I../crypto/3rdparty/%, $(THIRDPARTY_INCLUDES))
+ifndef SHARED
+DEP=../library/libmbedcrypto.a ../library/libmbedx509.a ../library/libmbedtls.a
+else
+DEP=../library/libmbedcrypto.$(DLEXT) ../library/libmbedx509.$(DLEXT) ../library/libmbedtls.$(DLEXT)
+endif
 
 ifdef DEBUG
 LOCAL_CFLAGS += -g3
@@ -43,12 +43,6 @@ else
 DLEXT ?= so
 EXEXT=
 SHARED_SUFFIX=
-endif
-
-ifndef SHARED
-DEP=../crypto/library/libmbedcrypto.a ../library/libmbedx509.a ../library/libmbedtls.a
-else
-DEP=../crypto/library/libmbedcrypto.$(DLEXT) ../library/libmbedx509.$(DLEXT) ../library/libmbedtls.$(DLEXT)
 endif
 
 # Zlib shared library extensions:
@@ -81,6 +75,9 @@ APPS = \
 	pkey/rsa_verify$(EXEXT) \
 	pkey/rsa_sign_pss$(EXEXT) \
 	pkey/rsa_verify_pss$(EXEXT) \
+	psa/crypto_examples$(EXEXT) \
+	psa/key_ladder_demo$(EXEXT) \
+	psa/psa_constant_names$(EXEXT) \
 	ssl/dtls_client$(EXEXT) \
 	ssl/dtls_server$(EXEXT) \
 	ssl/ssl_client1$(EXEXT) \
@@ -115,23 +112,26 @@ ifdef TEST_CPP
 APPS += test/cpp_dummy_build$(EXEXT)
 endif
 
+EXTRA_GENERATED =
+
 .SILENT:
 
-.PHONY: all clean list fuzz
+.PHONY: all clean list
 
 all: $(APPS)
-ifndef WINDOWS
-# APPS doesn't include the fuzzing programs, which aren't "normal"
-# sample or test programs, and don't build with MSVC which is
-# warning about fopen
-all: fuzz
-endif
-
-fuzz:
-	$(MAKE) -C fuzz THIRDPARTY_INCLUDES=$(THIRDPARTY_INCLUDES)
 
 $(DEP):
 	$(MAKE) -C ../library
+
+ifdef WINDOWS
+EXTRA_GENERATED += psa\psa_constant_names_generated.c
+else
+EXTRA_GENERATED += psa/psa_constant_names_generated.c
+endif
+
+psa/psa_constant_names$(EXEXT): psa/psa_constant_names_generated.c
+psa/psa_constant_names_generated.c: ../scripts/generate_psa_constants.py ../include/psa/crypto_values.h ../include/psa/crypto_extra.h
+	../scripts/generate_psa_constants.py
 
 aes/aescrypt2$(EXEXT): aes/aescrypt2.c $(DEP)
 	echo "  CC    aes/aescrypt2.c"
@@ -149,17 +149,9 @@ hash/generic_sum$(EXEXT): hash/generic_sum.c $(DEP)
 	echo "  CC    hash/generic_sum.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) hash/generic_sum.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-pkey/dh_client$(EXEXT): pkey/dh_client.c $(DEP)
-	echo "  CC    pkey/dh_client.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) pkey/dh_client.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
-
 pkey/dh_genprime$(EXEXT): pkey/dh_genprime.c $(DEP)
 	echo "  CC    pkey/dh_genprime.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) pkey/dh_genprime.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
-
-pkey/dh_server$(EXEXT): pkey/dh_server.c $(DEP)
-	echo "  CC    pkey/dh_server.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) pkey/dh_server.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 pkey/ecdh_curve25519$(EXEXT): pkey/ecdh_curve25519.c $(DEP)
 	echo "  CC    pkey/ecdh_curve25519.c"
@@ -228,6 +220,14 @@ pkey/rsa_decrypt$(EXEXT): pkey/rsa_decrypt.c $(DEP)
 pkey/rsa_encrypt$(EXEXT): pkey/rsa_encrypt.c $(DEP)
 	echo "  CC    pkey/rsa_encrypt.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) pkey/rsa_encrypt.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+psa/key_ladder_demo$(EXEXT): psa/key_ladder_demo.c $(DEP)
+	echo "  CC    psa/key_ladder_demo.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/key_ladder_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+psa/psa_constant_names$(EXEXT): psa/psa_constant_names.c $(DEP)
+	echo "  CC    psa/psa_constant_names.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/psa_constant_names.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 random/gen_entropy$(EXEXT): random/gen_entropy.c $(DEP)
 	echo "  CC    random/gen_entropy.c"
@@ -333,16 +333,19 @@ x509/req_app$(EXEXT): x509/req_app.c $(DEP)
 	echo "  CC    x509/req_app.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) x509/req_app.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
+psa/crypto_examples$(EXEXT): psa/crypto_examples.c $(DEP)
+	echo "  CC    psa/crypto_examples.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/crypto_examples.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
 clean:
 ifndef WINDOWS
-	rm -f $(APPS)
-	-rm -f ssl/ssl_pthread_server$(EXEXT)
+	rm -f $(APPS) $(EXTRA_GENERATED)
 	-rm -f test/cpp_dummy_build$(EXEXT)
 else
 	if exist *.o del /Q /F *.o
 	if exist *.exe del /Q /F *.exe
+	if exist $(EXTRA_GENERATED) del /S /Q /F $(EXTRA_GENERATED)
 endif
-	$(MAKE) -C fuzz clean
 
 list:
 	echo $(APPS)
