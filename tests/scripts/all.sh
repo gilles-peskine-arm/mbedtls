@@ -715,7 +715,7 @@ component_test_rsa_no_crt () {
 
 component_test_sslv3 () {
     msg "build: Default + SSLv3 (ASan build)" # ~ 6 min
-    scripts/config.pl set MBEDTLS_SSL_PROTO_SSL3
+    scripts/config.py set MBEDTLS_SSL_PROTO_SSL3
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -732,7 +732,7 @@ component_test_sslv3 () {
 
 component_test_no_renegotiation () {
     msg "build: Default + !MBEDTLS_SSL_RENEGOTIATION (ASan build)" # ~ 6 min
-    scripts/config.pl unset MBEDTLS_SSL_RENEGOTIATION
+    scripts/config.py unset MBEDTLS_SSL_RENEGOTIATION
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -745,8 +745,8 @@ component_test_no_renegotiation () {
 
 component_test_small_ssl_out_content_len () {
     msg "build: small SSL_OUT_CONTENT_LEN (ASan build)"
-    scripts/config.pl set MBEDTLS_SSL_IN_CONTENT_LEN 16384
-    scripts/config.pl set MBEDTLS_SSL_OUT_CONTENT_LEN 4096
+    scripts/config.py set MBEDTLS_SSL_IN_CONTENT_LEN 16384
+    scripts/config.py set MBEDTLS_SSL_OUT_CONTENT_LEN 4096
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -756,8 +756,8 @@ component_test_small_ssl_out_content_len () {
 
 component_test_small_ssl_in_content_len () {
     msg "build: small SSL_IN_CONTENT_LEN (ASan build)"
-    scripts/config.pl set MBEDTLS_SSL_IN_CONTENT_LEN 4096
-    scripts/config.pl set MBEDTLS_SSL_OUT_CONTENT_LEN 16384
+    scripts/config.py set MBEDTLS_SSL_IN_CONTENT_LEN 4096
+    scripts/config.py set MBEDTLS_SSL_OUT_CONTENT_LEN 16384
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -767,7 +767,7 @@ component_test_small_ssl_in_content_len () {
 
 component_test_small_ssl_dtls_max_buffering () {
     msg "build: small MBEDTLS_SSL_DTLS_MAX_BUFFERING #0"
-    scripts/config.pl set MBEDTLS_SSL_DTLS_MAX_BUFFERING 1000
+    scripts/config.py set MBEDTLS_SSL_DTLS_MAX_BUFFERING 1000
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -777,7 +777,7 @@ component_test_small_ssl_dtls_max_buffering () {
 
 component_test_small_mbedtls_ssl_dtls_max_buffering () {
     msg "build: small MBEDTLS_SSL_DTLS_MAX_BUFFERING #1"
-    scripts/config.pl set MBEDTLS_SSL_DTLS_MAX_BUFFERING 240
+    scripts/config.py set MBEDTLS_SSL_DTLS_MAX_BUFFERING 240
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -1000,15 +1000,15 @@ component_build_no_std_function () {
 
 component_build_no_ssl_srv () {
     msg "build: full config except ssl_srv.c, make, gcc" # ~ 30s
-    scripts/config.pl full
-    scripts/config.pl unset MBEDTLS_SSL_SRV_C
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_SSL_SRV_C
     make CC=gcc CFLAGS='-Werror -Wall -Wextra -O0'
 }
 
 component_build_no_ssl_cli () {
     msg "build: full config except ssl_cli.c, make, gcc" # ~ 30s
-    scripts/config.pl full
-    scripts/config.pl unset MBEDTLS_SSL_CLI_C
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_SSL_CLI_C
     make CC=gcc CFLAGS='-Werror -Wall -Wextra -O0'
 }
 
@@ -1016,16 +1016,16 @@ component_build_no_sockets () {
     # Note, C99 compliance can also be tested with the sockets support disabled,
     # as that requires a POSIX platform (which isn't the same as C99).
     msg "build: full config except net_sockets.c, make, gcc -std=c99 -pedantic" # ~ 30s
-    scripts/config.pl full
-    scripts/config.pl unset MBEDTLS_NET_C # getaddrinfo() undeclared, etc.
-    scripts/config.pl set MBEDTLS_NO_PLATFORM_ENTROPY # uses syscall() on GNU/Linux
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_NET_C # getaddrinfo() undeclared, etc.
+    scripts/config.py set MBEDTLS_NO_PLATFORM_ENTROPY # uses syscall() on GNU/Linux
     make CC=gcc CFLAGS='-Werror -Wall -Wextra -O0 -std=c99 -pedantic' lib
 }
 
 component_test_no_max_fragment_length () {
     # Run max fragment length tests with MFL disabled
     msg "build: default config except MFL extension (ASan build)" # ~ 30s
-    scripts/config.pl unset MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
+    scripts/config.py unset MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -1035,7 +1035,7 @@ component_test_no_max_fragment_length () {
 
 component_test_asan_remove_peer_certificate () {
     msg "build: default config with MBEDTLS_SSL_KEEP_PEER_CERTIFICATE disabled (ASan build)"
-    scripts/config.pl unset MBEDTLS_SSL_KEEP_PEER_CERTIFICATE
+    scripts/config.py unset MBEDTLS_SSL_KEEP_PEER_CERTIFICATE
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -1051,9 +1051,9 @@ component_test_asan_remove_peer_certificate () {
 
 component_test_no_max_fragment_length_small_ssl_out_content_len () {
     msg "build: no MFL extension, small SSL_OUT_CONTENT_LEN (ASan build)"
-    scripts/config.pl unset MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
-    scripts/config.pl set MBEDTLS_SSL_IN_CONTENT_LEN 16384
-    scripts/config.pl set MBEDTLS_SSL_OUT_CONTENT_LEN 4096
+    scripts/config.py unset MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
+    scripts/config.py set MBEDTLS_SSL_IN_CONTENT_LEN 16384
+    scripts/config.py set MBEDTLS_SSL_OUT_CONTENT_LEN 4096
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
@@ -1404,7 +1404,7 @@ component_build_armcc () {
 
 component_test_allow_sha1 () {
     msg "build: allow SHA1 in certificates by default"
-    scripts/config.pl set MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_CERTIFICATES
+    scripts/config.py set MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_CERTIFICATES
     make CFLAGS='-Werror -Wall -Wextra'
     msg "test: allow SHA1 in certificates by default"
     make test
