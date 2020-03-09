@@ -1,5 +1,2 @@
-ifeq ($(INCLUDING_FROM_MBEDTLS), 1)
-include ../crypto/3rdparty/everest/Makefile.inc
-else
-include ../3rdparty/everest/Makefile.inc
-endif
+3rdparty_dir = $(dir $(lastword $(MAKEFILE_LIST)))
+include $(3rdparty_dir)/everest/Makefile.inc
