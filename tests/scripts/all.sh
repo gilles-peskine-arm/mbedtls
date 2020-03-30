@@ -493,6 +493,14 @@ pre_check_git () {
     fi
 }
 
+pre_back_up () {
+    # Back up the configuration file. The cleanup function will restore it.
+    # We run cleanup both before running any component, and after each
+    # component, so each component will start with a fresh config.h.
+    cp -p "$CONFIG_H" "$CONFIG_BAK"
+    cp -p "$CRYPTO_CONFIG_H" "$CRYPTO_CONFIG_BAK"
+}
+
 pre_setup_keep_going () {
     failure_count=0 # Number of failed components
     last_failure_status=0 # Last failure status in this component
@@ -2715,10 +2723,6 @@ pseudo_component_error_test () {
 
 # Run one component and clean up afterwards.
 run_component () {
-    # Back up the configuration in case the component modifies it.
-    # The cleanup function will restore it.
-    cp -p "$CONFIG_H" "$CONFIG_BAK"
-    cp -p "$CRYPTO_CONFIG_H" "$CRYPTO_CONFIG_BAK"
     current_component="$1"
     export MBEDTLS_TEST_CONFIGURATION="$current_component"
 
@@ -2768,6 +2772,7 @@ pre_initialize_variables
 pre_parse_command_line "$@"
 
 pre_check_git
+pre_back_up
 
 build_status=0
 if [ $KEEP_GOING -eq 1 ]; then
