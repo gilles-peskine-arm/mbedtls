@@ -348,7 +348,7 @@ int main(int argc, const char *argv[])
           testfile_index++ )
     {
         int unmet_dep_count = 0;
-        char *unmet_dependencies[20];
+        char *unmet_dependencies[20]; /* only filled when verbose != 0 */
 
         test_filename = test_files[ testfile_index ];
 
@@ -395,6 +395,7 @@ int main(int argc, const char *argv[])
                         {
                             /* Only one count is needed if not verbose */
                             unmet_dep_count++;
+                            unmet_dependencies[0] = NULL;
                             break;
                         }
 
