@@ -1369,16 +1369,6 @@ component_test_se_default () {
     make test
 }
 
-component_test_se_full () {
-    msg "build: full config + MBEDTLS_PSA_CRYPTO_SE_C"
-    scripts/config.py full
-    scripts/config.py set MBEDTLS_PSA_CRYPTO_SE_C
-    make CC=gcc CFLAGS="$ASAN_CFLAGS -O2" LDFLAGS="$ASAN_CFLAGS"
-
-    msg "test: full config + MBEDTLS_PSA_CRYPTO_SE_C"
-    make test
-}
-
 component_test_make_shared () {
     msg "build/test: make shared" # ~ 40s
     make SHARED=1 all check
