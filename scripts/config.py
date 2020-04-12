@@ -182,6 +182,7 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_NO_UDBL_DIVISION', # variant toggle
     'MBEDTLS_PKCS11_C', # build dependecy (libpkcs11-helper)
     'MBEDTLS_PLATFORM_NO_STD_FUNCTIONS', # removes a feature
+    'MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT', # similar to non-platform xxx_ALT, requires platform_alt.h
     'MBEDTLS_PSA_CRYPTO_KEY_FILE_ID_ENCODES_OWNER', # variant toggle
     'MBEDTLS_PSA_CRYPTO_SE_C',
     'MBEDTLS_PSA_CRYPTO_SPM', # platform dependency (PSA SPM)
@@ -199,18 +200,26 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_ZLIB_SUPPORT', # build dependency (libz)
 ])
 
+def is_seamless_alt(name):
+    """Include xxx_ALT symbols that don't have external dependencies.
+
+    Include alternative implementations of platform functions, which  are
+    configurable function pointers that default to the built-in function.
+    This way we test that the function pointers exist and build correctly
+    without changing the behavior, and tests can verify that the function
+    pointers are used by modifying those pointers.
+
+    Exclude alternative implementations of library functions since they require
+    an implementation of the relevant functions and an xxx_alt.h header.
+    """
+    return name.startswith('MBEDTLS_PLATFORM_')
+
 def include_in_full(name):
     """Rules for symbols in the "full" configuration."""
-    if re.search(r'PLATFORM_[A-Z0-9]+_ALT', name):
-        # Include configurable functions that default to the built-in function.
-        # This way we test that they're in place without changing the behavior.
-        return True
     if name in EXCLUDE_FROM_FULL:
         return False
     if name.endswith('_ALT'):
-        # Exclude alt implementations since they require an implementation
-        # of the relevant functions.
-        return False
+        return is_seamless_alt(name)
     return True
 
 def full_adapter(name, active, section):
