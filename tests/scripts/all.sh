@@ -680,6 +680,9 @@ component_test_full_cmake_gcc_asan () {
 
     msg "test: compat.sh (full config, ASan build)"
     if_build_succeeded tests/compat.sh
+
+    msg "test: compat.sh (full config, ASan build, ssl3)"
+    if_build_succeeded env OPENSSL_CMD="$OPENSSL_LEGACY" GNUTLS_CLI="$GNUTLS_LEGACY_CLI" GNUTLS_SERV="$GNUTLS_LEGACY_SERV" tests/compat.sh -m 'ssl3'
 }
 
 component_test_zlib_make() {
@@ -725,23 +728,6 @@ component_test_ref_configs () {
     msg "test/build: ref-configs (ASan build)" # ~ 6 min 20s
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     record_status tests/scripts/test-ref-configs.pl
-}
-
-component_test_sslv3 () {
-    msg "build: Default + SSLv3 (ASan build)" # ~ 6 min
-    scripts/config.py set MBEDTLS_SSL_PROTO_SSL3
-    CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
-    make
-
-    msg "test: SSLv3 - main suites (inc. selftests) (ASan build)" # ~ 50s
-    make test
-
-    msg "build: SSLv3 - compat.sh (ASan build)" # ~ 6 min
-    if_build_succeeded tests/compat.sh -m 'tls1 tls1_1 tls1_2 dtls1 dtls1_2'
-    if_build_succeeded env OPENSSL_CMD="$OPENSSL_LEGACY" tests/compat.sh -m 'ssl3'
-
-    msg "build: SSLv3 - ssl-opt.sh (ASan build)" # ~ 6 min
-    if_build_succeeded tests/ssl-opt.sh
 }
 
 component_test_no_renegotiation () {
