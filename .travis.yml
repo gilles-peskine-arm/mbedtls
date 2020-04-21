@@ -8,12 +8,7 @@ jobs:
   include:
     - name: sanity
       script:
-        - tests/scripts/recursion.pl library/*.c
-        - tests/scripts/check-generated-files.sh
-        - tests/scripts/check-doxy-blocks.pl
-        - tests/scripts/check-names.sh
-        - tests/scripts/check-files.py
-        - tests/scripts/doxygen.sh
+        - tests/scripts/all.sh 'check_*'
     - name: default configuration
       script:
         - cmake -D CMAKE_BUILD_TYPE:String="Check" .
