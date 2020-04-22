@@ -7,10 +7,6 @@ import subprocess
 import sys
 
 # Read the library configuration.
-# Assume that this script is run from the root of the source tree. The
-# code to find demo scripts and the demo scripts themselves make the same
-# assumption.
-sys.path.insert(0, '.')
 import scripts.config
 CONFIG = scripts.config.ConfigFile()
 
