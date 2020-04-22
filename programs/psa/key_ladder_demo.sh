@@ -1,6 +1,14 @@
 #!/bin/sh
 set -e -u
 
+sed 's/^/# /' <<'EOF'
+This script demonstrates the use of the PSA cryptography interface to
+create a master key, derive a key from it and use that key to wrap
+the derived key using an AEAD algorithm.
+EOF
+
+#depends_on:MBEDTLS_SHA256_C:MBEDTLS_MD_C:MBEDTLS_AES_C:MBEDTLS_CCM_C:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_FS_IO
+
 program="${0%/*}"/key_ladder_demo
 files_to_clean=
 
