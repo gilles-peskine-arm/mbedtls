@@ -1,6 +1,7 @@
 language: c
 compiler:
 - clang
+python: 3.4 # oldest 3.x available on Travis
 sudo: false
 cache: ccache
 
