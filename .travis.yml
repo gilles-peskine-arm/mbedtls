@@ -1,15 +1,18 @@
 language: c
 compiler:
 - clang
-python: 3.4 # oldest 3.x available on Travis
 sudo: false
 cache: ccache
 
 jobs:
   include:
     - name: sanity
+      python: 3.4 # oldest 3.x available on Travis
+      install:
+        - pip install pylint==2.4.4
       script:
         - tests/scripts/all.sh 'check_*'
+
     - name: default configuration
       script:
         - cmake -D CMAKE_BUILD_TYPE:String="Check" .
@@ -18,6 +21,7 @@ jobs:
         - programs/test/selftest
         - OSSL_NO_DTLS=1 tests/compat.sh
         - tests/ssl-opt.sh -e '\(DTLS\|SCSV\).*openssl'
+
     - name: enumerated configurations
       script:
         - tests/scripts/test-ref-configs.pl
@@ -31,9 +35,6 @@ env:
   global:
     - SEED=1
     - secure: "FrI5d2s+ckckC17T66c8jm2jV6i2DkBPU5nyWzwbedjmEBeocREfQLd/x8yKpPzLDz7ghOvr+/GQvsPPn0dVkGlNzm3Q+hGHc/ujnASuUtGrcuMM+0ALnJ3k4rFr9xEvjJeWb4SmhJO5UCAZYvTItW4k7+bj9L+R6lt3TzQbXzg="
-
-install:
-  - pip install pylint==2.4.4
 
 addons:
   apt:
