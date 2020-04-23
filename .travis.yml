@@ -7,7 +7,8 @@ cache: ccache
 jobs:
   include:
     - name: sanity
-      python: 3.4 # oldest 3.x available on Travis
+      language: python
+      python: 3.5 # version from Ubuntu 16.04
       install:
         - pip install pylint==2.4.4
       script:
