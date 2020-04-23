@@ -8,7 +8,7 @@ jobs:
   include:
     - name: sanity
       language: python
-      python: 3.4 # oldest 3.x available on Travis
+      python: 3.5 # version from Ubuntu 16.04
       apt:
         packages:
         - doxygen
