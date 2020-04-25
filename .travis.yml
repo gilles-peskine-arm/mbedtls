@@ -40,6 +40,18 @@ jobs:
       script:
         - tests/scripts/all.sh -k test_default_out_of_box
 
+    - name: Windows
+      os: windows
+      script:
+        - export retarget="v120" # Visual Studio 2013
+        - >
+          cmd /C '
+            set "VSCMD_START_DIR=%cd%\visualc\VS2010" &&
+            "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64 &&
+            msbuild /t:Rebuild /p:Configuration=Release,PlatformToolset=%retarget% /m mbedTLS.sln &&
+            msbuild /p:Configuration=Release /m RUN_TESTS.vcxproj
+          '
+
 after_failure:
 - tests/scripts/travis-log-failure.sh
 
