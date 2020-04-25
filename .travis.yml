@@ -38,6 +38,11 @@ jobs:
       script:
         - tests/scripts/all.sh -k test_default_out_of_box
 
+    - name: Windows
+      os: windows
+      script:
+        - cmd /c "scripts\windows_msbuild.bat v120"
+
 after_failure:
 - tests/scripts/travis-log-failure.sh
 
