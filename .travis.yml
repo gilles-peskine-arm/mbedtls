@@ -40,7 +40,10 @@ jobs:
 
     - name: Windows
       os: windows
+      before_install:
+        - choco install python
       script:
+        - python scripts/generate_psa_constants.py
         - scripts/windows_msbuild.bat v141 # Visual Studio 2017
 
 after_failure:
