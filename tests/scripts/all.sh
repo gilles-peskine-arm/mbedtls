@@ -818,24 +818,27 @@ component_test_full_cmake_clang () {
     if_build_succeeded env OPENSSL_CMD="$OPENSSL_NEXT" tests/compat.sh -e '^$' -f 'ARIA\|CHACHA'
 }
 
-component_build_deprecated () {
-    msg "build: make, full config + DEPRECATED_WARNING, gcc -O" # ~ 30s
-    scripts/config.pl full
-    scripts/config.pl set MBEDTLS_DEPRECATED_WARNING
-    # Build with -O -Wextra to catch a maximum of issues.
-    make CC=gcc CFLAGS='-O -Werror -Wall -Wextra' lib programs
-    make CC=gcc CFLAGS='-O -Werror -Wall -Wextra -Wno-unused-function' tests
-
-    msg "build: make, full config + DEPRECATED_REMOVED, clang -O" # ~ 30s
-    # No cleanup, just tweak the configuration and rebuild
-    make clean
-    scripts/config.pl unset MBEDTLS_DEPRECATED_WARNING
+component_test_default_no_deprecated () {
+    msg "build: make, default + MBEDTLS_DEPRECATED_REMOVED" # ~ 30s
     scripts/config.pl set MBEDTLS_DEPRECATED_REMOVED
-    # Build with -O -Wextra to catch a maximum of issues.
-    make CC=clang CFLAGS='-O -Werror -Wall -Wextra' lib programs
-    make CC=clang CFLAGS='-O -Werror -Wall -Wextra -Wno-unused-function' tests
+    make CC=gcc CFLAGS='-O -Werror -Wall -Wextra'
+
+    msg "test: make, default + MBEDTLS_DEPRECATED_REMOVED" # ~ 5s
+    make test
 }
 
+component_test_deprecated () {
+    msg "build: make, full config" # ~ 30s
+    scripts/config.pl full
+    make CC=gcc CFLAGS='-O -Werror -Wall -Wextra' lib programs
+
+    msg "build: make tests, full config + MBEDTLS_TEST_DEPRECATED, expect warnings" # ~ 30s
+    # Expect warnings from the use of deprecated functions in test suites.
+    make CC=gcc CFLAGS='-O -Werror -Wall -Wextra -Wno-error=deprecated-declarations -DMBEDTLS_TEST_DEPRECATED' tests
+
+    msg "test: full config + MBEDTLS_TEST_DEPRECATED" # ~ 30s
+    make test
+}
 
 component_test_depends_curves () {
     msg "test/build: curves.pl (gcc)" # ~ 4 min
