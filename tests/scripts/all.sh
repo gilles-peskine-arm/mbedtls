@@ -827,6 +827,17 @@ component_test_default_no_deprecated () {
     make test
 }
 
+component_test_full_deprecated_warning () {
+    msg "build: make, full + MBEDTLS_DEPRECATED_WARNING" # ~ 30s
+    scripts/config.pl full
+    scripts/config.pl unset MBEDTLS_DEPRECATED_REMOVED
+    scripts/config.pl set MBEDTLS_DEPRECATED_WARNING
+    make CC=gcc CFLAGS='-O -Werror -Wall -Wextra'
+
+    msg "test: make, full + MBEDTLS_DEPRECATED_WARNING" # ~ 5s
+    make test
+}
+
 component_test_deprecated () {
     msg "build: make, full config" # ~ 30s
     scripts/config.pl full
