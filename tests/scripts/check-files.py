@@ -290,7 +290,8 @@ class IntegrityChecker:
             console = logging.StreamHandler()
             self.logger.addHandler(console)
 
-    def collect_files(self):
+    @staticmethod
+    def collect_files():
         bytes_output = subprocess.check_output(['git', 'ls-files', '-z'])
         bytes_filepaths = bytes_output.split(b'\0')[:-1]
         ascii_filepaths = map(lambda fp: fp.decode('ascii'), bytes_filepaths)
