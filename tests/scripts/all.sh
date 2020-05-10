@@ -625,6 +625,14 @@ component_check_files () {
     record_status tests/scripts/check-files.py
 }
 
+component_check_changelog () {
+    msg "Check: changelog entries" # < 1s
+    record_status scripts/assemble_changelog.py -o ChangeLog.new
+    # Show the diff for information. It isn't an error if the diff is
+    # non-empty.
+    diff -u ChangeLog ChangeLog.new || true
+}
+
 component_check_names () {
     msg "Check: declared and exported names (builds the library)" # < 3s
     record_status tests/scripts/check-names.sh -v
