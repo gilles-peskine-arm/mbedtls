@@ -61,10 +61,10 @@ A capability declares a family of functions that the driver implements for a cer
 
 A capability is a JSON object containing the following properties:
 
-* `"methods"` (mandatory, list of strings). A list of method names. Most method names consist of PSA API function names without the `psa_` prefix. The exact set of method names that a driver may define depends on the driver type; refer to the section on each driver type for details.
-* `"algorithms"` (optional, list of strings). Each element is an [algorithm specification](#algorithm-specifications). If specified, the core will invoke the methods listed in the `"methods"` property only when performing one of the specified algorithms. If omitted, the core will invoke the methods for all applicable algorithms.
-* `"key_types"` (optional, list of strings). Each element is a [key type specification](#key-type-specifications). If specified, the core will invoke the methods listed in the `"methods"` property only for operations involving a key with one of the specified key types. If omitted, the core will invoke the methods for all applicable key types.
-* `"key_sizes"` (optional, list of integers). If specified, the core will invoke the methods listed in the `"methods"` property only for operations involving a key with one of the specified key sizes. If omitted, the core will invoke the methods for all applicable key sizes. Key sizes are expressed in bits.
+* `"operations"` (optional, list of strings). Each element is an [operation family](#operation-families). If specified, the core will invoke this capability of the driver only when performing one of the specified operations. If omitted, the core will invoke this capability of the driver for all applicable operations.
+* `"algorithms"` (optional, list of strings). Each element is an [algorithm specification](#algorithm-specifications). If specified, the core will invoke this capability of the driver only when performing one of the specified algorithms. If omitted, the core will invoke the methods for all applicable algorithms.
+* `"key_types"` (optional, list of strings). Each element is a [key type specification](#key-type-specifications). If specified, the core will invoke this capability of the driver only for operations involving a key with one of the specified key types. If omitted, the core will invoke this capability of the driver for all applicable key types.
+* `"key_sizes"` (optional, list of integers). If specified, the core will invoke this capability of the driver only for operations involving a key with one of the specified key sizes. If omitted, the core will invoke this capability of the driver for all applicable key sizes. Key sizes are expressed in bits.
 * `"names"` (optional, object). A mapping from method names listed in the `"methods"` value, to the name of the C function in the driver that implements this method. If a method is not listed here, name of the driver function that implements it is the driver's prefix followed by an underscore (`_`) followed by the method name. If this property is omitted, it is equivalent to an empty object (so each method is implemented by a function with called *prefix*`_`*method*).
 * `"fallback"` (optional for transparent drivers, not permitted for opaque or remote drivers, boolean). If present and true, the driver may return `PSA_ERROR_NOT_SUPPORTED`, in which case the core should call another driver or use built-in code to perform this operation. If absent or false, the core should not include built-in code to perform this particular cryptographic mechanism.
 
@@ -78,6 +78,158 @@ Example: the following capability declares that the driver can perform determini
     "key_sizes": [256, 384]
 }
 ```
+
+### Operation families
+
+An operation family is a string that represents the underlying cryptographic operation or key management operation for a function in the PSA Crypto API or a family of functions. To implement a given operation type, a driver must provide one or more functions and possibly an operation context type.
+
+If a driver supports an operation family, it must provide all the functions in the family.
+
+#### General considerations on multi-part operations
+
+Each multi-part operation family includes a type that represents the operation context and functions that operate on this type. The lifecycle of a driver operation context is similar to the lifecycle of an API operation context:
+
+1. The core initializes operation context objects to either all-bits-zero or to logical zero (`{0}`), at its discretion.
+1. The core calls the `xxx_setup` function for this operation family. If this fails, the core destroys the operation context object without calling any other driver function on it.
+1. The core calls other functions that manipulate the operation context object, respecting the constraints.
+1. If any function fails, the core calls the driver's `xxx_abort` function for this operation family, then destroys the operation context object without calling any other driver function on it.
+1. If a “finish” function fails, the core destroys the operation context object without calling any other driver function on it. The finish functions are: *prefix*`_mac_sign_finish`, *prefix*`_mac_verify_finish`, *prefix*`_cipher_fnish`, *prefix*`_aead_finish`, *prefix*`_aead_verify`.
+
+If a driver implements a multi-part operation family but not the corresponding single-part operation, the core calls the driver's multipart operation functions to perform the single-part operation.
+
+#### Operation family `"hash"`
+
+This family corresponds to the calculation of a hash in one shot.
+
+This family applies to transparent drivers only.
+
+This family requires the following function:
+
+* *prefix*`_hash_compute()`, called by `psa_hash_compute()` and `psa_hash_compare()`.
+
+To verify a hash with `psa_hash_compare()`, the core calls the driver's *prefix`_hash_compute` function and compares the result with the reference hash value.
+
+#### Operation family `"hash_multipart"`
+
+This family corresponds to the calculation of a hash in one multiple parts.
+
+This family applies to transparent drivers only.
+
+This family requires the following type and functions:
+
+* Type *prefix*`_hash_operation_t`: the type of a hash operation in progress.
+* *prefix*`_hash_setup()`: called by `psa_hash_setup()`.
+* *prefix*`_hash_update()`: called by `psa_hash_update()`.
+* *prefix*`_hash_finish()`: called by `psa_hash_finish()` and `psa_hash_verify()`.
+* *prefix*`_hash_abort()`: called by `psa_hash_setup()`, `psa_hash_update()`, `psa_hash_finish()`, `psa_hash_verify()`.
+
+To verify a hash with `psa_hash_verify()`, the core calls the driver's *prefix`_hash_finish` function and compares the result with the reference hsah value.
+
+#### Operation family `"mac"`
+
+This family corresponds to the calculation of a MAC in one shot.
+
+This family requires the following function:
+
+* *prefix*`_mac_compute()`, called by `psa_mac_compute()` and possibly `psa_mac_verify()`.
+
+To verify a mac with `psa_mac_verify()`, the core uses the driver's [`mac_verify` operation](#operation-family-mac-verify) if there is one. Otherwise the core calls the driver's *prefix`_mac_compute` function and compares the result with the reference MAC value.
+
+#### Operation family `"mac_multipart"`
+
+TODO
+
+#### Operation family `"mac_verify"`
+
+This family corresponds to the verification of a MAC in one shot.
+
+This family requires the following function:
+
+* *prefix*`_mac_verify()`, called by `psa_mac_verify()`.
+
+To verify a mac with `psa_mac_verify()`, the core uses the driver's [`mac_verify` operation](#operation-family-mac-verify) if there is one. Otherwise the core calls the driver's *prefix`_mac_compute` function and compares the result with the reference MAC value.
+
+#### Operation family `"mac_verify_multipart"`
+
+TODO
+
+#### Operation family `"cipher_encrypt"`
+
+TODO
+
+#### Operation family `"cipher_encrypt_multipart"`
+
+TODO
+
+#### Operation family `"cipher_decrypt"`
+
+TODO
+
+#### Operation family `"cipher_decrypt_multipart"`
+
+TODO
+
+#### Operation family `"aead_encrypt"`
+
+TODO
+
+#### Operation family `"aead_encrypt_multipart"`
+
+TODO
+
+#### Operation family `"aead_decrypt"`
+
+TODO
+
+#### Operation family `"aead_decrypt_multipart"`
+
+TODO
+
+#### Operation family `"asymmetric_encrypt"`
+
+TODO
+
+#### Operation family `"asymmetric_decrypt"`
+
+TODO
+
+#### Operation family `"sign_hash"`
+
+TODO
+
+#### Operation family `"verify_hash"`
+
+TODO
+
+#### Operation family `"sign_message"`
+
+TODO
+
+#### Operation family `"verify_message"`
+
+TODO
+
+#### Operation family `"key_derivation"`
+
+TODO
+
+#### Operation family `"derive_key`
+
+TODO
+
+#### Operation family `"generate"`
+
+TODO
+
+#### Operation family `"import"`
+
+TODO
+
+#### Operation family `"copy"`
+
+TODO
+
+### Algorithm and key specifications
 
 #### Algorithm specifications
 
@@ -118,7 +270,7 @@ The signature of a driver function generally looks like the signature of the PSA
     * For an opaque driver, the wrapped key material (`const uint8_t *`), and its size in bytes (`size_t`). The driver builds the key material when the key is created and the core treats it opaquely.
     * For a remote driver, a key context (`const `*prefix*`_key_context_t *`).
 
-* For functions that involve a multipart operation, the operation state type (`psa_XXX_operation_t`) is replaced by a driver-specific operation state type (*prefix*`_XXX_operation_t`).
+* For functions that involve a multi-part operation, the operation state type (`psa_XXX_operation_t`) is replaced by a driver-specific operation state type (*prefix*`_XXX_operation_t`).
 
 
 ## Transparent drivers
