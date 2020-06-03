@@ -5,8 +5,6 @@
  * this suite only performs very basic sanity checks of the timing API.
  */
 
-#include <limits.h>
-
 #include "mbedtls/timing.h"
 
 /* END_HEADER */
