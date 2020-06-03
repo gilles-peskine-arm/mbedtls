@@ -38,13 +38,12 @@
  */
 #include "mbedtls/check_config.h"
 
-/*
- * We assume CHAR_BIT is 8 in many places. In practice, this is true on our
+/* We assume CHAR_BIT is 8 in many places. In practice, this is true on our
  * target platforms, so not an issue, but let's just be extra sure.
  */
 #include <limits.h>
 #if CHAR_BIT != 8
-#error "mbed TLS requires a platform with 8-bit chars"
+#error "Mbed TLS requires a platform with 8-bit bytes (8-bit char type)."
 #endif
 
 /** Helper to define a function as static except when building invasive tests.
