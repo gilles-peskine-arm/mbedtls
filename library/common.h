@@ -46,6 +46,21 @@
 #error "Mbed TLS requires a platform with 8-bit bytes (8-bit char type)."
 #endif
 
+/* We assume that int is a 32-bit type in many places. Some modules
+ * don't compile if int is a 16-bit type. More dangerously, some of the code
+ * compiles, but is vulnerable to integer overflows. Do not remove this check
+ * without having done a thorough security review of your configuration.
+ */
+#if INT_MAX < 0x7fffffff
+#error "Mbed TLS requires the int type to have 32 bits or more. 16-bit platforms are not supported and some of the code is insecure on 16-bit platforms."
+#endif
+
+/* In some places, we assume that size_t values will not be promoted. */
+#include <stdint.h>
+#if SIZE_MAX < UINT_MAX
+#error "Mbed TLS requires size_t to be at least as wide as unsigned int."
+#endif
+
 /** Helper to define a function as static except when building invasive tests.
  *
  * If a function is only used inside its own source file and should be
