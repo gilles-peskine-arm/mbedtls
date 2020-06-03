@@ -31,6 +31,13 @@
 #include "mbedtls/config.h"
 #endif
 
+/* Force the inclusion of check_config.h, whether config.h included it or not.
+ * This makes it impossible for users who write their own config.h to
+ * accidentally define an unsupported configuration which may not have
+ * the intended effect.
+ */
+#include "mbedtls/check_config.h"
+
 /** Helper to define a function as static except when building invasive tests.
  *
  * If a function is only used inside its own source file and should be
