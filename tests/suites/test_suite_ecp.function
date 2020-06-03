@@ -1,4 +1,5 @@
 /* BEGIN_HEADER */
+#include <limits.h>
 #include "mbedtls/ecp.h"
 
 #define ECP_PF_UNKNOWN     -1

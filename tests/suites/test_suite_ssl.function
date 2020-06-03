@@ -1,4 +1,6 @@
 /* BEGIN_HEADER */
+#include <limits.h>
+
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_internal.h>
 #include <mbedtls/ctr_drbg.h>
