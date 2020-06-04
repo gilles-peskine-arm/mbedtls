@@ -244,6 +244,22 @@ void mbedtls_mpi_swap( mbedtls_mpi *X, mbedtls_mpi *Y )
 }
 
 /*
+ * Conditionally assign dest = src, without leaking information
+ * about whether the assignment was made or not.
+ * dest and src must be arrays of limbs of size n.
+ * assign must be 0 or 1.
+ */
+static void mpi_safe_cond_assign( size_t n,
+                                  mbedtls_mpi_uint *dest,
+                                  const mbedtls_mpi_uint *src,
+                                  unsigned char assign )
+{
+    size_t i;
+    for( i = 0; i < n; i++ )
+        dest[i] = dest[i] * ( 1 - assign ) + src[i] * assign;
+}
+
+/*
  * Conditionally assign X = Y, without leaking information
  * about whether the assignment was made or not.
  * (Leaking information about the respective sizes of X and Y is ok however.)
@@ -262,15 +278,57 @@ int mbedtls_mpi_safe_cond_assign( mbedtls_mpi *X, const mbedtls_mpi *Y, unsigned
 
     X->s = X->s * ( 1 - assign ) + Y->s * assign;
 
-    for( i = 0; i < Y->n; i++ )
-        X->p[i] = X->p[i] * ( 1 - assign ) + Y->p[i] * assign;
+    mpi_safe_cond_assign( Y->n, X->p, Y->p, assign );
 
-    for( ; i < X->n; i++ )
+    for( i = Y->n; i < X->n; i++ )
         X->p[i] *= ( 1 - assign );
 
 cleanup:
     return( ret );
 }
+
+#if 0
+/** Turn zero-or-nonzero into zero-or-all-bits-one, without branches.
+ *
+ * \param value     The value to analyze.
+ * \return          Zero if \p value is zero, otherwise all-bits-one.
+ */
+static mbedtls_mpi_uint mpi_all_or_nothing( mbedtls_mpi_uint value )
+{
+    /* MSVC has a warning about unary minus on unsigned, but this is
+     * well-defined and precisely what we want to do here */
+#if defined(_MSC_VER)
+#pragma warning( push )
+#pragma warning( disable : 4146 )
+#endif
+    return( - ( ( value | - value ) >> ( biL - 1 ) ) );
+#if defined(_MSC_VER)
+#pragma warning( pop )
+#endif
+}
+
+/* Constant-time conditional assignment.
+ *
+ * If assign == 0, keep dest unmodified.
+ * If assign != 0, copy source to dest.
+ * Do this without branching so that memory access patterns and branching
+ * patterns do not reveal whether the assignment was done.
+ *
+ * dest and source must both be arrays of n limbs.
+ *
+ */
+void mpi_safe_cond_assign( size_t n,
+                           mbedtls_mpi_uint *dest,
+                           const mbedtls_mpi_uint *source,
+                           mbedtls_mpi_uint assign )
+{
+    mbedtls_mpi_uint s_mask = mpi_all_or_nothing( assign );
+    mbedtls_mpi_uint d_mask = ~s_mask;
+    size_t i;
+    for( i = 0; i < n; i++ )
+        dest[i] = ( dest[i] & d_mask ) | ( source[i] & s_mask );
+}
+#endif
 
 /*
  * Conditionally swap X and Y, without leaking information
@@ -2028,13 +2086,26 @@ static int mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi 
 
     memcpy( A->p, d, ( n + 1 ) * ciL );
 
-    if( mbedtls_mpi_cmp_abs( A, N ) >= 0 )
-        mpi_sub_hlp( n, N->p, A->p );
-    else
-        /* prevent timing attacks */
-        mpi_sub_hlp( n, A->p, T->p );
     /* If A >= N then A -= N. Do the subtraction unconditionally to prevent
-     * timing attacks. Modify T as a side effect. */
+     * timing attacks. */
+    /* Set d to A + (2^biL)^n - N. */
+    d[n] += 1;
+    mpi_sub_hlp( n, N->p, d );
+    /* Now d - (2^biL)^n = A - N so d >= (2^biL)^n iff A >= N.
+     * So we want to copy the result of the subtraction iff d->p[n] != 0.
+     * Note that d->p[n] is either 0 or 1 since A - N <= N <= (2^biL)^n. */
+    mpi_safe_cond_assign( n + 1, A->p, d, d[n] );
+    A->p[n] = 0;
+
+#if 0
+    /* Set c to: 0 if A = N, 1 if A > N, UINT_MAX if A < N. */
+    unsigned c = (unsigned) mbedtls_mpi_cmp_abs( A, N );
+    /* Set A to the result of the subtraction if wanted. This is wanted
+     * if c is UINT_MAX, not if c is 0 or 1. Express the condition using
+     * bitwise operations so that compilers are unlikely to generate
+     * a branch. */
+    mpi_safe_cond_assign( n + 1, A->p, d, ~c & 2 );
+#endif
 
     return( 0 );
 }
