@@ -83,21 +83,6 @@ int mbedtls_platform_set_calloc_free( void * (*calloc_func)( size_t, size_t ),
           !( defined(MBEDTLS_PLATFORM_CALLOC_MACRO) &&
              defined(MBEDTLS_PLATFORM_FREE_MACRO) ) */
 
-#if defined(MBEDTLS_PLATFORM_HAS_NON_CONFORMING_SNPRINTF)
-#include <stdarg.h>
-int mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... )
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    va_list argp;
-
-    va_start( argp, fmt );
-    ret = mbedtls_vsnprintf( s, n, fmt, argp );
-    va_end( argp );
-
-    return( ret );
-}
-#endif
-
 #if defined(MBEDTLS_PLATFORM_SNPRINTF_ALT)
 #if !defined(MBEDTLS_PLATFORM_STD_SNPRINTF)
 /*
@@ -127,31 +112,6 @@ int mbedtls_platform_set_snprintf( int (*snprintf_func)( char * s, size_t n,
     return( 0 );
 }
 #endif /* MBEDTLS_PLATFORM_SNPRINTF_ALT */
-
-#if defined(MBEDTLS_PLATFORM_HAS_NON_CONFORMING_VSNPRINTF)
-#include <stdarg.h>
-int mbedtls_platform_win32_vsnprintf( char *s, size_t n, const char *fmt, va_list arg )
-{
-    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-
-    /* Avoid calling the invalid parameter handler by checking ourselves */
-    if( s == NULL || n == 0 || fmt == NULL )
-        return( -1 );
-
-#if defined(_TRUNCATE)
-    ret = vsnprintf_s( s, n, _TRUNCATE, fmt, arg );
-#else
-    ret = vsnprintf( s, n, fmt, arg );
-    if( ret < 0 || (size_t) ret == n )
-    {
-        s[n-1] = '\0';
-        ret = -1;
-    }
-#endif
-
-    return( ret );
-}
-#endif
 
 #if defined(MBEDTLS_PLATFORM_VSNPRINTF_ALT)
 #if !defined(MBEDTLS_PLATFORM_STD_VSNPRINTF)
