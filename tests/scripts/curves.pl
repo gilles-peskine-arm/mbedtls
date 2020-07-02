@@ -2,8 +2,23 @@
 
 # curves.pl
 #
-# Copyright (c) 2014-2018, ARM Limited, All Rights Reserved
-
+# Copyright (c) 2014-2020, ARM Limited, All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This file is part of Mbed TLS (https://tls.mbed.org)
+#
 # Purpose
 #
 # The purpose of this test script is to validate that the library works
@@ -79,6 +94,7 @@ for my $curve (@curves) {
     print "\n******************************************\n";
     print "* Testing with only curve: $curve\n";
     print "******************************************\n";
+    $ENV{MBEDTLS_TEST_CONFIGURATION} = "$curve";
 
     system( "scripts/config.pl set $curve" )
         and abort "Failed to enable $curve\n";
@@ -91,10 +107,8 @@ for my $curve (@curves) {
             and abort "Failed to $ecdsa $dep\n";
     }
 
-    system( "CFLAGS='-Werror -Wall -Wextra' make lib" )
-        and abort "Failed to build lib: only $curve\n";
-    system( "cd tests && make" )
-        and abort "Failed to build tests: only $curve\n";
+    system( "CFLAGS='-Werror -Wall -Wextra' make" )
+        and abort "Failed to build: only $curve\n";
     system( "make test" )
         and abort "Failed test suite: only $curve\n";
 
@@ -110,19 +124,18 @@ for my $curve (@curves) {
     system( "make clean" ) and die;
 
     # depends on a specific curve. Also, ignore error if it wasn't enabled
-    system( "scripts/config.pl unset MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED" );
+    system( "scripts/config.py unset MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED" );
 
     print "\n******************************************\n";
     print "* Testing without curve: $curve\n";
     print "******************************************\n";
+    $ENV{MBEDTLS_TEST_CONFIGURATION} = "-$curve";
 
-    system( "scripts/config.pl unset $curve" )
+    system( "scripts/config.py unset $curve" )
         and abort "Failed to disable $curve\n";
 
-    system( "CFLAGS='-Werror -Wall -Wextra' make lib" )
-        and abort "Failed to build lib: all but $curve\n";
-    system( "cd tests && make" )
-        and abort "Failed to build tests: all but $curve\n";
+    system( "CFLAGS='-Werror -Wall -Wextra' make" )
+        and abort "Failed to build: all but $curve\n";
     system( "make test" )
         and abort "Failed test suite: all but $curve\n";
 

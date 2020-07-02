@@ -30,7 +30,7 @@
 #include <stddef.h>
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "config.h"
+#include "mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -39,6 +39,8 @@
 #define MBEDTLS_ERR_MD_BAD_INPUT_DATA                     -0x5100  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_MD_ALLOC_FAILED                       -0x5180  /**< Failed to allocate memory. */
 #define MBEDTLS_ERR_MD_FILE_IO_ERROR                      -0x5200  /**< Opening or reading of file failed. */
+
+/* MBEDTLS_ERR_MD_HW_ACCEL_FAILED is deprecated and should not be used. */
 #define MBEDTLS_ERR_MD_HW_ACCEL_FAILED                    -0x5280  /**< MD hardware accelerator failed. */
 
 #ifdef __cplusplus
@@ -70,6 +72,12 @@ typedef enum {
 #define MBEDTLS_MD_MAX_SIZE         64  /* longest known is SHA512 */
 #else
 #define MBEDTLS_MD_MAX_SIZE         32  /* longest known is SHA256 or less */
+#endif
+
+#if defined(MBEDTLS_SHA512_C)
+#define MBEDTLS_MD_MAX_BLOCK_SIZE         128
+#else
+#define MBEDTLS_MD_MAX_BLOCK_SIZE         64
 #endif
 
 /**

@@ -29,8 +29,12 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
+#include <stdlib.h>
 #define mbedtls_printf     printf
 #define mbedtls_fprintf    fprintf
+#define mbedtls_exit            exit
+#define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
+#define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif
 
 #if !defined(MBEDTLS_SSL_CLI_C) || !defined(MBEDTLS_SSL_PROTO_DTLS) ||    \
@@ -45,7 +49,7 @@ int main( void )
             "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C and/or "
             "MBEDTLS_X509_CRT_PARSE_C and/or MBEDTLS_RSA_C and/or "
             "MBEDTLS_CERTS_C and/or MBEDTLS_PEM_PARSE_C not defined.\n" );
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
@@ -60,15 +64,25 @@ int main( void )
 #include "mbedtls/certs.h"
 #include "mbedtls/timing.h"
 
+/* Uncomment out the following line to default to IPv4 and disable IPv6 */
+//#define FORCE_IPV4
+
 #define SERVER_PORT "4433"
 #define SERVER_NAME "localhost"
-#define SERVER_ADDR "127.0.0.1" /* forces IPv4 */
+
+#ifdef FORCE_IPV4
+#define SERVER_ADDR "127.0.0.1"     /* Forces IPv4 */
+#else
+#define SERVER_ADDR "::1"
+#endif
+
 #define MESSAGE     "Echo this"
 
 #define READ_TIMEOUT_MS 1000
 #define MAX_RETRY       5
 
 #define DEBUG_LEVEL 0
+
 
 static void my_debug( void *ctx, int level,
                       const char *file, int line,
@@ -136,7 +150,7 @@ int main( int argc, char *argv[] )
                           mbedtls_test_cas_pem_len );
     if( ret < 0 )
     {
-        mbedtls_printf( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", -ret );
+        mbedtls_printf( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", (unsigned int) -ret );
         goto exit;
     }
 
@@ -212,7 +226,7 @@ int main( int argc, char *argv[] )
 
     if( ret != 0 )
     {
-        mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", -ret );
+        mbedtls_printf( " failed\n  ! mbedtls_ssl_handshake returned -0x%x\n\n", (unsigned int) -ret );
         goto exit;
     }
 
@@ -290,7 +304,7 @@ send_request:
                 goto close_notify;
 
             default:
-                mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n\n", -ret );
+                mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n\n", (unsigned int) -ret );
                 goto exit;
         }
     }
@@ -342,7 +356,7 @@ exit:
     if( ret < 0 )
         ret = 1;
 
-    return( ret );
+    mbedtls_exit( ret );
 }
 #endif /* MBEDTLS_SSL_CLI_C && MBEDTLS_SSL_PROTO_DTLS && MBEDTLS_NET_C &&
           MBEDTLD_TIMING_C && MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C &&

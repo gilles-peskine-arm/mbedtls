@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define mbedtls_printf          printf
+#define mbedtls_exit            exit
 #define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif /* MBEDTLS_PLATFORM_C */
@@ -132,9 +133,11 @@ int main( void )
             "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C and/or "
             "MBEDTLS_PEM_WRITE_C"
             "not defined.\n" );
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
+
+
 /*
  * global options
  */
@@ -299,7 +302,7 @@ int main( int argc, char *argv[] )
                                         NULL, DEV_RANDOM_THRESHOLD,
                                         MBEDTLS_ENTROPY_SOURCE_STRONG ) ) != 0 )
         {
-            mbedtls_printf( " failed\n  ! mbedtls_entropy_add_source returned -0x%04x\n", -ret );
+            mbedtls_printf( " failed\n  ! mbedtls_entropy_add_source returned -0x%04x\n", (unsigned int) -ret );
             goto exit;
         }
 
@@ -312,7 +315,7 @@ int main( int argc, char *argv[] )
                                (const unsigned char *) pers,
                                strlen( pers ) ) ) != 0 )
     {
-        mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret );
+        mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%04x\n", (unsigned int) -ret );
         goto exit;
     }
 
@@ -322,9 +325,10 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "\n  . Generating the private key ..." );
     fflush( stdout );
 
-    if( ( ret = mbedtls_pk_setup( &key, mbedtls_pk_info_from_type( opt.type ) ) ) != 0 )
+    if( ( ret = mbedtls_pk_setup( &key,
+            mbedtls_pk_info_from_type( (mbedtls_pk_type_t) opt.type ) ) ) != 0 )
     {
-        mbedtls_printf( " failed\n  !  mbedtls_pk_setup returned -0x%04x", -ret );
+        mbedtls_printf( " failed\n  !  mbedtls_pk_setup returned -0x%04x", (unsigned int) -ret );
         goto exit;
     }
 
@@ -335,7 +339,7 @@ int main( int argc, char *argv[] )
                                    opt.rsa_keysize, 65537 );
         if( ret != 0 )
         {
-            mbedtls_printf( " failed\n  !  mbedtls_rsa_gen_key returned -0x%04x", -ret );
+            mbedtls_printf( " failed\n  !  mbedtls_rsa_gen_key returned -0x%04x", (unsigned int) -ret );
             goto exit;
         }
     }
@@ -344,11 +348,12 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_ECP_C)
     if( opt.type == MBEDTLS_PK_ECKEY )
     {
-        ret = mbedtls_ecp_gen_key( opt.ec_curve, mbedtls_pk_ec( key ),
+        ret = mbedtls_ecp_gen_key( (mbedtls_ecp_group_id) opt.ec_curve,
+                                   mbedtls_pk_ec( key ),
                                    mbedtls_ctr_drbg_random, &ctr_drbg );
         if( ret != 0 )
         {
-            mbedtls_printf( " failed\n  !  mbedtls_ecp_gen_key returned -0x%04x", -ret );
+            mbedtls_printf( " failed\n  !  mbedtls_ecp_gen_key returned -0x%04x", (unsigned int) -ret );
             goto exit;
         }
     }
@@ -441,7 +446,7 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
 #endif /* MBEDTLS_PK_WRITE_C && MBEDTLS_PEM_WRITE_C && MBEDTLS_FS_IO &&
         * MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C */
