@@ -31,26 +31,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define mbedtls_printf          printf
+#define mbedtls_exit            exit
 #define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif /* MBEDTLS_PLATFORM_C */
 
-#if !defined(MBEDTLS_ECDH_C) || \
+#if !defined(MBEDTLS_ECDH_C) || !defined(MBEDTLS_ECDH_LEGACY_CONTEXT) || \
     !defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
     !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_CTR_DRBG_C)
 int main( void )
 {
-    mbedtls_printf( "MBEDTLS_ECDH_C and/or "
+    mbedtls_printf( "MBEDTLS_ECDH_C and/or MBEDTLS_ECDH_LEGACY_CONTEXT and/or "
                     "MBEDTLS_ECP_DP_CURVE25519_ENABLED and/or "
                     "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C "
                     "not defined\n" );
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/ecdh.h"
+
 
 int main( int argc, char *argv[] )
 {
@@ -236,7 +238,7 @@ exit:
     mbedtls_ctr_drbg_free( &ctr_drbg );
     mbedtls_entropy_free( &entropy );
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
 #endif /* MBEDTLS_ECDH_C && MBEDTLS_ECP_DP_CURVE25519_ENABLED &&
           MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C */

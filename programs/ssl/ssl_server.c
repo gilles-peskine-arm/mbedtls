@@ -34,6 +34,9 @@
 #define mbedtls_time_t     time_t
 #define mbedtls_fprintf    fprintf
 #define mbedtls_printf     printf
+#define mbedtls_exit            exit
+#define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
+#define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif
 
 #if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_CERTS_C) ||    \
@@ -49,7 +52,7 @@ int main( void )
            "MBEDTLS_NET_C and/or MBEDTLS_RSA_C and/or "
            "MBEDTLS_CTR_DRBG_C and/or MBEDTLS_X509_CRT_PARSE_C "
            "and/or MBEDTLS_PEM_PARSE_C not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
@@ -79,6 +82,7 @@ int main( void )
     "<p>Successful connection using: %s</p>\r\n"
 
 #define DEBUG_LEVEL 0
+
 
 static void my_debug( void *ctx, int level,
                       const char *file, int line,
@@ -305,7 +309,7 @@ reset:
                     break;
 
                 default:
-                    mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n", -ret );
+                    mbedtls_printf( " mbedtls_ssl_read returned -0x%x\n", (unsigned int) -ret );
                     break;
             }
 
@@ -393,7 +397,7 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
-    return( ret );
+    mbedtls_exit( ret );
 }
 #endif /* MBEDTLS_BIGNUM_C && MBEDTLS_CERTS_C && MBEDTLS_ENTROPY_C &&
           MBEDTLS_SSL_TLS_C && MBEDTLS_SSL_SRV_C && MBEDTLS_NET_C &&

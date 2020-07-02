@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #define mbedtls_fprintf         fprintf
 #define mbedtls_printf          printf
+#define mbedtls_exit            exit
 #define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif /* MBEDTLS_PLATFORM_C */
@@ -46,9 +47,11 @@
 int main( void )
 {
     mbedtls_printf("MBEDTLS_ENTROPY_C and/or MBEDTLS_FS_IO not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
+
+
 int main( int argc, char *argv[] )
 {
     FILE *f;
@@ -60,13 +63,13 @@ int main( int argc, char *argv[] )
     if( argc < 2 )
     {
         mbedtls_fprintf( stderr, "usage: %s <output filename>\n", argv[0] );
-        return( exit_code );
+        mbedtls_exit( exit_code );
     }
 
     if( ( f = fopen( argv[1], "wb+" ) ) == NULL )
     {
         mbedtls_printf( "failed to open '%s' for writing.\n", argv[1] );
-        return( exit_code );
+        mbedtls_exit( exit_code );
     }
 
     mbedtls_entropy_init( &entropy );
@@ -77,7 +80,7 @@ int main( int argc, char *argv[] )
         if( ret != 0 )
         {
             mbedtls_printf( "  failed\n  !  mbedtls_entropy_func returned -%04X\n",
-                            ret );
+                            (unsigned int) ret );
             goto cleanup;
         }
 
@@ -96,6 +99,6 @@ cleanup:
     fclose( f );
     mbedtls_entropy_free( &entropy );
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
 #endif /* MBEDTLS_ENTROPY_C */
