@@ -265,7 +265,7 @@ maybe_requires_ciphersuite_enabled() {
             ;;
     esac
 
-    unset cmd ciphersuite
+    unset ciphersuite
 }
 
 # skip next test if OpenSSL doesn't support FALLBACK_SCSV
