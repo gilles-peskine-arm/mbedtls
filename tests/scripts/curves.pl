@@ -91,10 +91,8 @@ for my $curve (@curves) {
             and abort "Failed to $ecdsa $dep\n";
     }
 
-    system( "CFLAGS='-Werror -Wall -Wextra' make lib" )
+    system( "CFLAGS='-Werror -Wall -Wextra' make" )
         and abort "Failed to build lib: only $curve\n";
-    system( "cd tests && make" )
-        and abort "Failed to build tests: only $curve\n";
     system( "make test" )
         and abort "Failed test suite: only $curve\n";
 
@@ -119,10 +117,8 @@ for my $curve (@curves) {
     system( "scripts/config.pl unset $curve" )
         and abort "Failed to disable $curve\n";
 
-    system( "CFLAGS='-Werror -Wall -Wextra' make lib" )
-        and abort "Failed to build lib: all but $curve\n";
-    system( "cd tests && make" )
-        and abort "Failed to build tests: all but $curve\n";
+    system( "CFLAGS='-Werror -Wall -Wextra' make" )
+        and abort "Failed to build: all but $curve\n";
     system( "make test" )
         and abort "Failed test suite: all but $curve\n";
 
