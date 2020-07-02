@@ -74,11 +74,11 @@
     defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) || \
     defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
-#define MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED
+#define MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED
 #endif
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
     defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
-#define MBEDTLS_ECP__MONTGOMERY_ENABLED
+#define MBEDTLS_ECP_MONTGOMERY_ENABLED
 #endif
 
 #ifdef __cplusplus
@@ -119,7 +119,7 @@ typedef enum
      * - List the curve as a dependency of MBEDTLS_ECP_C and
      *   MBEDTLS_ECDSA_C if supported in check_config.h.
      * - Add the curve to the appropriate curve type macro
-     *   MBEDTLS_ECP__yyy_ENABLED above.
+     *   MBEDTLS_ECP_yyy_ENABLED above.
      * - Add the necessary definitions to ecp_curves.c.
      * - Add the curve to the ecp_supported_curves array in ecp.c.
      * - Add the curve to applicable profiles in x509_crt.c if applicable.
@@ -902,7 +902,7 @@ int mbedtls_ecp_mul( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
              const mbedtls_mpi *m, const mbedtls_ecp_point *P,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng );
 
-#if defined(MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED)
+#if defined(MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED)
 /**
  * \brief           This function performs multiplication of a point by
  *                  an integer: \p R = \p m * \p P in a restartable way.
@@ -976,7 +976,7 @@ int mbedtls_ecp_mul_restartable( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
 int mbedtls_ecp_muladd( mbedtls_ecp_group *grp, mbedtls_ecp_point *R,
              const mbedtls_mpi *m, const mbedtls_ecp_point *P,
              const mbedtls_mpi *n, const mbedtls_ecp_point *Q );
-#endif /* MBEDTLS_ECP__SHORT_WEIERSTRASS_ENABLED */
+#endif /* MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED */
 
 /**
  * \brief           This function performs multiplication and addition of two
