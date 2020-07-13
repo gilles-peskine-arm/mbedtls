@@ -1,11 +1,11 @@
 PSA Cryptoprocessor Driver Interface
 ====================================
 
-This document describes an interface for cryptoprocessor drivers in the PSA cryptography API. It describes the design of the PSA interface as well as the reference implementation in Mbed TLS and provides instructions and guidelines to driver writers.
+This document describes an interface for cryptoprocessor drivers in the PSA cryptography API. This interface complements the PSA Cryptography API specification, which describes the interface between a PSA Cryptography implementation and an application.
 
-**This is work in progress**. This document is still incomplete and **may change or may be abandoned at any time**. The interface is not fully implemented in Mbed TLS yet and is disabled by default; you can enable the experimental work in progress by setting `MBEDTLS_PSA_CRYPTO_DRIVERS` in the compile-time configuration.
+This specification is work in progress and should be considered to be in a beta stage. There is ongoing work to implement this interface in Mbed TLS, which is the reference implementation of the PSA Cryptography API. At this stage, Arm does not expect major changes, but minor changes are expected based on experience from the first implementation and on external feedback.
 
-Time-stamp: "2020/05/26 21:44:21 GMT"
+Time-stamp: "2020/07/13 00:00:44 GMT"
 
 ## Introduction
 
@@ -139,7 +139,7 @@ All driver functions return a status of type `psa_status_t` which should use the
 
 The signature of a driver function generally looks like the signature of the PSA Crypto API that it implements, with some modifications. This section gives an overview of modifications that apply to whole classes of functions. Refer to the reference section for each function or function family for details.
 
-* For functions that operate on an existing key, the `psa_key_id_t` parameter (`psa_key_handle_t` in versions of Mbed TLS that are compatible with PSA Crypto 1.0 beta 3) is replaced by a sequence of three parameters that describe the key:
+* For functions that operate on an existing key, the `psa_key_id_t` parameter is replaced by a sequence of three parameters that describe the key:
     1. `const psa_key_attributes_t *attributes`: the key attributes.
     2. `const uint8_t *key_buffer`: a key material or key context buffer.
     3. `size_t key_buffer_size`: the size of the key buffer in bytes.
@@ -335,7 +335,7 @@ The `"key_context"` property in the [driver description](#driver-description-top
 
 * `"base_size"` (integer or string, optional): this many bytes are included in every key context. If omitted, this value defaults to 0.
 * `"key_pair_size"` (integer or string, optional): this many bytes are included in every key context for a key pair. If omitted, this value defaults to 0.
-* `"public_key_size"` (integer or string, optional): this many bytes are included in every key context for a key pair. If omitted, this value defaults to 0.
+* `"public_key_size"` (integer or string, optional): this many bytes are included in every key context for a public key. If omitted, this value defaults to 0.
 * `"symmetric_factor"` (integer or string, optional): every key context for a symmetric key includes this many times the key size. If omitted, this value defaults to 0.
 * `"store_public_key"` (boolean, optional): If specified and true, for a key pair, the key context includes space for the public key. If omitted or false, no additional space is added for the public key.
 * `"size_function"` (string, optional): the name of a function that returns the number of bytes that the driver needs in a key context for a key. This may be a pointer to function. This must be a C identifier; more complex expressions are not permitted. If the core uses this function, it supersedes all the other properties.
@@ -463,35 +463,6 @@ psa_generate_key(&attributes, &handle);
 ```
 
 TODO: how does the application know which location value to use?
-
-## How to build Mbed TLS with drivers
-
-To build Mbed TLS with drivers:
-
-1. Activate `MBEDTLS_PSA_CRYPTO_DRIVERS` in the library configuration.
-
-    ```
-    cd /path/to/mbedtls
-    scripts/config.py set MBEDTLS_PSA_CRYPTO_DRIVERS
-    ```
-
-2. Pass the [driver description files](#driver-description-files) through the Make variable `PSA_DRIVERS` when building the library.
-
-    ```
-    cd /path/to/mbedtls
-    make PSA_DRIVERS="/path/to/acme/driver.json /path/to/nadir/driver.json" lib
-    ```
-
-3. Link your application with the implementation of the driver functions.
-
-    ```
-    cd /path/to/application
-    ld myapp.o -L/path/to/acme -lacmedriver -L/path/to/nadir -lnadirdriver -L/path/to/mbedtls -lmbedcrypto
-    ```
-
-## Mbed TLS internal architecture
-
-TODO
 
 ## Open questions
 
