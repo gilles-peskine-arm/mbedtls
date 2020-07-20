@@ -155,7 +155,7 @@ $dispatch_code
 };
 
 /**
- * \brief        Execute the test function.
+ * \brief        Execute the test function once.
  *
  *               This is a wrapper function around the test function execution
  *               to allow the setjmp() call used to catch any calls to the
@@ -168,8 +168,6 @@ $dispatch_code
  */
 void execute_function_ptr(TestWrapper_t fp, void **params)
 {
-    mbedtls_test_memory_setup( );
-
     reset_test_failure( );
 #if defined(MBEDTLS_CHECK_PARAMS)
     if ( setjmp( param_fail_jmp ) == 0 )
@@ -186,6 +184,60 @@ void execute_function_ptr(TestWrapper_t fp, void **params)
 #else
     fp( params );
 #endif
+}
+
+/**
+ * \brief        Execute the test function as many times as necessary.
+ *
+ *               Normally, just run the test function once with the supplied
+ *               parameters. When low-memory simulation with forced
+ *               calloc failure is active, run the test multiple times,
+ *               with different forced calloc failures each time. The
+ *               last run is a normal run with no forced calloc failure.
+ *
+ * \param fp     Function pointer to the test function
+ * \param params Parameters to pass
+ *
+ */
+static void do_test_runs( TestWrapper_t fp, void **params )
+{
+    mbedtls_test_memory_setup( );
+    reset_test_failure( );
+    execute_function_ptr( fp, params );
+
+#if defined(MBEDTLS_TEST_MEMORY_CALLOC_FAILURE)
+    while( mbedtls_test_memory_has_forced_failure( ) )
+    {
+        size_t allocations;
+        size_t bytes;
+        size_t failed;
+        size_t leaks;
+        mbedtls_test_memory_get_stats( &allocations, &bytes, &failed, &leaks );
+        size_t fail_n = mbedtls_test_memory_get_forced_failure( );
+        if( leaks != 0 )
+        {
+            /* FIXME: this doesn't work for on-target tests (no stdout). */
+            /* FIXME: this isn't really the right time to print something:
+             * it's between the test description and the test result. But
+             * this is hard to change, because the test description has already
+             * been printed and the test result isn't available yet. */
+            /* FIXME: we should mark the test suite as failed. */
+            mbedtls_fprintf( stderr,
+                             "[calloc #%zu failed ==> %zu leak(s)]",
+                             fail_n, leaks );
+        }
+
+        /* We just ran the test case with a forced allocation failure.
+         * The test case probably failed, and we don't care: the tested
+         * functionality isn't expected to work if there isn't enough memory.
+         * What we care about is that there is no memory leak or crash. */
+        reset_test_failure( );
+
+        mbedtls_test_memory_next_forced_failure( );
+
+        execute_function_ptr( fp, params );
+    }
+#endif /* MBEDTLS_TEST_MEMORY_CALLOC_FAILURE */
 
     mbedtls_test_memory_teardown( );
 }
@@ -208,7 +260,7 @@ int dispatch_test( size_t func_idx, void ** params )
     {
         fp = test_funcs[func_idx];
         if ( fp )
-            execute_function_ptr(fp, params);
+            do_test_runs(fp, params);
         else
             ret = DISPATCH_UNSUPPORTED_SUITE;
     }
