@@ -1530,7 +1530,7 @@ component_test_memory_wrappers () {
     make CC=gcc CFLAGS="-DMBEDTLS_TEST_MEMORY_WRAPPERS $ASAN_CFLAGS -O3" LDFLAGS="$ASAN_CFLAGS" tests
 
     msg "test: with memory wrappers"
-    make test
+    ( cd tests && scripts/run-test-suites.pl -v 3 )
 }
 
 component_test_aes_fewer_tables () {
