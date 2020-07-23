@@ -46,22 +46,36 @@ void mbedtls_test_memory_setup( void );
  */
 void mbedtls_test_memory_teardown( void );
 
+/** Statistics about memory usage.
+ *
+ * Calls to mbedtls_calloc() with a size of 0 and calls to
+ * mbedtls_free(NULL) are not included in these statistics.
+ *
+ * The statistics assume that a block allocated before a call to
+ * mbedtls_test_memory_setup() is never freed after this call.
+ */
+typedef struct
+{
+    /** The total number of calls to mbedtls_calloc(). */
+    size_t allocations;
+    /** The total number of allocated bytes. This is typically a lot larger
+     * than the peak memory consumption. */
+    size_t bytes;
+    /** The number of failed allocations. */
+    size_t failed;
+    /** The number of calls to mbedtls_calloc() minus the number of calls
+     * to mbedtls_free(). */
+    size_t active;
+} mbedtls_test_memory_stats_t;
+
 /** Obtain statistics about allocations since the last call to
  * mbedtls_test_memory_setup().
- *
- * \param allocations   The total number of calls to mbedtls_calloc()
- *                      (excluding zero-sized allocations).
- * \param bytes         The total number of allocated bytes.
- *                      This is typically a lot larger than the total
- *                      memory consumption.
- * \param failed        The number of failed allocations.
- * \param leaks         The number of calls to mbedtls_calloc() minus
- *                      the number of calls to mbedtls_free()
- *                      (excluding zero-sized allocations and calls to
- *                      `mbedtls_free(NULL)`).
  */
-void mbedtls_test_memory_get_stats( size_t *allocations, size_t *bytes,
-                                        size_t *failed, size_t *leaks );
+void mbedtls_test_memory_get_stats( mbedtls_test_memory_stats_t *stats );
+
+/** Obtain statistics about allocations since the program startup.
+ */
+void mbedtls_test_memory_get_total_stats( mbedtls_test_memory_stats_t *stats );
 
 #else /* MBEDTLS_TEST_MEMORY_WRAPPERS */
 
