@@ -377,28 +377,31 @@ static int run_test_snprintf( void )
 #if defined(MBEDTLS_TEST_MEMORY_WRAPPERS)
 /** \brief Report memory statistics for this test case.
  *
- * \param total_errors  Incremented if there was a memory leak.
+ * \param total_errors  If non-null: incremented if there was a memory leak.
+ *                      If null: report total statistics rather than
+ *                      just for this test case.
  */
 void report_memory_stats( unsigned *total_errors )
 {
-    size_t allocations;
-    size_t bytes;
-    size_t failed;
-    size_t leaks;
-    mbedtls_test_memory_get_stats( &allocations, &bytes, &failed, &leaks );
-    if( allocations != 0 )
+    mbedtls_test_memory_stats_t stats;
+    if( total_errors == NULL )
+        mbedtls_test_memory_get_total_stats( &stats );
+    else
+        mbedtls_test_memory_get_stats( &stats );
+    if( stats.allocations != 0 )
     {
-        mbedtls_fprintf( stdout, "  %zu allocations", allocations );
-        if( failed != 0 )
-            mbedtls_fprintf( stdout, " (%zu failed)", failed );
-        mbedtls_fprintf( stdout, ", %zu total bytes\n", bytes );
+        mbedtls_fprintf( stdout, "  %zu allocations", stats.allocations );
+        if( stats.failed != 0 )
+            mbedtls_fprintf( stdout, " (%zu failed)", stats.failed );
+        mbedtls_fprintf( stdout, ", %zu total bytes\n", stats.bytes );
     }
-    if( leaks != 0 )
+    if( stats.active != 0 )
     {
-        ++( *total_errors );
+        if( total_errors != NULL )
+            ++( *total_errors );
         mbedtls_fprintf( stdout,
                          "  FAIL: There were %zu leaked allocations.\n",
-                         leaks );
+                         stats.active );
     }
 }
 #endif
@@ -840,6 +843,9 @@ int execute_tests( int argc , const char ** argv )
 
     mbedtls_fprintf( stdout, " (%u / %u tests (%u skipped))\n",
                      total_tests - total_errors, total_tests, total_skipped );
+#if defined(MBEDTLS_TEST_MEMORY_WRAPPERS)
+    report_memory_stats( NULL );
+#endif
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C) && \
     !defined(TEST_SUITE_MEMORY_BUFFER_ALLOC)

@@ -33,31 +33,36 @@
 
 #include <string.h>
 
-typedef struct
+static mbedtls_test_memory_stats_t current_stats;
+static mbedtls_test_memory_stats_t total_stats;
+
+static void update_stats( mbedtls_test_memory_stats_t *stats )
 {
-    size_t total_allocations; /* Total calls to calloc */
-    size_t total_bytes; /* Total bytes allocated */
-    size_t active_allocations; /* Calls to calloc that are not yet freed */
-    size_t failed_allocations; /* Calls to calloc that have failed */
-} mbedtls_test_memory_stats_t;
-static mbedtls_test_memory_stats_t stats;
+    stats->allocations += current_stats.allocations;
+    stats->bytes += current_stats.bytes;
+    stats->failed += current_stats.failed;
+    stats->active += current_stats.active;
+}
 
 void mbedtls_test_memory_setup( void )
 {
-    memset( &stats, 0, sizeof( stats ) );
+    update_stats( &total_stats );
+    memset( &current_stats, 0, sizeof( current_stats ) );
 }
 
 void mbedtls_test_memory_teardown( void )
 {
 }
 
-void mbedtls_test_memory_get_stats( size_t *allocations, size_t *bytes,
-                                    size_t *failed, size_t *leaks )
+void mbedtls_test_memory_get_stats( mbedtls_test_memory_stats_t *stats )
 {
-    *allocations = stats.total_allocations;
-    *bytes = stats.total_bytes;
-    *failed = stats.failed_allocations;
-    *leaks = stats.active_allocations;
+    *stats = current_stats;
+}
+
+void mbedtls_test_memory_get_total_stats( mbedtls_test_memory_stats_t *stats )
+{
+    *stats = total_stats;
+    update_stats( stats );
 }
 
 void *mbedtls_test_calloc_wrapper( size_t n, size_t size )
@@ -66,16 +71,16 @@ void *mbedtls_test_calloc_wrapper( size_t n, size_t size )
      * function returns NULL, we know that the allocation has failed. */
     if( n == 0 || size == 0 )
         return( NULL );
-    ++stats.total_allocations;
+    ++current_stats.allocations;
     void *ptr = mbedtls_calloc( n, size );
     if( ptr == NULL )
     {
-        ++stats.failed_allocations;
+        ++current_stats.failed;
     }
     else
     {
-        ++stats.active_allocations;
-        stats.total_bytes += n * size;
+        ++current_stats.active;
+        current_stats.bytes += n * size;
     }
     return( ptr );
 }
@@ -84,7 +89,7 @@ void mbedtls_test_free_wrapper( void *ptr )
 {
     if( ptr == NULL )
         return;
-    --stats.active_allocations;
+    --current_stats.active;
     mbedtls_free( ptr );
 }
 
