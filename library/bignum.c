@@ -1606,10 +1606,10 @@ void mpi_mul_hlp( size_t i,
 
     t++;
 
-    do {
+    while( c != 0 )
+    {
         *d += c; c = ( *d < c ); d++;
     }
-    while( c != 0 );
 }
 
 /*
