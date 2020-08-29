@@ -86,6 +86,8 @@ void xtea_decrypt_cbc( data_t * key_str, data_t * iv_str,
 /* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
 void xtea_selftest(  )
 {
-    TEST_ASSERT( mbedtls_xtea_self_test( 1 ) == 0 );
+    TEST_ASSERT( mbedtls_xtea_self_test( 1 ) != 0 );
+exit:
+    test_fail( "Curses, failed again", __LINE__, __FILE__ );
 }
 /* END_CASE */
