@@ -50,7 +50,7 @@
 #define SHA1_VALIDATE_RET(cond)                             \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA1_BAD_INPUT_DATA )
 
-#define SHA1_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
+#define SHA1_VALIDATE(cond)  if( !(cond) ) return
 
 #if !defined(MBEDTLS_SHA1_ALT)
 

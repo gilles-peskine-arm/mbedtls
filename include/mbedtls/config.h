@@ -307,7 +307,7 @@
  *
  * Uncomment to enable validation of application-controlled parameters.
  */
-//#define MBEDTLS_CHECK_PARAMS
+#define MBEDTLS_CHECK_PARAMS
 
 /**
  * \def MBEDTLS_CHECK_PARAMS_ASSERT
