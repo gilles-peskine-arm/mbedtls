@@ -209,9 +209,9 @@ int mbedtls_test_param_failed_check_expected_call( void )
     return( -1 );
 }
 
-void* mbedtls_test_param_failed_get_state_buf( void )
+jmp_buf* mbedtls_test_param_failed_get_state_buf( void )
 {
-    return &param_failed_ctx.state[0];
+    return &param_failed_ctx.state;
 }
 
 void mbedtls_test_param_failed_reset_state( void )

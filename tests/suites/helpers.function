@@ -261,9 +261,9 @@ typedef struct data_tag
  */
 #define TEST_INVALID_PARAM( TEST )                                       \
     do {                                                                 \
-        memcpy( jmp_tmp, mbedtls_test_param_failed_get_state_buf( ),     \
+        memcpy( jmp_tmp, *mbedtls_test_param_failed_get_state_buf( ),     \
                 sizeof( jmp_tmp ) );                                     \
-        if( setjmp(  mbedtls_test_param_failed_get_state_buf( ) ) == 0 ) \
+        if( setjmp( *mbedtls_test_param_failed_get_state_buf( ) ) == 0 ) \
         {                                                                \
             TEST;                                                        \
             test_fail( #TEST, __LINE__, __FILE__ );                      \

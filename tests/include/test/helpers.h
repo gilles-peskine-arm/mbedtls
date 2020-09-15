@@ -105,6 +105,8 @@ int mbedtls_test_hexcmp( uint8_t * a, uint8_t * b,
 
 #if defined(MBEDTLS_CHECK_PARAMS)
 
+#include <setjmp.h>
+
 typedef struct
 {
     const char *failure_condition;
@@ -163,7 +165,7 @@ int mbedtls_test_param_failed_check_expected_call( void );
  * \return  Address of the object of type jmp_buf holding the execution state
  *          information used by mbedtls_param_failed() to do a long jump.
  */
-void* mbedtls_test_param_failed_get_state_buf( void );
+jmp_buf* mbedtls_test_param_failed_get_state_buf( void );
 
 /**
  * \brief   Reset the execution state used by mbedtls_param_failed() to do a
