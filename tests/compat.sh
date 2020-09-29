@@ -50,7 +50,7 @@ fi
 
 # default values for options
 MODES="tls1 tls1_1 tls1_2 dtls1 dtls1_2"
-VERIFIES="NO YES"
+VERIFIES="no yes"
 TYPES="ECDSA RSA PSK"
 FILTER=""
 EXCLUDE='NULL\|DES-CBC-\|RC4\|ARCFOUR' # avoid plain DES but keep 3DES-EDE-CBC (mbedTLS), DES-CBC3 (OpenSSL)
@@ -117,8 +117,9 @@ get_options() {
     done
 
     # sanitize some options (modes checked later)
-    VERIFIES="$( echo $VERIFIES | tr [a-z] [A-Z] )"
-    TYPES="$( echo $TYPES | tr [a-z] [A-Z] )"
+    PEERS="$( echo $PEERS | tr A-Z a-z )"
+    VERIFIES="$( echo $VERIFIES | tr A-Z a-z )"
+    TYPES="$( echo $TYPES | tr a-z A-Z )"
 }
 
 log() {
@@ -181,11 +182,12 @@ filter()
 # PSK ciphersuites with DTLS, which is incorrect, so disable them for now
 check_openssl_server_bug()
 {
-    if test "X$VERIFY" = "XYES" && is_dtls "$MODE" && \
-        echo "$1" | grep "^TLS-PSK" >/dev/null;
-    then
-        SKIP_NEXT="YES"
-    fi
+    case "$1" in
+        "TLS-PSK*")
+            if [ "$VERIFY" = "yes" ] && is_dtls "$MODE"; then
+                SKIP_NEXT="YES"
+            fi;;
+    esac
 }
 
 filter_ciphersuites()
@@ -206,7 +208,7 @@ filter_ciphersuites()
     if [ `minor_ver "$MODE"` -ge 3 ] && is_dtls "$MODE"; then
         O_CIPHERS=""
         case "$PEER" in
-            [Oo]pen*)
+            open*)
                 M_CIPHERS=""
                 ;;
         esac
@@ -214,7 +216,7 @@ filter_ciphersuites()
 
     # For GnuTLS client -> mbed TLS server,
     # we need to force IPv4 by connecting to 127.0.0.1 but then auth fails
-    if [ "X$VERIFY" = "XYES" ] && is_dtls "$MODE"; then
+    if [ "$VERIFY" = "yes" ] && is_dtls "$MODE"; then
         G_CIPHERS=""
     fi
 }
@@ -778,7 +780,7 @@ setup_arguments()
     G_CLIENT_ARGS="-p $PORT --debug 3 $G_MODE"
     G_CLIENT_PRIO="NONE:$G_PRIO_MODE:+COMP-NULL:+CURVE-ALL:+SIGN-ALL"
 
-    if [ "X$VERIFY" = "XYES" ];
+    if [ "$VERIFY" = "yes" ];
     then
         M_SERVER_ARGS="$M_SERVER_ARGS ca_file=data_files/test-ca_cat12.crt auth_mode=required"
         O_SERVER_ARGS="$O_SERVER_ARGS -CAfile data_files/test-ca_cat12.crt -Verify 10"
@@ -803,7 +805,7 @@ setup_arguments()
             O_SERVER_ARGS="$O_SERVER_ARGS -cert data_files/server5.crt -key data_files/server5.key"
             G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server5.crt --x509keyfile data_files/server5.key"
 
-            if [ "X$VERIFY" = "XYES" ]; then
+            if [ "$VERIFY" = "yes" ]; then
                 M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=data_files/server6.crt key_file=data_files/server6.key"
                 O_CLIENT_ARGS="$O_CLIENT_ARGS -cert data_files/server6.crt -key data_files/server6.key"
                 G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile data_files/server6.crt --x509keyfile data_files/server6.key"
@@ -817,7 +819,7 @@ setup_arguments()
             O_SERVER_ARGS="$O_SERVER_ARGS -cert data_files/server2.crt -key data_files/server2.key"
             G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2.crt --x509keyfile data_files/server2.key"
 
-            if [ "X$VERIFY" = "XYES" ]; then
+            if [ "$VERIFY" = "yes" ]; then
                 M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=data_files/server1.crt key_file=data_files/server1.key"
                 O_CLIENT_ARGS="$O_CLIENT_ARGS -cert data_files/server1.crt -key data_files/server1.key"
                 G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile data_files/server1.crt --x509keyfile data_files/server1.key"
@@ -852,7 +854,10 @@ setup_arguments()
 
 # is_mbedtls <cmd_line>
 is_mbedtls() {
-    echo "$1" | grep 'ssl_server2\|ssl_client2' > /dev/null
+    case "$1" in
+        *ssl_client2*|*ssl_server2*) true;;
+        *) false;;
+    esac
 }
 
 # has_mem_err <log_file_name>
@@ -971,9 +976,8 @@ wait_client_done() {
 run_client() {
     # announce what we're going to do
     TESTS=$(( $TESTS + 1 ))
-    VERIF=$(echo $VERIFY | tr '[:upper:]' '[:lower:]')
     TITLE="`echo $1 | head -c1`->`echo $SERVER_NAME | head -c1`"
-    TITLE="$TITLE $MODE,$VERIF $2"
+    TITLE="$TITLE $MODE,$VERIFY $2"
     printf "$TITLE "
     LEN=$(( 72 - `echo "$TITLE" | wc -c` ))
     for i in `seq 1 $LEN`; do printf '.'; done; printf ' '
@@ -1123,29 +1127,41 @@ if [ ! -x "$M_CLI" ]; then
     exit 1
 fi
 
-if echo "$PEERS" | grep -i openssl > /dev/null; then
-    if which "$OPENSSL_CMD" >/dev/null 2>&1; then :; else
-        echo "Command '$OPENSSL_CMD' not found" >&2
-        exit 1
-    fi
-fi
-
-if echo "$PEERS" | grep -i gnutls > /dev/null; then
-    for CMD in "$GNUTLS_CLI" "$GNUTLS_SERV"; do
-        if which "$CMD" >/dev/null 2>&1; then :; else
-            echo "Command '$CMD' not found" >&2
+case " $PEERS " in
+    *\ open*)
+        if which "$OPENSSL_CMD" >/dev/null 2>&1; then :; else
+            echo "Command '$OPENSSL_CMD' not found" >&2
             exit 1
-        fi
-    done
-fi
+        fi;;
+esac
+
+case " $PEERS " in
+    *\ gnu*)
+        for CMD in "$GNUTLS_CLI" "$GNUTLS_SERV"; do
+            if which "$CMD" >/dev/null 2>&1; then :; else
+                echo "Command '$CMD' not found" >&2
+                exit 1
+            fi
+        done;;
+esac
 
 for PEER in $PEERS; do
     case "$PEER" in
-        mbed*|[Oo]pen*|[Gg]nu*)
+        mbed*|open*|gnu*)
             ;;
         *)
             echo "Unknown peers: $PEER" >&2
             exit 1
+    esac
+done
+
+for VERIFY in $VERIFIES; do
+    case $VERIFY in
+        no|yes)
+            ;;
+        *)
+            echo "Unknown verify mode: $VERIFY" >&2
+            exit 1;;
     esac
 done
 
@@ -1177,7 +1193,7 @@ for VERIFY in $VERIFIES; do
 
             case "$PEER" in
 
-                [Oo]pen*)
+                open*)
 
                     if test "$OSSL_NO_DTLS" -gt 0 && is_dtls "$MODE"; then
                         continue;
@@ -1207,7 +1223,7 @@ for VERIFY in $VERIFIES; do
 
                     ;;
 
-                [Gg]nu*)
+                gnu*)
 
                     reset_ciphersuites
                     add_common_ciphersuites
