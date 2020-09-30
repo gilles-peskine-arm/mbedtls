@@ -266,6 +266,7 @@ void ecp_clear_precomputed( mbedtls_ecp_group *grp )
 #define ecp_clear_precomputed( g )
 #endif
 
+#if defined(MBEDTLS_ECP_C)
 static int set_ecp_curve( const char *string, mbedtls_ecp_curve_info *curve )
 {
     const mbedtls_ecp_curve_info *found =
@@ -278,6 +279,7 @@ static int set_ecp_curve( const char *string, mbedtls_ecp_curve_info *curve )
     else
         return( 0 );
 }
+#endif
 
 unsigned char buf[BUFSIZE];
 
@@ -302,11 +304,13 @@ int main( int argc, char *argv[] )
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
     unsigned char alloc_buf[HEAP_SIZE] = { 0 };
 #endif
+#if defined(MBEDTLS_ECP_C)
     mbedtls_ecp_curve_info single_curve[2] = {
         { MBEDTLS_ECP_DP_NONE, 0, 0, NULL },
         { MBEDTLS_ECP_DP_NONE, 0, 0, NULL },
     };
     const mbedtls_ecp_curve_info *curve_list = mbedtls_ecp_curve_list( );
+#endif
 
     if( argc <= 1 )
     {
@@ -374,8 +378,10 @@ int main( int argc, char *argv[] )
                 todo.ecdsa = 1;
             else if( strcmp( argv[i], "ecdh" ) == 0 )
                 todo.ecdh = 1;
+#if defined(MBEDTLS_ECP_C)
             else if( set_ecp_curve( argv[i], single_curve ) )
                 curve_list = single_curve;
+#endif
             else
             {
                 mbedtls_printf( "Unrecognized option: %s\n", argv[i] );
