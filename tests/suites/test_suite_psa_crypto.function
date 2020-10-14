@@ -4220,15 +4220,17 @@ exit:
 
 /* BEGIN_CASE */
 void sign_verify( int key_type_arg, data_t *key_data,
-                  int alg_arg, data_t *input_data )
+                  int alg_arg, int deterministic, data_t *input_data )
 {
     psa_key_handle_t handle = 0;
     psa_key_type_t key_type = key_type_arg;
     psa_algorithm_t alg = alg_arg;
     size_t key_bits;
     unsigned char *signature = NULL;
+    unsigned char *signature2 = NULL;
     size_t signature_size;
     size_t signature_length = 0xdeadbeef;
+    size_t signature2_length = 0xdeadbeee;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     PSA_ASSERT( psa_crypto_init( ) );
@@ -4249,6 +4251,7 @@ void sign_verify( int key_type_arg, data_t *key_data,
     TEST_ASSERT( signature_size != 0 );
     TEST_ASSERT( signature_size <= PSA_SIGNATURE_MAX_SIZE );
     ASSERT_ALLOC( signature, signature_size );
+    ASSERT_ALLOC( signature2, signature_size );
 
     /* Perform the signature. */
     PSA_ASSERT( psa_sign_hash( handle, alg,
@@ -4263,6 +4266,29 @@ void sign_verify( int key_type_arg, data_t *key_data,
     PSA_ASSERT( psa_verify_hash( handle, alg,
                                  input_data->x, input_data->len,
                                  signature, signature_length ) );
+
+    /* Perform the signature again and check that it has the expected
+     * determinism. */
+    PSA_ASSERT( psa_sign_hash( handle, alg,
+                               input_data->x, input_data->len,
+                               signature2, signature_size,
+                               &signature2_length ) );
+    TEST_ASSERT( signature_length <= signature_size );
+    TEST_ASSERT( signature_length > 0 );
+    if( deterministic )
+    {
+        /* This is a deterministic signature algorithm, so performing
+         * the operation twice must give the same result. */
+        ASSERT_COMPARE( signature, signature_length,
+                        signature2, signature2_length );
+    }
+    else
+    {
+        /* This is a randomized signature algorithm, so performing
+         * the operation twice must give different result. */
+        TEST_ASSERT( signature_length != signature2_length ||
+                     memcmp( signature, signature2, signature_length ) );
+    }
 
     if( input_data->len != 0 )
     {
@@ -4280,6 +4306,7 @@ exit:
     psa_reset_key_attributes( &attributes );
     psa_destroy_key( handle );
     mbedtls_free( signature );
+    mbedtls_free( signature2 );
     PSA_DONE( );
 }
 /* END_CASE */
