@@ -3676,9 +3676,11 @@ static int ssl_handshake_init( mbedtls_ssl_context *ssl )
     {
         ssl->handshake = mbedtls_calloc( 1, sizeof(mbedtls_ssl_handshake_params) );
     }
+
 #if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
     /* If the buffers are too small - reallocate */
     {
+        uint32_t buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
         int modified = 0;
         size_t written_in = 0, iv_offset_in = 0, len_offset_in = 0;
         size_t written_out = 0, iv_offset_out = 0, len_offset_out = 0;
@@ -3687,40 +3689,40 @@ static int ssl_handshake_init( mbedtls_ssl_context *ssl )
             written_in = ssl->in_msg - ssl->in_buf;
             iv_offset_in = ssl->in_iv - ssl->in_buf;
             len_offset_in = ssl->in_len - ssl->in_buf;
-            if( ssl->in_buf_len < MBEDTLS_SSL_IN_BUFFER_LEN )
+            if( ssl->in_buf_len < buf_len )
             {
-                if( resize_buffer( &ssl->in_buf, MBEDTLS_SSL_IN_BUFFER_LEN,
-                                   &ssl->in_buf_len ) != 0 )
+                if( resize_buffer( &ssl->in_buf, buf_len, &ssl->in_buf_len ) != 0 )
                 {
                     MBEDTLS_SSL_DEBUG_MSG( 1, ( "input buffer resizing failed - out of memory" ) );
                 }
                 else
                 {
-                    MBEDTLS_SSL_DEBUG_MSG( 2, ( "Reallocating in_buf to %d", MBEDTLS_SSL_IN_BUFFER_LEN ) );
+                    MBEDTLS_SSL_DEBUG_MSG( 2, ( "Reallocating in_buf to %d", buf_len ) );
                     modified = 1;
                 }
             }
         }
 
+        buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN;
         if( ssl->out_buf != NULL )
         {
             written_out = ssl->out_msg - ssl->out_buf;
             iv_offset_out = ssl->out_iv - ssl->out_buf;
             len_offset_out = ssl->out_len - ssl->out_buf;
-            if( ssl->out_buf_len < MBEDTLS_SSL_OUT_BUFFER_LEN )
+            if( ssl->out_buf_len < buf_len )
             {
-                if( resize_buffer( &ssl->out_buf, MBEDTLS_SSL_OUT_BUFFER_LEN,
-                                   &ssl->out_buf_len ) != 0 )
+                if( resize_buffer( &ssl->out_buf, buf_len, &ssl->out_buf_len ) != 0 )
                 {
                     MBEDTLS_SSL_DEBUG_MSG( 1, ( "output buffer resizing failed - out of memory" ) );
                 }
                 else
                 {
-                    MBEDTLS_SSL_DEBUG_MSG( 2, ( "Reallocating out_buf to %d", MBEDTLS_SSL_OUT_BUFFER_LEN ) );
+                    MBEDTLS_SSL_DEBUG_MSG( 2, ( "Reallocating out_buf to %d", buf_len ) );
                     modified = 1;
                 }
             }
         }
+
         if( modified )
         {
             /* Update pointers here to avoid doing it twice. */
@@ -5963,8 +5965,8 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
      * several records in it, it is possible that the I/O buffers are not
      * empty at this stage */
     {
-        int modified = 0;
         uint32_t buf_len = mbedtls_ssl_get_input_buflen( ssl );
+        int modified = 0;
         size_t written_in = 0, iv_offset_in = 0, len_offset_in = 0;
         size_t written_out = 0, iv_offset_out = 0, len_offset_out = 0;
         if( ssl->in_buf != NULL )
@@ -5986,15 +5988,13 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
             }
         }
 
-
         buf_len = mbedtls_ssl_get_output_buflen( ssl );
-        if(ssl->out_buf != NULL )
+        if( ssl->out_buf != NULL )
         {
             written_out = ssl->out_msg - ssl->out_buf;
             iv_offset_out = ssl->out_iv - ssl->out_buf;
             len_offset_out = ssl->out_len - ssl->out_buf;
-            if( ssl->out_buf_len > mbedtls_ssl_get_output_buflen( ssl ) &&
-                ssl->out_left < buf_len )
+            if( ssl->out_buf_len > buf_len && ssl->out_left < buf_len )
             {
                 if( resize_buffer( &ssl->out_buf, buf_len, &ssl->out_buf_len ) != 0 )
                 {
@@ -6007,6 +6007,7 @@ void mbedtls_ssl_handshake_free( mbedtls_ssl_context *ssl )
                 }
             }
         }
+
         if( modified )
         {
             /* Update pointers here to avoid doing it twice. */
