@@ -694,8 +694,8 @@ typedef uint64_t psa_drv_slot_number_t;
  * this function should check that #MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(\p key_id)
  * is allowed to use the given key.
  *
- * \param[in,out] attributes    On entry, this is #PSA_KEY_ID_INIT or an
- *                              equivalent value, except that the key
+ * \param[in,out] attributes    On entry, this is #PSA_KEY_ATTRIBUTES_INIT or
+ *                              an equivalent value, except that the key
  *                              identifier field is set.
  *                              On successful return, this function must set
  *                              the attributes of the key: lifetime, type,
