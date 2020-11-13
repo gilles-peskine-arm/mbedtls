@@ -5,7 +5,7 @@ This document describes an interface for cryptoprocessor drivers in the PSA cryp
 
 This specification is work in progress and should be considered to be in a beta stage. There is ongoing work to implement this interface in Mbed TLS, which is the reference implementation of the PSA Cryptography API. At this stage, Arm does not expect major changes, but minor changes are expected based on experience from the first implementation and on external feedback.
 
-Time-stamp: "2020/11/13 13:15:37 GMT"
+Time-stamp: "2020/11/13 13:19:50 GMT"
 
 ## Introduction
 
@@ -405,8 +405,8 @@ This operation family requires the following type, entry points and parameters (
 * `"init_random"` (optional): if this function is present, [the core calls it once](#random-generator-initialization) after allocating a `"random_context_t"` object.
 * `"add_entropy"` (entry point): the core calls this function to [inject entropy](#entropy-injection).
 * `"get_random"` (entry point): the core calls this function whenever it needs to [obtain random data](#the-get_random-entry-point).
-* `"initial_entropy_size"` (integer): the minimum number of bytes of entropy that the core must supply before the driver can output random data.
-* `"reseed_entropy_size"` (integer): the minimum number of bytes of entropy that the core must supply when the driver runs out of entropy.
+* `"initial_entropy_size"` (integer): the minimum number of bytes of entropy that the core must supply before the driver can output random data. This can be `0` if the driver includes an entropy source of its own.
+* `"reseed_entropy_size"` (integer): the minimum number of bytes of entropy that the core must supply when the driver runs out of entropy. This can be `0` if the driver includes an entropy source of its own.
 
 Random generation is not parametrized by an algorithm. The choice of algorithm is up to the driver.
 
@@ -420,7 +420,7 @@ psa_status_t acme_init_random(acme_random_context_t *context);
 
 The core calls this entry point once after allocating a random generation context. Initially, the context object is all-bits-zero.
 
-If a driver does not have an `"init_random"` entry point, the context object passed to the first call to `"add_entropy"` will be all-bits-zero.
+If a driver does not have an `"init_random"` entry point, the context object passed to the first call to `"add_entropy"` or `"get_random"` will be all-bits-zero.
 
 #### Entropy injection
 
@@ -445,7 +445,7 @@ The core may call this function at any time. For example, to enforce prediction 
 * Before any call to the `"get_random"` entry point, to supply `"initial_entropy_size"` bytes of entropy.
 * After a call to the `"get_random"` entry point returns less than the required amount of random data, to supply `"reseed_entropy_size"` bytes of entropy.
 
-When the driver requires entropy, the core can supply it with one or more successive calls to the `"add_entropy"` entry point.
+When the driver requires entropy, the core can supply it with one or more successive calls to the `"add_entropy"` entry point. If the required entropy size is zero, the core does not need to call `"add_entropy"`.
 
 #### The `"get_random"` entry point
 
@@ -460,7 +460,7 @@ psa_status_t acme_get_random(acme_random_context_t *context,
 
 The semantics of the parameters is as follows:
 
-* `context`: a random generation context. The core must have called `"add_entropy"` at least once with a total of at least `"initial_entropy_size"` bytes of entropy before it calls `"get_random"`.
+* `context`: a random generation context. If the driver's `"initial_entropy_size"` property is nonzero, the core must have called `"add_entropy"` at least once with a total of at least `"initial_entropy_size"` bytes of entropy before it calls `"get_random"`. Alternatively, if the driver's `"initial_entropy_size"` property is zero and the core did not call `"add_entropy"`, the core must have called `"init_random"` if present, and otherwise the context is all-bits zero.
 * `output`: on success or partial success, the first `*output_length` bytes of this buffer contain cryptographic-quality random data.
 * `output_size`: the size of the `output` buffer in bytes.
 * `*output_length`: on exit, the number of bytes of random data that the driver has written to the `output` buffer. This is preferably `output_size`, but the driver is allowed to return less data if it runs out of entropy as described below. The core sets this value to 0 on entry.
