@@ -125,7 +125,7 @@ static void custom_entropy_init( mbedtls_entropy_context *ctx )
  * END_DEPENDENCIES
  */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED */
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 void create_nv_seed( )
 {
     static unsigned char seed[ENTROPY_MIN_NV_SEED_SIZE];
@@ -201,7 +201,7 @@ void validate_module_init_key_based( int count )
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 void custom_entropy_sources( int sources_arg, int expected_init_status_arg )
 {
     psa_status_t expected_init_status = expected_init_status_arg;
@@ -222,7 +222,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 void fake_entropy_source( int threshold,
                           int amount1,
                           int amount2,
@@ -262,7 +262,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED */
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_NV_SEED:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 void entropy_from_nv_seed( int seed_size_arg,
                            int expected_init_status_arg )
 {
