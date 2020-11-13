@@ -160,6 +160,36 @@ An entry point can be eliminated entirely if no algorithm requires it.
 
 Code that is specific to certain key types or to certain algorithms must be guarded by the applicable symbols: `PSA_WANT_xxx` for code that is independent of the application, and `MBEDTLS_PSA_BUILTIN_xxx` for code that calls an Mbed TLS software implementation.
 
+## Test strategy
+
+TODO
+
+## Migration
+
+We want to migrate compilation guards in PSA code from the current `MBEDTLS_xxx_C` symbols to the new `MBEDTLS_PSA_BUILTIN_xxx` and `PSA_WANT_xxx` symbols. We can do that piecewise for a small set of cryptographic mechanisms at a time.
+
+### Migrating support for a set of mechanisms
+
+TODO can be done in 3 phases:
+
+1. Add, use and test `PSA_WANT` when `MBEDTLS_USE_PSA_CRYPTO` is not used. Use reduced test strategy that avoids known issues.
+2. Change guards on `MBEDTLS_xxx_C` to `MBEDTLS_PSA_BUILTIN_xxx` in PSA code.
+3. Extend to `MBEDTLS_USE_PSA_CRYPTO`. Does not depend on `PSA_WANT_xxx`.
+
+### Dependencies between mechanisms
+
+TODO
+
+### Random generator in PSA
+
+TODO `psa_crypto.c` depends on `MBEDTLS_CTR_DRBG_C` which depends on `MBEDTLS_AES_C` so you can't remove software AES
+
+### Known pitfalls
+
+TODO
+
+* cipher not tested; DES-only doesn't work
+
 ## PSA standardization
 
 ### JSON configuration mechanism
