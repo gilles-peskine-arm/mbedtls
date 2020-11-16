@@ -5,7 +5,7 @@ This document describes an interface for cryptoprocessor drivers in the PSA cryp
 
 This specification is work in progress and should be considered to be in a beta stage. There is ongoing work to implement this interface in Mbed TLS, which is the reference implementation of the PSA Cryptography API. At this stage, Arm does not expect major changes, but minor changes are expected based on experience from the first implementation and on external feedback.
 
-Time-stamp: "2020/11/16 16:01:07 GMT"
+Time-stamp: "2020/11/16 20:51:25 GMT"
 
 ## Introduction
 
@@ -820,6 +820,16 @@ The driver is allowed to update the state at any time. Is this ok?
 An example use case for updating the persistent state at arbitrary times is to renew a key that is used to encrypt communications between the application processor and the secure element.
 
 `psa_crypto_driver_get_persistent_state` does not identify the calling driver, so the driver needs to remember which driver it's calling. This may require a thread-local variable in a multithreaded core. Is this ok?
+
+### Randomness
+
+#### Input to `"add_entropy"`
+
+Should the input to the [`"add_entropy"` entry point](#entropy-injection) be a full-entropy buffer (with data from all entropy sources already mixed), raw entropy direct from the entropy sources, or give the core a choice?
+
+* Raw data: drivers must implement entropy mixing. `"add_entropy"` needs an extra parameter to indicate the amount of entropy in the data. The core must not do any conditioning.
+* Choice: drivers must implement entropy mixing. `"add_entropy"` needs an extra parameter to indicate the amount of entropy in the data. The core may do conditioning if it wants, but doesn't have to.
+* Full entropy: drivers don't need to do entropy mixing.
 
 <!--
 Local Variables:
