@@ -5,7 +5,7 @@ This document describes an interface for cryptoprocessor drivers in the PSA cryp
 
 This specification is work in progress and should be considered to be in a beta stage. There is ongoing work to implement this interface in Mbed TLS, which is the reference implementation of the PSA Cryptography API. At this stage, Arm does not expect major changes, but minor changes are expected based on experience from the first implementation and on external feedback.
 
-Time-stamp: "2020/11/16 20:59:04 GMT"
+Time-stamp: "2020/11/18 14:44:07 GMT"
 
 ## Introduction
 
@@ -834,6 +834,12 @@ Should the input to the [`"add_entropy"` entry point](#entropy-injection) be a f
 #### Flags for `"get_entropy"`
 
 Are the [entropy collection flags](#entropy-collection-flags) well-chosen?
+
+#### Random generator instantiations
+
+May the core instantiate a random generation context more than once? In other words, can there be multiple objects of type `acme_random_context_t`?
+
+Functionally, one RNG is as good as any. If the core wants some parts of the system to use a deterministic generator for reproducibility, it can't use this interface anyway, since the RNG is not necessarily deterministic. However, for performance on multiprocessor systems, a multithreaded core could prefer to use one RNG instance per thread.
 
 <!--
 Local Variables:
