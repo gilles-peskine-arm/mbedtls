@@ -976,6 +976,10 @@ component_test_psa_external_rng () {
 
     msg "test: full plus PSA_CRYPTO_EXTERNAL_RNG minus built-in DRBG - main suites"
     make test
+
+    msg "build: full plus PSA_CRYPTO_EXTERNAL_RNG minus built-in DRBG - ssl-opt.sh"
+    # Just check that TLS code could use the PSA RNG
+    tests/ssl-opt.sh -f "Default"
 }
 
 component_test_new_ecdh_context () {
