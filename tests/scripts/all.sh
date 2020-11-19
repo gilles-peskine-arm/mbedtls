@@ -936,7 +936,6 @@ component_test_ecp_no_internal_rng () {
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
     scripts/config.py unset MBEDTLS_HMAC_DRBG_C
     scripts/config.py unset MBEDTLS_ECDSA_DETERMINISTIC # requires HMAC_DRBG
-    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
 
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
@@ -954,7 +953,6 @@ component_test_ecp_restartable_no_internal_rng () {
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
     scripts/config.py unset MBEDTLS_HMAC_DRBG_C
     scripts/config.py unset MBEDTLS_ECDSA_DETERMINISTIC # requires HMAC_DRBG
-    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
 
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
@@ -963,6 +961,21 @@ component_test_ecp_restartable_no_internal_rng () {
     make test
 
     # no SSL tests as they all depend on having a DRBG
+}
+
+component_test_psa_external_rng () {
+    msg "build: full plus PSA_CRYPTO_EXTERNAL_RNG minus built-in entropy/DRBG"
+    scripts/config.py full
+    scripts/config.py unset MBEDTLS_ENTROPY_C
+    scripts/config.py unset MBEDTLS_ENTROPY_NV_SEED
+    scripts/config.py unset MBEDTLS_PLATFORM_NV_SEED_ALT
+    scripts/config.py unset MBEDTLS_CTR_DRBG_C
+    scripts/config.py unset MBEDTLS_HMAC_DRBG_C
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+    make CFLAGS="$ASAN_CFLAGS -Os" LDFLAGS="$ASAN_CFLAGS"
+
+    msg "test: full plus PSA_CRYPTO_EXTERNAL_RNG minus built-in DRBG - main suites"
+    make test
 }
 
 component_test_new_ecdh_context () {
