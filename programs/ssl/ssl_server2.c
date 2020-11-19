@@ -1801,18 +1801,18 @@ int main( int argc, char *argv[] )
     size_t psk_len = 0;
     psk_entry *psk_info = NULL;
 #endif
-    const char *pers = "ssl_server2";
     unsigned char client_ip[16] = { 0 };
     size_t cliip_len;
 #if defined(MBEDTLS_SSL_COOKIE_C)
     mbedtls_ssl_cookie_ctx cookie_ctx;
 #endif
 
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_x509_crt_profile crt_profile_for_test = mbedtls_x509_crt_profile_default;
 #endif
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_ssl_context ssl;
     mbedtls_ssl_config conf;
 #if defined(MBEDTLS_TIMING_C)
@@ -2823,23 +2823,23 @@ int main( int argc, char *argv[] )
     fflush( stdout );
 
     mbedtls_entropy_init( &entropy );
-    if (opt.reproducible)
     {
-        srand( 1 );
-        if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, dummy_entropy,
-                                           &entropy, (const unsigned char *) pers,
-                                           strlen( pers ) ) ) != 0 )
+        const char *pers = "ssl_server2";
+        int (*f_entropy)(void *, unsigned char *, size_t);
+
+        if( opt.reproducible )
         {
-            mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n",
-                            (unsigned int) -ret );
-            goto exit;
+            srand( 1 );
+            f_entropy = dummy_entropy;
         }
-    }
-    else
-    {
-        if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func,
-                                           &entropy, (const unsigned char *) pers,
-                                           strlen( pers ) ) ) != 0 )
+        else
+            f_entropy = mbedtls_entropy_func;
+
+        ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
+                                     f_entropy, &entropy,
+                                     (const unsigned char *) pers,
+                                     strlen( pers ) );
+        if( ret != 0 )
         {
             mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n",
                             (unsigned int) -ret );
@@ -3225,7 +3225,7 @@ int main( int argc, char *argv[] )
         }
 #endif
 
-    if (opt.reproducible)
+    if( opt.reproducible )
     {
 #if defined(MBEDTLS_HAVE_TIME)
 #if defined(MBEDTLS_PLATFORM_TIME_ALT)
@@ -3911,7 +3911,7 @@ handshake:
             }
             mbedtls_printf( "\n" );
 
-            if ( dtls_srtp_negotiation_result.mki_len > 0 )
+            if( dtls_srtp_negotiation_result.mki_len > 0 )
             {
                 mbedtls_printf( "    DTLS-SRTP mki value: " );
                 for( j = 0; j < dtls_srtp_negotiation_result.mki_len; j++ )
@@ -4527,6 +4527,7 @@ exit:
 
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
+
     mbedtls_ctr_drbg_free( &ctr_drbg );
     mbedtls_entropy_free( &entropy );
 
