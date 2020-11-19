@@ -42,12 +42,22 @@
 
 #if !defined(MBEDTLS_ENTROPY_C) || \
     !defined(MBEDTLS_SSL_TLS_C) || !defined(MBEDTLS_SSL_CLI_C) || \
-    !defined(MBEDTLS_NET_C) || !defined(MBEDTLS_CTR_DRBG_C)
+    !defined(MBEDTLS_NET_C)
 int main( void )
 {
     mbedtls_printf("MBEDTLS_ENTROPY_C and/or "
            "MBEDTLS_SSL_TLS_C and/or MBEDTLS_SSL_CLI_C and/or "
-           "MBEDTLS_NET_C and/or MBEDTLS_CTR_DRBG_C and/or not defined.\n");
+           "MBEDTLS_NET_C not defined.\n");
+    mbedtls_exit( 0 );
+}
+#elif !( defined(MBEDTLS_CTR_DRBG_C) || \
+         ( defined(MBEDTLS_HMAC_DRBG_C) && ( defined(MBEDTLS_SHA256_C) || \
+                                             defined(MBEDTLS_SHA512_C) ) ) )
+int main( void )
+{
+    mbedtls_printf("MBEDTLS_CTR_DRBG_C and MBEDTLS_HMAC_DRBG_C not defined, "
+                   "or MBEDTLS_HMAC_DRBG_C defined without "
+                   "MBEDTLS_SHA256_C or MBEDTLS_SHA512_C.\n");
     mbedtls_exit( 0 );
 }
 #else
@@ -60,6 +70,7 @@ int main( void )
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
+#include "mbedtls/hmac_drbg.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/error.h"
@@ -1212,7 +1223,17 @@ int main( int argc, char *argv[] )
 #endif
 
     mbedtls_entropy_context entropy;
+#if defined(MBEDTLS_CTR_DRBG_C)
+    int (*const f_rng)(void *, unsigned char *, size_t) =
+        &mbedtls_ctr_drbg_random;
     mbedtls_ctr_drbg_context ctr_drbg;
+    void *const p_rng = &ctr_drbg;
+#else
+    int (*const f_rng)(void *, unsigned char *, size_t) =
+        &mbedtls_hmac_drbg_random;
+    mbedtls_hmac_drbg_context hmac_drbg;
+    void *const p_rng = &hmac_drbg;
+#endif
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_x509_crt_profile crt_profile_for_test = mbedtls_x509_crt_profile_default;
@@ -1271,7 +1292,11 @@ int main( int argc, char *argv[] )
     mbedtls_ssl_init( &ssl );
     mbedtls_ssl_config_init( &conf );
     memset( &saved_session, 0, sizeof( mbedtls_ssl_session ) );
+#if defined(MBEDTLS_CTR_DRBG_C)
     mbedtls_ctr_drbg_init( &ctr_drbg );
+#else
+    mbedtls_hmac_drbg_init( &hmac_drbg );
+#endif
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
     mbedtls_x509_crt_init( &cacert );
     mbedtls_x509_crt_init( &clicert );
@@ -2076,13 +2101,25 @@ int main( int argc, char *argv[] )
         else
             f_entropy = mbedtls_entropy_func;
 
+#if defined(MBEDTLS_CTR_DRBG_C)
         ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
                                      f_entropy, &entropy,
                                      (const unsigned char *) pers,
                                      strlen( pers ) );
+#else
+        ret = mbedtls_hmac_drbg_seed( &hmac_drbg,
+#if defined(MBEDTLS_SHA256_C)
+                                      mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 ),
+#else
+                                      mbedtls_md_info_from_type( MBEDTLS_MD_SHA512 ),
+#endif
+                                      f_entropy, &entropy,
+                                      (const unsigned char *) pers,
+                                      strlen( pers ) );
+#endif
         if( ret != 0 )
         {
-            mbedtls_printf( " failed\n  ! mbedtls_ctr_drbg_seed returned -0x%x\n",
+            mbedtls_printf( " failed\n  ! mbedtls_xxx_drbg_seed returned -0x%x\n",
                             (unsigned int) -ret );
             goto exit;
         }
@@ -2433,7 +2470,8 @@ int main( int argc, char *argv[] )
 #endif
 #endif
     }
-    mbedtls_ssl_conf_rng( &conf, mbedtls_ctr_drbg_random, &ctr_drbg );
+    mbedtls_ssl_conf_rng( &conf, f_rng, p_rng );
+
     mbedtls_ssl_conf_dbg( &conf, my_debug, stdout );
 
     mbedtls_ssl_conf_read_timeout( &conf, opt.read_timeout );
@@ -3554,7 +3592,11 @@ exit:
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
 
+#if defined(MBEDTLS_CTR_DRBG_C)
     mbedtls_ctr_drbg_free( &ctr_drbg );
+#else
+    mbedtls_hmac_drbg_free( &hmac_drbg );
+#endif
     mbedtls_entropy_free( &entropy );
 
     if( session_data != NULL )
