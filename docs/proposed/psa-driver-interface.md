@@ -5,7 +5,7 @@ This document describes an interface for cryptoprocessor drivers in the PSA cryp
 
 This specification is work in progress and should be considered to be in a beta stage. There is ongoing work to implement this interface in Mbed TLS, which is the reference implementation of the PSA Cryptography API. At this stage, Arm does not expect major changes, but minor changes are expected based on experience from the first implementation and on external feedback.
 
-Time-stamp: "2020/11/19 11:09:53 GMT"
+Time-stamp: "2020/11/23 11:29:20 GMT"
 
 ## Introduction
 
@@ -405,9 +405,9 @@ This operation family requires the following type, entry points and parameters (
 
 * Type `"random_context_t"`: the type of a random generation context.
 * `"init_random"` (entry point, optional): if this function is present, [the core calls it once](#random-generator-initialization) after allocating a `"random_context_t"` object.
-* `"add_entropy"` (entry point, optional): the core calls this function to [inject entropy](#entropy-injection). This entry point is optional if the driver is for a peripheral that includes an entropy source of its own, however [random generator drivers without entropy injection](#random-generator-drivers-without-entropy-injection) have limited portability since they can only be used on platforms with no other entropy source.
+* `"add_entropy"` (entry point, optional): the core calls this function to [inject entropy](#entropy-injection). This entry point is optional if the driver is for a peripheral that includes an entropy source of its own, however [random generator drivers without entropy injection](#random-generator-drivers-without-entropy-injection) have limited portability since they can only be used on platforms with no other entropy source. This entry point is mandatory if `"initial_entropy_size"` is nonzero.
 * `"get_random"` (entry point, mandatory): the core calls this function whenever it needs to [obtain random data](#the-get_random-entry-point).
-* `"initial_entropy_size"` (integer, optional): the minimum number of bytes of entropy that the core must supply before the driver can output random data. This can be `0` if the driver is for a peripheral that includes an entropy source of its own. If omitted, the value is `0`.
+* `"initial_entropy_size"` (integer, mandatory): the minimum number of bytes of entropy that the core must supply before the driver can output random data. This can be `0` if the driver is for a peripheral that includes an entropy source of its own.
 * `"reseed_entropy_size"` (integer, optional): the minimum number of bytes of entropy that the core must supply when the driver runs out of entropy. This value is also a hint for the size to supply if the core makes additional calls to `"add_entropy"`, for example to enforce prediction resistance. If omitted, the core chooses a value which is at least the expected security strength of the device.
 
 Random generation is not parametrized by an algorithm. The choice of algorithm is up to the driver.
