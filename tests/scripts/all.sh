@@ -915,10 +915,6 @@ component_test_no_ctr_drbg () {
     msg "build: Full minus CTR_DRBG"
     scripts/config.py full
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_C # requires CTR_DRBG
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_STORAGE_C # requires PSA Crypto
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_SE_C # requires PSA Crypto
-    scripts/config.py unset MBEDTLS_USE_PSA_CRYPTO # requires PSA Crypto
 
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
@@ -951,8 +947,7 @@ component_test_ecp_no_internal_rng () {
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
     scripts/config.py unset MBEDTLS_HMAC_DRBG_C
     scripts/config.py unset MBEDTLS_ECDSA_DETERMINISTIC # requires HMAC_DRBG
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_C # requires a DRBG
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_STORAGE_C # requires PSA Crypto
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
 
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
@@ -970,8 +965,7 @@ component_test_ecp_restartable_no_internal_rng () {
     scripts/config.py unset MBEDTLS_CTR_DRBG_C
     scripts/config.py unset MBEDTLS_HMAC_DRBG_C
     scripts/config.py unset MBEDTLS_ECDSA_DETERMINISTIC # requires HMAC_DRBG
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_C # requires CTR_DRBG
-    scripts/config.py unset MBEDTLS_PSA_CRYPTO_STORAGE_C # requires PSA Crypto
+    scripts/config.py set MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
 
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
