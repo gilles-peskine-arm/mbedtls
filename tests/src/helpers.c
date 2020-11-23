@@ -19,6 +19,10 @@
 #include <test/macros.h>
 #include <string.h>
 
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#include <test/psa_crypto_helpers.h>
+#endif
+
 #if defined(MBEDTLS_CHECK_PARAMS)
 #include <setjmp.h>
 #endif
@@ -53,6 +57,11 @@ int mbedtls_test_platform_setup( void )
 #if defined(MBEDTLS_PLATFORM_C)
     ret = mbedtls_platform_setup( &platform_ctx );
 #endif /* MBEDTLS_PLATFORM_C */
+
+#if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+    mbedtls_test_enable_insecure_external_rng( );
+#endif
+
     return( ret );
 }
 
