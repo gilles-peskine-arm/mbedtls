@@ -40,8 +40,32 @@
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif
 
-#if !defined(MBEDTLS_ENTROPY_C) || \
-    !defined(MBEDTLS_SSL_TLS_C) || !defined(MBEDTLS_SSL_SRV_C) || \
+/* Search for an available random generator */
+#undef RNG_MISSING
+#undef RNG_USE_CTR_DRBG
+#undef RNG_USE_HMAC_DRBG
+#undef RNG_USE_PSA
+
+#if defined(MBEDTLS_ENTROPY_C)
+#if defined(MBEDTLS_CTR_DRBG_C)
+#define RNG_USE_CTR_DRBG
+#include "mbedtls/ctr_drbg.h"
+#elif defined(MBEDTLS_HMAC_DRBG_C) && defined(MBEDTLS_SHA256_C)
+#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/md.h"
+#define RNG_USE_HMAC_DRBG MBEDTLS_MD_SHA256
+#elif defined(MBEDTLS_HMAC_DRBG_C) && defined(MBEDTLS_SHA512_C)
+#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/md.h"
+#define RNG_USE_HMAC_DRBG MBEDTLS_MD_SHA512
+#endif
+#elif defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+#define RNG_USE_PSA
+#else
+#define RNG_MISSING
+#endif
+
+#if !defined(MBEDTLS_SSL_TLS_C) || !defined(MBEDTLS_SSL_SRV_C) || \
     !defined(MBEDTLS_NET_C)
 int main( void )
 {
@@ -50,14 +74,14 @@ int main( void )
            "MBEDTLS_NET_C not defined.\n");
     mbedtls_exit( 0 );
 }
-#elif !( defined(MBEDTLS_CTR_DRBG_C) || \
-         ( defined(MBEDTLS_HMAC_DRBG_C) && ( defined(MBEDTLS_SHA256_C) || \
-                                             defined(MBEDTLS_SHA512_C) ) ) )
+#elif defined(RNG_MISSING)
 int main( void )
 {
     mbedtls_printf("MBEDTLS_CTR_DRBG_C and MBEDTLS_HMAC_DRBG_C not defined, "
                    "or MBEDTLS_HMAC_DRBG_C defined without "
-                   "MBEDTLS_SHA256_C or MBEDTLS_SHA512_C.\n");
+                   "MBEDTLS_SHA256_C or MBEDTLS_SHA512_C, "
+                   "or MBEDTLS_ENTROPY_C no defined; "
+                   "and MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG not defined either.\n");
     mbedtls_exit( 0 );
 }
 #else
@@ -65,8 +89,6 @@ int main( void )
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/hmac_drbg.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/x509.h"
 #include "mbedtls/error.h"
@@ -1819,16 +1841,18 @@ int main( int argc, char *argv[] )
 #endif
 
     mbedtls_entropy_context entropy;
-#if defined(MBEDTLS_CTR_DRBG_C)
+#if defined(RNG_USE_CTR_DRBG)
     int (*const f_rng)(void *, unsigned char *, size_t) =
         &mbedtls_ctr_drbg_random;
     mbedtls_ctr_drbg_context ctr_drbg;
     void *const p_rng = &ctr_drbg;
-#else
+#elif defined(RNG_USE_HMAC_DRBG)
     int (*const f_rng)(void *, unsigned char *, size_t) =
         &mbedtls_hmac_drbg_random;
     mbedtls_hmac_drbg_context hmac_drbg;
     void *const p_rng = &hmac_drbg;
+#else
+#error "Missing definitions of f_rng and p_rng"
 #endif
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
@@ -1927,9 +1951,9 @@ int main( int argc, char *argv[] )
     mbedtls_net_init( &listen_fd );
     mbedtls_ssl_init( &ssl );
     mbedtls_ssl_config_init( &conf );
-#if defined(MBEDTLS_CTR_DRBG_C)
+#if defined(RNG_USE_CTR_DRBG)
     mbedtls_ctr_drbg_init( &ctr_drbg );
-#else
+#elif defined(RNG_USE_HMAC_DRBG)
     mbedtls_hmac_drbg_init( &hmac_drbg );
 #endif
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
@@ -2860,18 +2884,14 @@ int main( int argc, char *argv[] )
         else
             f_entropy = mbedtls_entropy_func;
 
-#if defined(MBEDTLS_CTR_DRBG_C)
+#if defined(RNG_USE_CTR_DRBG)
         ret = mbedtls_ctr_drbg_seed( &ctr_drbg,
                                      f_entropy, &entropy,
                                      (const unsigned char *) pers,
                                      strlen( pers ) );
-#else
+#elif defined(RNG_USE_HMAC_DRBG)
         ret = mbedtls_hmac_drbg_seed( &hmac_drbg,
-#if defined(MBEDTLS_SHA256_C)
-                                      mbedtls_md_info_from_type( MBEDTLS_MD_SHA256 ),
-#else
-                                      mbedtls_md_info_from_type( MBEDTLS_MD_SHA512 ),
-#endif
+                                      mbedtls_md_info_from_type( RNG_USE_HMAC_DRBG ),
                                       f_entropy, &entropy,
                                       (const unsigned char *) pers,
                                       strlen( pers ) );
@@ -4565,9 +4585,10 @@ exit:
     mbedtls_ssl_free( &ssl );
     mbedtls_ssl_config_free( &conf );
 
-#if defined(MBEDTLS_CTR_DRBG_C)
+#if defined(RNG_USE_CTR_DRBG)
     mbedtls_ctr_drbg_free( &ctr_drbg );
-#else
+#endif
+#if defined(RNG_USE_HMAC_DRBG)
     mbedtls_hmac_drbg_free( &hmac_drbg );
 #endif
     mbedtls_entropy_free( &entropy );
@@ -4616,6 +4637,4 @@ exit:
     else
         mbedtls_exit( query_config_ret );
 }
-#endif /* MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_SSL_TLS_C &&
-          MBEDTLS_SSL_SRV_C && MBEDTLS_NET_C && MBEDTLS_RSA_C &&
-          MBEDTLS_CTR_DRBG_C */
+#endif /* working main */
