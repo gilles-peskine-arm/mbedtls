@@ -5,7 +5,7 @@ This document describes an interface for cryptoprocessor drivers in the PSA cryp
 
 This specification is work in progress and should be considered to be in a beta stage. There is ongoing work to implement this interface in Mbed TLS, which is the reference implementation of the PSA Cryptography API. At this stage, Arm does not expect major changes, but minor changes are expected based on experience from the first implementation and on external feedback.
 
-Time-stamp: "2020/11/23 11:29:20 GMT"
+Time-stamp: "2020/11/23 11:52:33 GMT"
 
 ## Introduction
 
@@ -755,6 +755,19 @@ psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION
 ```
 
 ## Open questions
+
+### Value representation
+
+#### Integers
+
+It would be better if there was a uniform requirement on integer values. Do they have to be JSON integers? C preprocessor integers (which could be e.g. a macro defined in some header file)? C compile-time constants (allowing `sizeof`)?
+
+This choice is partly driven by the use of the values, so they might not be uniform. Note that if the value can be zero and it's plausible that the core would want to statically allocate an array of the given size, the core needs to know whether the value is 0 so that it could use code like
+```
+#if ACME_FOO_SIZE != 0
+    uint8_t foo[ACME_FOO_SIZE];
+#endif
+```
 
 ### Driver declarations
 
