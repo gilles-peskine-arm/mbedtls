@@ -95,6 +95,44 @@ src/drivers/%.o : src/drivers/%.c
 
 C_FILES := $(addsuffix .c,$(APPS))
 
+ifdef LOOPBACK_DRIVER
+define libcopy_rewrite :=
+	s!^(\s*#\s*include\s*[\"<])(mbedtls|psa)/!$${1}libcopy1/$${2}/!; \
+	next if /^\s*#\s*include/; \
+	s/\b(?=MBEDTLS_|PSA_)/LIBCOPY1_/g; \
+	s/\b(?=mbedtls_|psa_)/libcopy1_/g;
+endef
+
+libcopy1_headers = $(subst ../include,include/libcopy1,$(wildcard ../include/*/*.h))
+$(filter-out %/mbedtls/config.h,$(libcopy1_headers)): \
+		include/libcopy1/%.h: ../include/%.h
+	mkdir -p $(@D)
+	perl -pe '$(libcopy_rewrite)' <$< >$@
+include/libcopy1/mbedtls/config.h: include/libcopy1/mbedtls/config.original-names.h
+	mkdir -p $(@D)
+	perl -pe '$(libcopy_rewrite)' <$< >$@
+include/libcopy1/mbedtls/config.original-names.h:
+	mkdir -p $(@D)
+	../scripts/config.py -f ../include/mbedtls/config.h -w $@ crypto_full
+
+libcopy1_sources = \
+	$(subst ..,src/drivers/libcopy1, \
+		$(wildcard ../library/*.[ch]))
+$(libcopy1_sources): src/drivers/libcopy1/library/%: ../library/%
+	mkdir -p $(@D)
+	perl -pe '$(libcopy_rewrite)' <$< >$@
+
+libcopy1_modules = $(filter %.c,$(libcopy1_sources))
+libcopy1_objects = $(libcopy1_modules:.c=.o)
+$(libcopy1_objects): $(filter %.h,$(libcopy1_sources)) $(libcopy1_headers)
+$(libcopy1_objects): %.o: %.c
+	$(CC) -g3 -D_FILE_OFFSET_BITS=64 -I include $(CFLAGS) -o $@ -c $<
+
+LOCAL_CFLAGS += -DPSA_CRYPTO_DRIVER_TEST_LOOPBACK
+src/drivers/loopback.o: $(libcopy1_headers)
+MBEDTLS_TEST_OBJS += $(libcopy1_objects)
+endif #ifdef LOOPBACK_DRIVER
+
 # Wildcard target for test code generation:
 # A .c file is generated for each .data file in the suites/ directory. Each .c
 # file depends on a .data and .function file from suites/ directory. Following
@@ -135,6 +173,7 @@ clean:
 ifndef WINDOWS
 	rm -rf $(BINARIES) *.c *.datax TESTS
 	rm -f src/*.o src/drivers/*.o src/libmbed*
+	rm -rf include/libcopy1 src/drivers/libcopy1
 else
 	if exist *.c del /Q /F *.c
 	if exist *.exe del /Q /F *.exe
