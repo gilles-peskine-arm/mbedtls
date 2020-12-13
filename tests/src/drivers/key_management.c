@@ -137,6 +137,7 @@ psa_status_t test_opaque_generate_key(
     return( PSA_ERROR_NOT_SUPPORTED );
 }
 
+#if !defined(PSA_CRYPTO_DRIVER_TEST_LOOPBACK)
 psa_status_t test_transparent_validate_key(
     const psa_key_attributes_t *attributes,
     const uint8_t *data,
@@ -248,6 +249,7 @@ ecp_exit:
 #endif /* MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR ||
         * MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY */
 }
+#endif
 
 psa_status_t test_transparent_export_public_key(
     const psa_key_attributes_t *attributes,

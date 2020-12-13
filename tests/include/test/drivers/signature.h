@@ -26,7 +26,7 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(PSA_CRYPTO_DRIVER_TEST)
+#if defined(PSA_CRYPTO_DRIVER_TEST) || defined(PSA_CRYPTO_DRIVER_TEST_LOOPBACK)
 #include <psa/crypto_driver_common.h>
 
 typedef struct {
@@ -78,5 +78,5 @@ psa_status_t test_opaque_signature_verify_hash(
     const uint8_t *hash, size_t hash_length,
     const uint8_t *signature, size_t signature_length );
 
-#endif /* PSA_CRYPTO_DRIVER_TEST */
+#endif /* defined(PSA_CRYPTO_DRIVER_TEST) || defined(PSA_CRYPTO_DRIVER_TEST_LOOPBACK) */
 #endif /* PSA_CRYPTO_TEST_DRIVERS_SIGNATURE_H */
