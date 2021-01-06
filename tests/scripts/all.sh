@@ -2512,6 +2512,15 @@ component_check_python_files () {
     record_status tests/scripts/check-python-files.sh
 }
 
+support_check_python_files () {
+    # Currently we consider pylint mandatory on the CI, but it doesn't
+    # have to pass on older systems, so only consider the check to be
+    # available if there's a recent enough pylint. The check script also
+    # runs mypy if available, but we don't have it yet on our CI so
+    # it'll just be skipped if not available.
+    tests/scripts/check-python-files.sh --can-pylint
+}
+
 component_check_generate_test_code () {
     msg "uint test: generate_test_code.py"
     # unittest writes out mundane stuff like number or tests run on stderr.
