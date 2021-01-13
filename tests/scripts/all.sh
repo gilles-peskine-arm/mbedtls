@@ -919,10 +919,11 @@ component_test_no_ctr_drbg () {
     CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
     make
 
-    msg "test: no CTR_DRBG"
+    msg "test: no CTR_DRBG - unit tests"
     make test
 
-    # no ssl-opt.sh/compat.sh as they all depend on CTR_DRBG so far
+    msg "test: no CTR_DRBG - ssl-opt.sh (small selection)"
+    if_build_succeeded tests/ssl-opt.sh -f Default
 }
 
 component_test_no_hmac_drbg () {
@@ -954,7 +955,7 @@ component_test_psa_external_rng_no_drbg () {
     msg "test: PSA_CRYPTO_EXTERNAL_RNG minus *_DRBG"
     make test
 
-    # No ssl-opt.sh/compat.sh because they require CTR_DRBG.
+    # no SSL tests as they all depend on having a DRBG
 }
 
 component_test_psa_external_rng_use_psa_crypto () {
@@ -968,7 +969,8 @@ component_test_psa_external_rng_use_psa_crypto () {
     msg "test: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG"
     make test
 
-    # No ssl-opt.sh/compat.sh because they require CTR_DRBG.
+    msg "test: full + PSA_CRYPTO_EXTERNAL_RNG + USE_PSA_CRYPTO minus CTR_DRBG"
+    if_build_succeeded tests/ssl-opt.sh -f 'Default\|opaque'
 }
 
 component_test_ecp_no_internal_rng () {
