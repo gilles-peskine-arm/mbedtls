@@ -74,7 +74,7 @@ psa_status_t test_transparent_generate_key(
         mbedtls_ecp_group_id grp_id =
             mbedtls_ecc_group_of_psa(
                 curve,
-                PSA_BITS_TO_BYTES( psa_get_key_bits( attributes ) ) );
+                psa_get_key_bits( attributes ), 0 );
         const mbedtls_ecp_curve_info *curve_info =
             mbedtls_ecp_curve_info_from_grp_id( grp_id );
         mbedtls_ecp_keypair ecp;
@@ -184,12 +184,15 @@ psa_status_t test_transparent_validate_key(
                  * format, meaning their curve_size is equal to the amount of input. */
             }
 
-            grp_id = mbedtls_ecc_group_of_psa( curve, curve_size );
+            grp_id = mbedtls_ecc_group_of_psa(
+                curve,
+                PSA_BYTES_TO_BITS( curve_size ), 1 );
         }
         else
         {
-            grp_id = mbedtls_ecc_group_of_psa( curve,
-                PSA_BITS_TO_BYTES( psa_get_key_bits( attributes ) ) );
+            grp_id = mbedtls_ecc_group_of_psa(
+                curve,
+                psa_get_key_bits( attributes ), 0 );
         }
 
         const mbedtls_ecp_curve_info *curve_info =
@@ -292,8 +295,9 @@ psa_status_t test_transparent_export_public_key(
         if( attributes->domain_parameters_size != 0 )
             return( PSA_ERROR_NOT_SUPPORTED );
 
-        grp_id = mbedtls_ecc_group_of_psa( PSA_KEY_TYPE_ECC_GET_FAMILY( keytype ),
-                                           PSA_BITS_TO_BYTES( psa_get_key_bits( attributes ) ) );
+        grp_id = mbedtls_ecc_group_of_psa(
+            PSA_KEY_TYPE_ECC_GET_FAMILY( keytype ),
+            psa_get_key_bits( attributes ), 0 );
         if( grp_id == MBEDTLS_ECP_DP_NONE )
             return( PSA_ERROR_NOT_SUPPORTED );
 

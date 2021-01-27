@@ -411,71 +411,71 @@ static inline int psa_key_slot_is_external( const psa_key_slot_t *slot )
     defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_KEY_PAIR) || \
     defined(MBEDTLS_PSA_ACCEL_KEY_TYPE_ECC_PUBLIC_KEY)
 mbedtls_ecp_group_id mbedtls_ecc_group_of_psa( psa_ecc_family_t curve,
-                                               size_t byte_length )
+                                               size_t bits,
+                                               int bits_is_sloppy )
 {
     switch( curve )
     {
         case PSA_ECC_FAMILY_SECP_R1:
-            switch( byte_length )
+            switch( bits )
             {
-                case PSA_BITS_TO_BYTES( 192 ):
+                case 192:
                     return( MBEDTLS_ECP_DP_SECP192R1 );
-                case PSA_BITS_TO_BYTES( 224 ):
+                case 224:
                     return( MBEDTLS_ECP_DP_SECP224R1 );
-                case PSA_BITS_TO_BYTES( 256 ):
+                case 256:
                     return( MBEDTLS_ECP_DP_SECP256R1 );
-                case PSA_BITS_TO_BYTES( 384 ):
+                case 384:
                     return( MBEDTLS_ECP_DP_SECP384R1 );
-                case PSA_BITS_TO_BYTES( 521 ):
+                case 521:
                     return( MBEDTLS_ECP_DP_SECP521R1 );
-                default:
-                    return( MBEDTLS_ECP_DP_NONE );
+                case 528:
+                    if( bits_is_sloppy )
+                        return( MBEDTLS_ECP_DP_SECP521R1 );
+                    break;
             }
             break;
 
         case PSA_ECC_FAMILY_BRAINPOOL_P_R1:
-            switch( byte_length )
+            switch( bits )
             {
-                case PSA_BITS_TO_BYTES( 256 ):
+                case 256:
                     return( MBEDTLS_ECP_DP_BP256R1 );
-                case PSA_BITS_TO_BYTES( 384 ):
+                case 384:
                     return( MBEDTLS_ECP_DP_BP384R1 );
-                case PSA_BITS_TO_BYTES( 512 ):
+                case 512:
                     return( MBEDTLS_ECP_DP_BP512R1 );
-                default:
-                    return( MBEDTLS_ECP_DP_NONE );
             }
             break;
 
         case PSA_ECC_FAMILY_MONTGOMERY:
-            switch( byte_length )
+            switch( bits )
             {
-                case PSA_BITS_TO_BYTES( 255 ):
+                case 255:
                     return( MBEDTLS_ECP_DP_CURVE25519 );
-                case PSA_BITS_TO_BYTES( 448 ):
+                case 256:
+                    if( bits_is_sloppy )
+                        return( MBEDTLS_ECP_DP_CURVE25519 );
+                    break;
+                case 448:
                     return( MBEDTLS_ECP_DP_CURVE448 );
-                default:
-                    return( MBEDTLS_ECP_DP_NONE );
             }
             break;
 
         case PSA_ECC_FAMILY_SECP_K1:
-            switch( byte_length )
+            switch( bits )
             {
-                case PSA_BITS_TO_BYTES( 192 ):
+                case 192:
                     return( MBEDTLS_ECP_DP_SECP192K1 );
-                case PSA_BITS_TO_BYTES( 224 ):
+                case 224:
                     return( MBEDTLS_ECP_DP_SECP224K1 );
-                case PSA_BITS_TO_BYTES( 256 ):
+                case 256:
                     return( MBEDTLS_ECP_DP_SECP256K1 );
-                default:
-                    return( MBEDTLS_ECP_DP_NONE );
             }
             break;
-
-        default:
-            return( MBEDTLS_ECP_DP_NONE );
     }
+
+    return( MBEDTLS_ECP_DP_NONE );
 }
 #endif /* defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR) ||
         * defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY) ||
@@ -774,6 +774,7 @@ exit:
  *                          when done.
  */
 static psa_status_t psa_load_ecp_representation( psa_key_type_t type,
+                                                 size_t curve_bits,
                                                  const uint8_t *data,
                                                  size_t data_length,
                                                  mbedtls_ecp_keypair **p_ecp )
@@ -781,7 +782,8 @@ static psa_status_t psa_load_ecp_representation( psa_key_type_t type,
     mbedtls_ecp_group_id grp_id = MBEDTLS_ECP_DP_NONE;
     psa_status_t status;
     mbedtls_ecp_keypair *ecp = NULL;
-    size_t curve_size = data_length;
+    size_t curve_bytes = data_length;
+    int explicit_bits = ( curve_bits != 0 );
 
     if( PSA_KEY_TYPE_IS_PUBLIC_KEY( type ) &&
         PSA_KEY_TYPE_ECC_GET_FAMILY( type ) != PSA_ECC_FAMILY_MONTGOMERY )
@@ -794,13 +796,27 @@ static psa_status_t psa_load_ecp_representation( psa_key_type_t type,
          */
         if( ( data_length & 1 ) == 0 )
             return( PSA_ERROR_INVALID_ARGUMENT );
-        curve_size = data_length / 2;
+        curve_bytes = data_length / 2;
 
         /* Montgomery public keys are represented in compressed format, meaning
          * their curve_size is equal to the amount of input. */
 
         /* Private keys are represented in uncompressed private random integer
          * format, meaning their curve_size is equal to the amount of input. */
+    }
+
+    if( explicit_bits )
+    {
+        /* With an explicit bit-size, the data must have the matching length. */
+        if( curve_bytes != PSA_BITS_TO_BYTES( curve_bits ) )
+            return( PSA_ERROR_INVALID_ARGUMENT );
+    }
+    else
+    {
+        /* We need to infer the bit-size from the data. Since the only
+         * information we have is the length in bytes, the value of curve_bits
+         * at this stage is rounded up to the nearest multiple of 8. */
+        curve_bits = PSA_BYTES_TO_BITS( curve_bytes );
     }
 
     /* Allocate and initialize a key representation. */
@@ -811,10 +827,16 @@ static psa_status_t psa_load_ecp_representation( psa_key_type_t type,
 
     /* Load the group. */
     grp_id = mbedtls_ecc_group_of_psa( PSA_KEY_TYPE_ECC_GET_FAMILY( type ),
-                                       curve_size );
+                                       curve_bits, !explicit_bits );
     if( grp_id == MBEDTLS_ECP_DP_NONE )
     {
-        status = PSA_ERROR_INVALID_ARGUMENT;
+        /* We can't distinguish between a nonsensical family/size combination
+         * (which would warrant PSA_ERROR_INVALID_ARGUMENT) and a
+         * well-regarded curve that Mbed TLS just doesn't know about (which
+         * would warrant PSA_ERROR_NOT_SUPPORTED). For uniformity with how
+         * curves that Mbed TLS knows about but for which support is disabled
+         * at build time, return NOT_SUPPORTED. */
+        status = PSA_ERROR_NOT_SUPPORTED;
         goto exit;
     }
 
@@ -943,10 +965,8 @@ static psa_status_t psa_import_ecp_key( psa_key_slot_t *slot,
     mbedtls_ecp_keypair *ecp = NULL;
 
     /* Parse input */
-    status = psa_load_ecp_representation( slot->attr.type,
-                                          data,
-                                          data_length,
-                                          &ecp );
+    status = psa_load_ecp_representation( slot->attr.type, slot->attr.bits,
+                                          data, data_length, &ecp );
     if( status != PSA_SUCCESS )
         goto exit;
 
@@ -1796,7 +1816,7 @@ static psa_status_t psa_internal_export_key( const psa_key_slot_t *slot,
     defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_PUBLIC_KEY)
             mbedtls_ecp_keypair *ecp = NULL;
             status = psa_load_ecp_representation(
-                                    slot->attr.type,
+                                    slot->attr.type, slot->attr.bits,
                                     slot->data.key.data,
                                     slot->data.key.bytes,
                                     &ecp );
@@ -4001,6 +4021,7 @@ psa_status_t psa_sign_hash( mbedtls_svc_key_id_t key,
         {
             mbedtls_ecp_keypair *ecp = NULL;
             status = psa_load_ecp_representation( slot->attr.type,
+                                                  slot->attr.bits,
                                                   slot->data.key.data,
                                                   slot->data.key.bytes,
                                                   &ecp );
@@ -4104,6 +4125,7 @@ psa_status_t psa_verify_hash( mbedtls_svc_key_id_t key,
         {
             mbedtls_ecp_keypair *ecp = NULL;
             status = psa_load_ecp_representation( slot->attr.type,
+                                                  slot->attr.bits,
                                                   slot->data.key.data,
                                                   slot->data.key.bytes,
                                                   &ecp );
@@ -6159,6 +6181,7 @@ static psa_status_t psa_key_agreement_ecdh( const uint8_t *peer_key,
     mbedtls_ecdh_init( &ecdh );
 
     status = psa_load_ecp_representation( PSA_KEY_TYPE_ECC_PUBLIC_KEY(curve),
+                                          bits,
                                           peer_key,
                                           peer_key_length,
                                           &their_key );
@@ -6215,6 +6238,7 @@ static psa_status_t psa_key_agreement_raw_internal( psa_algorithm_t alg,
             mbedtls_ecp_keypair *ecp = NULL;
             psa_status_t status = psa_load_ecp_representation(
                                     private_key->attr.type,
+                                    private_key->attr.bits,
                                     private_key->data.key.data,
                                     private_key->data.key.bytes,
                                     &ecp );
@@ -6627,7 +6651,7 @@ static psa_status_t psa_generate_key_internal(
     {
         psa_ecc_family_t curve = PSA_KEY_TYPE_ECC_GET_FAMILY( type );
         mbedtls_ecp_group_id grp_id =
-            mbedtls_ecc_group_of_psa( curve, PSA_BITS_TO_BYTES( bits ) );
+            mbedtls_ecc_group_of_psa( curve, bits, 0 );
         const mbedtls_ecp_curve_info *curve_info =
             mbedtls_ecp_curve_info_from_grp_id( grp_id );
         mbedtls_ecp_keypair ecp;
