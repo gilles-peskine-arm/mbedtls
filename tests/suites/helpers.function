@@ -346,23 +346,7 @@ typedef struct data_tag
 /*----------------------------------------------------------------------------*/
 /* Global variables */
 
-typedef enum
-{
-    TEST_RESULT_SUCCESS = 0,
-    TEST_RESULT_FAILED,
-    TEST_RESULT_SKIPPED
-} test_result_t;
-
-typedef struct
-{
-    test_result_t result;
-    const char *test;
-    const char *filename;
-    int line_no;
-    unsigned long step;
-}
-test_info_t;
-static test_info_t test_info;
+test_info_t test_info;
 
 #if defined(MBEDTLS_CHECK_PARAMS)
 jmp_buf jmp_tmp;

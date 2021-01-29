@@ -31,6 +31,11 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+#if defined(MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_PTHREAD) && \
+    defined(MBEDTLS_TEST_HOOKS)
+#define MBEDTLS_TEST_MUTEX_USAGE
+#endif
+
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -51,6 +56,29 @@
 
 int mbedtls_test_platform_setup( void );
 void mbedtls_test_platform_teardown( void );
+
+typedef enum
+{
+    TEST_RESULT_SUCCESS = 0,
+    TEST_RESULT_FAILED,
+    TEST_RESULT_SKIPPED
+} test_result_t;
+
+typedef struct test_info
+{
+    test_result_t result;
+    const char *test;
+    const char *filename;
+    int line_no;
+    unsigned long step;
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
+    const char *mutex_usage_error;
+#endif
+}
+test_info_t;
+extern test_info_t test_info;
+
+void test_fail( const char *test, int line_no, const char* filename );
 
 /**
  * \brief          This function decodes the hexadecimal representation of
@@ -194,13 +222,14 @@ void mbedtls_test_param_failed_reset_state( void );
 #include "test/fake_external_rng_for_test.h"
 #endif
 
-#if defined(MBEDTLS_THREADING_C) && defined(MBEDTLS_THREADING_PTHREAD) && \
-    defined(MBEDTLS_TEST_HOOKS)
-#define MBEDTLS_TEST_MUTEX_USAGE
-
+#if defined(MBEDTLS_TEST_MUTEX_USAGE)
 /** Permanently activate the mutex usage verification framework. See
  * threading_helpers.c for information. */
 void mbedtls_test_mutex_usage_init( void );
+
+/** Call this function after executing a test case to check for mutex usage
+ * errors. */
+void mbedtls_test_mutex_usage_check( void );
 #endif /* MBEDTLS_TEST_MUTEX_USAGE */
 
 #endif /* TEST_HELPERS_H */
