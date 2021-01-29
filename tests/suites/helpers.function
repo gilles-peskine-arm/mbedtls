@@ -651,6 +651,13 @@ static int mbedtls_test_wrap_mutex_unlock( mbedtls_threading_mutex_t *mutex )
     return( mutex_functions.unlock( mutex ) );
 }
 
+#if defined(MBEDTLS_FS_IO)
+static unsigned readdir_mutex_count;
+#endif
+#if defined(MBEDTLS_HAVE_TIME_DATE)
+static unsigned gmtime_mutex_count;
+#endif
+
 static void mbedtls_test_mutex_usage_init( void )
 {
     mutex_functions.init = mbedtls_mutex_init;
@@ -661,6 +668,15 @@ static void mbedtls_test_mutex_usage_init( void )
     mbedtls_mutex_free = &mbedtls_test_wrap_mutex_free;
     mbedtls_mutex_lock = &mbedtls_test_wrap_mutex_lock;
     mbedtls_mutex_unlock = &mbedtls_test_wrap_mutex_unlock;
+
+    /* Without MBEDTLS_THREADING_ALT, these global mutexes are not
+     * initialized explicitly. They are never freed explicitly. */
+#if defined(MBEDTLS_FS_IO)
+    mbedtls_threading_readdir_mutex.count = &readdir_mutex_count;
+#endif
+#if defined(MBEDTLS_HAVE_TIME_DATE)
+    mbedtls_threading_gmtime_mutex.count = &gmtime_mutex_count;
+#endif
 }
 
 static void mbedtls_test_mutex_usage_check( void )
