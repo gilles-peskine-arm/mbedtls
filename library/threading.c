@@ -102,7 +102,11 @@ int (*mbedtls_mutex_unlock)( mbedtls_threading_mutex_t * ) = threading_mutex_unl
 /*
  * With phtreads we can statically initialize mutexes
  */
+#if defined(MBEDTLS_TEST_HOOKS)
+#define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1, NULL }
+#else
 #define MUTEX_INIT  = { PTHREAD_MUTEX_INITIALIZER, 1 }
+#endif
 
 #endif /* MBEDTLS_THREADING_PTHREAD */
 

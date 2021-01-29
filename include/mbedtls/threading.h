@@ -71,6 +71,9 @@ typedef struct
 {
     pthread_mutex_t mutex;
     char is_valid;
+#if defined(MBEDTLS_TEST_HOOKS)
+    unsigned *count;
+#endif
 } mbedtls_threading_mutex_t;
 #endif
 
