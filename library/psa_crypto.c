@@ -135,9 +135,11 @@ mbedtls_psa_drbg_context_t *const mbedtls_psa_random_state =
 
 psa_status_t mbedtls_to_psa_error( int ret )
 {
-    /* If there's both a high-level code and low-level code, dispatch on
-     * the high-level code. */
-    switch( ret < -0x7f ? - ( -ret & 0x7f80 ) : ret )
+    /* Mbed TLS error codes can combine a high-level error code and a
+     * low-level error code. The low-level error usually reflects the
+     * root cause better, so dispatch on that preferably. */
+    int low_level_ret = - ( -ret & 0x007f );
+    switch( low_level_ret != 0 ? low_level_ret : ret )
     {
         case 0:
             return( PSA_SUCCESS );
@@ -344,7 +346,7 @@ psa_status_t mbedtls_to_psa_error( int ret )
         case MBEDTLS_ERR_RSA_OUTPUT_TOO_LARGE:
             return( PSA_ERROR_BUFFER_TOO_SMALL );
         case MBEDTLS_ERR_RSA_RNG_FAILED:
-            return( PSA_ERROR_INSUFFICIENT_MEMORY );
+            return( PSA_ERROR_INSUFFICIENT_ENTROPY );
         case MBEDTLS_ERR_RSA_UNSUPPORTED_OPERATION:
             return( PSA_ERROR_NOT_SUPPORTED );
         case MBEDTLS_ERR_RSA_HW_ACCEL_FAILED:
@@ -372,8 +374,11 @@ psa_status_t mbedtls_to_psa_error( int ret )
             return( PSA_ERROR_INVALID_SIGNATURE );
         case MBEDTLS_ERR_ECP_ALLOC_FAILED:
             return( PSA_ERROR_INSUFFICIENT_MEMORY );
+        case MBEDTLS_ERR_ECP_RANDOM_FAILED:
+            return( PSA_ERROR_INSUFFICIENT_ENTROPY );
         case MBEDTLS_ERR_ECP_HW_ACCEL_FAILED:
             return( PSA_ERROR_HARDWARE_FAILURE );
+
         case MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED:
             return( PSA_ERROR_CORRUPTION_DETECTED );
 
@@ -2353,6 +2358,15 @@ psa_status_t psa_import_key( const psa_key_attributes_t *attributes,
     }
     else
 #endif /* MBEDTLS_PSA_CRYPTO_SE_C */
+    if( psa_key_lifetime_is_external( psa_get_key_lifetime( attributes ) ) )
+    {
+        /* Importing a key with external lifetime through the driver wrapper
+         * interface is not yet supported. Return as if this was an invalid
+         * lifetime. */
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+    else
     {
         status = psa_import_key_into_slot( slot, data, data_length );
         if( status != PSA_SUCCESS )
@@ -2759,7 +2773,7 @@ psa_status_t psa_hash_finish( psa_hash_operation_t *operation,
 {
     psa_status_t status;
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
-    size_t actual_hash_length = PSA_HASH_SIZE( operation->alg );
+    size_t actual_hash_length = PSA_HASH_LENGTH( operation->alg );
 
     /* Fill the output buffer with something that isn't a valid hash
      * (barring an attack on the hash and deliberately-crafted input),
@@ -3236,7 +3250,7 @@ static psa_status_t psa_hmac_setup_internal( psa_hmac_internal_data *hmac,
 {
     uint8_t ipad[PSA_HMAC_MAX_HASH_BLOCK_SIZE];
     size_t i;
-    size_t hash_size = PSA_HASH_SIZE( hash_alg );
+    size_t hash_size = PSA_HASH_LENGTH( hash_alg );
     size_t block_size = psa_get_hash_block_size( hash_alg );
     psa_status_t status;
 
@@ -3352,7 +3366,7 @@ static psa_status_t psa_mac_setup( psa_mac_operation_t *operation,
             goto exit;
         }
 
-        operation->mac_size = PSA_HASH_SIZE( hash_alg );
+        operation->mac_size = PSA_HASH_LENGTH( hash_alg );
         /* Sanity check. This shouldn't fail on a valid configuration. */
         if( operation->mac_size == 0 ||
             operation->mac_size > sizeof( operation->ctx.hmac.opad ) )
@@ -3522,7 +3536,7 @@ static psa_status_t psa_mac_finish_internal( psa_mac_operation_t *operation,
 #if defined(MBEDTLS_CMAC_C)
     if( operation->alg == PSA_ALG_CMAC )
     {
-        uint8_t tmp[PSA_MAX_BLOCK_CIPHER_BLOCK_SIZE];
+        uint8_t tmp[PSA_BLOCK_CIPHER_BLOCK_MAX_SIZE];
         int ret = mbedtls_cipher_cmac_finish( &operation->ctx.cmac, tmp );
         if( ret == 0 )
             memcpy( mac, tmp, operation->mac_size );
@@ -4478,11 +4492,11 @@ static psa_status_t psa_cipher_setup( psa_cipher_operation_t *operation,
 #endif //MBEDTLS_CIPHER_MODE_WITH_PADDING
 
     operation->block_size = ( PSA_ALG_IS_STREAM_CIPHER( alg ) ? 1 :
-                              PSA_BLOCK_CIPHER_BLOCK_SIZE( slot->attr.type ) );
+                              PSA_BLOCK_CIPHER_BLOCK_LENGTH( slot->attr.type ) );
     if( ( alg & PSA_ALG_CIPHER_FROM_BLOCK_FLAG ) != 0 &&
         alg != PSA_ALG_ECB_NO_PADDING )
     {
-        operation->iv_size = PSA_BLOCK_CIPHER_BLOCK_SIZE( slot->attr.type );
+        operation->iv_size = PSA_BLOCK_CIPHER_BLOCK_LENGTH( slot->attr.type );
     }
 #if defined(MBEDTLS_CHACHA20_C)
     else
@@ -4942,7 +4956,7 @@ static psa_status_t psa_aead_setup( aead_operation_t *operation,
             /* CCM allows the following tag lengths: 4, 6, 8, 10, 12, 14, 16.
              * The call to mbedtls_ccm_encrypt_and_tag or
              * mbedtls_ccm_auth_decrypt will validate the tag length. */
-            if( PSA_BLOCK_CIPHER_BLOCK_SIZE( operation->slot->attr.type ) != 16 )
+            if( PSA_BLOCK_CIPHER_BLOCK_LENGTH( operation->slot->attr.type ) != 16 )
             {
                 status = PSA_ERROR_INVALID_ARGUMENT;
                 goto cleanup;
@@ -4964,7 +4978,7 @@ static psa_status_t psa_aead_setup( aead_operation_t *operation,
             /* GCM allows the following tag lengths: 4, 8, 12, 13, 14, 15, 16.
              * The call to mbedtls_gcm_crypt_and_tag or
              * mbedtls_gcm_auth_decrypt will validate the tag length. */
-            if( PSA_BLOCK_CIPHER_BLOCK_SIZE( operation->slot->attr.type ) != 16 )
+            if( PSA_BLOCK_CIPHER_BLOCK_LENGTH( operation->slot->attr.type ) != 16 )
             {
                 status = PSA_ERROR_INVALID_ARGUMENT;
                 goto cleanup;
@@ -5333,7 +5347,7 @@ static psa_status_t psa_key_derivation_hkdf_read( psa_hkdf_key_derivation_t *hkd
                                              uint8_t *output,
                                              size_t output_length )
 {
-    uint8_t hash_length = PSA_HASH_SIZE( hash_alg );
+    uint8_t hash_length = PSA_HASH_LENGTH( hash_alg );
     psa_status_t status;
 
     if( hkdf->state < HKDF_STATE_KEYED || ! hkdf->info_set )
@@ -5403,7 +5417,7 @@ static psa_status_t psa_key_derivation_tls12_prf_generate_next_block(
     psa_algorithm_t alg )
 {
     psa_algorithm_t hash_alg = PSA_ALG_HKDF_GET_HASH( alg );
-    uint8_t hash_length = PSA_HASH_SIZE( hash_alg );
+    uint8_t hash_length = PSA_HASH_LENGTH( hash_alg );
     psa_hash_operation_t backup = PSA_HASH_OPERATION_INIT;
     psa_status_t status, cleanup_status;
 
@@ -5513,7 +5527,7 @@ static psa_status_t psa_key_derivation_tls12_prf_read(
     size_t output_length )
 {
     psa_algorithm_t hash_alg = PSA_ALG_TLS12_PRF_GET_HASH( alg );
-    uint8_t hash_length = PSA_HASH_SIZE( hash_alg );
+    uint8_t hash_length = PSA_HASH_LENGTH( hash_alg );
     psa_status_t status;
     uint8_t offset, length;
 
@@ -5743,7 +5757,7 @@ static psa_status_t psa_key_derivation_setup_kdf(
     if( is_kdf_alg_supported )
     {
         psa_algorithm_t hash_alg = PSA_ALG_HKDF_GET_HASH( kdf_alg );
-        size_t hash_size = PSA_HASH_SIZE( hash_alg );
+        size_t hash_size = PSA_HASH_LENGTH( hash_alg );
         if( hash_size == 0 )
             return( PSA_ERROR_NOT_SUPPORTED );
         if( ( PSA_ALG_IS_TLS12_PRF( kdf_alg ) ||
@@ -5831,7 +5845,7 @@ static psa_status_t psa_hkdf_input( psa_hkdf_key_derivation_t *hkdf,
                                                sizeof( hkdf->prk ) );
             if( status != PSA_SUCCESS )
                 return( status );
-            hkdf->offset_in_block = PSA_HASH_SIZE( hash_alg );
+            hkdf->offset_in_block = PSA_HASH_LENGTH( hash_alg );
             hkdf->block_number = 0;
             hkdf->state = HKDF_STATE_KEYED;
             return( PSA_SUCCESS );
@@ -5949,10 +5963,10 @@ static psa_status_t psa_tls12_prf_psk_to_ms_set_key(
     size_t data_length )
 {
     psa_status_t status;
-    uint8_t pms[ 4 + 2 * PSA_ALG_TLS12_PSK_TO_MS_MAX_PSK_LEN ];
+    uint8_t pms[ 4 + 2 * PSA_TLS12_PSK_TO_MS_PSK_MAX_SIZE ];
     uint8_t *cur = pms;
 
-    if( data_length > PSA_ALG_TLS12_PSK_TO_MS_MAX_PSK_LEN )
+    if( data_length > PSA_TLS12_PSK_TO_MS_PSK_MAX_SIZE )
         return( PSA_ERROR_INVALID_ARGUMENT );
 
     /* Quoting RFC 4279, Section 2:
