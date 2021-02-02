@@ -734,6 +734,8 @@ int main( int argc, char *argv[] )
     mbedtls_memory_buffer_alloc_init( alloc_buf, sizeof(alloc_buf) );
 #endif
 
+    test_hooks_init( );
+
     /*
      * Make sure memory references are valid.
      */
@@ -3033,6 +3035,14 @@ exit:
     }
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED &&
           MBEDTLS_USE_PSA_CRYPTO */
+
+    if( test_hooks_failure_detected( ) )
+    {
+        if( ret == 0 )
+            ret = 1;
+        mbedtls_printf( "Test hooks detected errors.\n" );
+    }
+    test_hooks_free( );
 
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
 #if defined(MBEDTLS_MEMORY_DEBUG)
