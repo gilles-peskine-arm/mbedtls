@@ -696,14 +696,12 @@ run_test() {
     shift 3
 
     # Expected exit code for the server in response to SIGTERM
-    # Expect 1 for gnutls-serv, otherwise default to expecting 0
     case $SRV_CMD in
-    gnutls-serv\ *)
-        SRV_EXPECTED_EXITCODE="1"
-        ;;
-    *)
-        SRV_EXPECTED_EXITCODE="0"
-        ;;
+      gnutls-serv\ *)
+        # Experimentally, gnutls-serv returns 1 when killed by a signal
+        # even if nothing went wrong.
+        SRV_EXPECTED_RET="1";;
+      *) SRV_EXPECTED_RET="0";;
     esac
 
     # Check if test uses files
@@ -816,7 +814,7 @@ run_test() {
     fi
 
     # check server exit code
-    if [ $SRV_RET != $SRV_EXPECTED_EXITCODE ]; then
+    if [ $SRV_RET != $SRV_EXPECTED_RET ]; then
         fail "Server exited with status $SRV_RET"
         return
     fi
