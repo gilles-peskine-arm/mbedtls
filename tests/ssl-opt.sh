@@ -695,6 +695,17 @@ run_test() {
     CLI_EXPECT="$3"
     shift 3
 
+    # Expected exit code for the server in response to SIGTERM
+    # Expect 1 for gnutls-serv, otherwise default to expecting 0
+    case $SRV_CMD in
+    gnutls-serv\ *)
+        SRV_EXPECTED_EXITCODE="1"
+        ;;
+    *)
+        SRV_EXPECTED_EXITCODE="0"
+        ;;
+    esac
+
     # Check if test uses files
     TEST_USES_FILES=$(echo "$SRV_CMD $CLI_CMD" | grep "\.\(key\|crt\|pem\)" )
     if [ ! -z "$TEST_USES_FILES" ]; then
@@ -805,7 +816,7 @@ run_test() {
     fi
 
     # check server exit code
-    if [ $SRV_RET != 0 ]; then
+    if [ $SRV_RET != $SRV_EXPECTED_EXITCODE ]; then
         fail "Server exited with status $SRV_RET"
         return
     fi
