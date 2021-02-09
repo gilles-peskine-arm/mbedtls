@@ -628,7 +628,7 @@ static void mbedtls_test_wrap_mutex_free( mbedtls_threading_mutex_t *mutex )
     switch( mutex->is_valid )
     {
         case MUTEX_FREED:
-            mbedtls_test_mutex_usage_error( mutex, "free without init" );
+            mbedtls_test_mutex_usage_error( mutex, "free without init or double free" );
             break;
         case MUTEX_IDLE:
             /* Do nothing. The underlying free function will reset is_valid
