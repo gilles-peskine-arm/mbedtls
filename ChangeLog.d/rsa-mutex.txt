@@ -1,0 +1,5 @@
+Bugfix
+   * Ensure that calling mbedtls_rsa_free() twice is safe. This happens
+     when some Mbed TLS library functions fail. Such a double-free was safe
+     when MBEDTLS_THREADING_C was enabled on platforms where freeing a mutex
+     twice is not safe.
