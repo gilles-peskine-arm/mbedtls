@@ -3,3 +3,8 @@ Bugfix
      when some Mbed TLS library functions fail. Such a double-free was safe
      when MBEDTLS_THREADING_C was enabled on platforms where freeing a mutex
      twice is not safe.
+
+Default behavior changes
+   * In mbedtls_rsa_context objects, the ver field was formerly documented
+     as always 0. It is now reserved for internal purposes and may take
+     different values.
