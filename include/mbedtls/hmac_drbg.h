@@ -234,7 +234,17 @@ int mbedtls_hmac_drbg_seed( mbedtls_hmac_drbg_context *ctx,
  *
  * This function is meant for use in algorithms that need a pseudorandom
  * input such as deterministic ECDSA.
- *
+ */
+#if defined(MBEDTLS_THREADING_C)
+/**
+ * \note                When Mbed TLS is built with threading support,
+ *                      after this function returns successfully,
+ *                      it is safe to call mbedtls_hmac_drbg_random()
+ *                      from multiple threads. Other operations, including
+ *                      reseeding, are not thread-safe.
+ */
+#endif /* MBEDTLS_THREADING_C */
+/**
  * \param ctx           HMAC_DRBG context to be initialised.
  * \param md_info       MD algorithm to use for HMAC_DRBG.
  * \param data          Concatenation of the initial entropy string and
@@ -408,7 +418,6 @@ int mbedtls_hmac_drbg_random_with_add( void *p_rng,
 #if defined(MBEDTLS_THREADING_C)
 /**
  * \note                When Mbed TLS is built with threading support,
- *                      after this function returns successfully,
  *                      it is safe to call mbedtls_ctr_drbg_random()
  *                      from multiple threads. Other operations, including
  *                      reseeding, are not thread-safe.
