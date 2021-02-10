@@ -471,8 +471,16 @@ int mbedtls_ctr_drbg_random_with_add( void *p_rng,
  *
  * This function automatically reseeds if the reseed counter is exceeded
  * or prediction resistance is enabled.
- *
- *
+ */
+#if defined(MBEDTLS_THREADING_C)
+/**
+ * \note                When Mbed TLS is built with threading support,
+ *                      it is safe to call mbedtls_ctr_drbg_random()
+ *                      from multiple threads. Other operations, including
+ *                      reseeding, are not thread-safe.
+ */
+#endif /* MBEDTLS_THREADING_C */
+/**
  * \param p_rng         The CTR_DRBG context. This must be a pointer to a
  *                      #mbedtls_ctr_drbg_context structure.
  * \param output        The buffer to fill.
