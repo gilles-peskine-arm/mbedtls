@@ -48,7 +48,7 @@ mbedtls_psa_get_random_length:MBEDTLS_CTR_DRBG_MAX_REQUEST
 
 PSA classic wrapper: HMAC_DRBG max
 depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:!MBEDTLS_CTR_DRBG_C:MBEDTLS_HMAC_DRBG_C
-mbedtls_psa_get_random_length:MBEDTLS_CTR_DRBG_MAX_REQUEST
+mbedtls_psa_get_random_length:MBEDTLS_HMAC_DRBG_MAX_REQUEST
 
 PSA classic wrapper: ECDSA signature (SECP256R1)
 depends_on:MBEDTLS_ECP_DP_SECP256R1_ENABLED
