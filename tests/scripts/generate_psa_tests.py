@@ -21,7 +21,7 @@ import argparse
 import os
 import re
 import sys
-from typing import FrozenSet, Iterable, List, Optional, TypeVar
+from typing import FrozenSet, Iterable, Iterator, List, Optional, TypeVar
 
 import scripts_path # pylint: disable=unused-import
 from mbedtls_dev import crypto_knowledge
@@ -144,7 +144,7 @@ class TestGenerator:
             kt: crypto_knowledge.KeyType,
             param: Optional[int] = None,
             param_descr: str = '',
-    ) -> List[test_case.TestCase]:
+    ) -> Iterator[test_case.TestCase]:
         """Return test cases exercising key creation when the given type is unsupported.
 
         If param is present and not None, emit test cases conditioned on this
@@ -154,7 +154,7 @@ class TestGenerator:
         if kt.name in self.ALWAYS_SUPPORTED:
             # Don't generate test cases for key types that are always supported.
             # They would be skipped in all configurations, which is noise.
-            return []
+            return
         import_dependencies = [('!' if param is None else '') +
                                psa_want_symbol(kt.name)]
         if kt.params is not None:
@@ -165,46 +165,46 @@ class TestGenerator:
             generate_dependencies = []
         else:
             generate_dependencies = import_dependencies
-        test_cases = []
         for bits in kt.sizes_to_test():
-            test_cases.append(test_case_for_key_type_not_supported(
+            yield test_case_for_key_type_not_supported(
                 'import', kt.expression, bits,
                 finish_family_dependencies(import_dependencies, bits),
                 test_case.hex_string(kt.key_material(bits)),
                 param_descr=param_descr,
-            ))
+            )
             if not generate_dependencies and param is not None:
                 # If generation is impossible for this key type, rather than
                 # supported or not depending on implementation capabilities,
                 # only generate the test case once.
                 continue
-            test_cases.append(test_case_for_key_type_not_supported(
+            yield test_case_for_key_type_not_supported(
                 'generate', kt.expression, bits,
                 finish_family_dependencies(generate_dependencies, bits),
                 str(bits),
                 param_descr=param_descr,
-            ))
+            )
             # To be added: derive
-        return test_cases
 
-    def generate_not_supported(self) -> None:
+    def test_cases_for_not_supported(self) -> Iterator[test_case.TestCase]:
         """Generate test cases that exercise the creation of keys of unsupported types."""
-        test_cases = []
         for key_type in sorted(self.constructors.key_types):
             kt = crypto_knowledge.KeyType(key_type)
-            test_cases += self.test_cases_for_key_type_not_supported(kt)
-        # To be added: parametrized key types FFDH
+            yield from self.test_cases_for_key_type_not_supported(kt)
         for curve_family in sorted(self.constructors.ecc_curves):
             for constr in ('PSA_KEY_TYPE_ECC_KEY_PAIR',
                            'PSA_KEY_TYPE_ECC_PUBLIC_KEY'):
                 kt = crypto_knowledge.KeyType(constr, [curve_family])
-                test_cases += self.test_cases_for_key_type_not_supported(
+                yield from self.test_cases_for_key_type_not_supported(
                     kt, param_descr='type')
-                test_cases += self.test_cases_for_key_type_not_supported(
+                yield from self.test_cases_for_key_type_not_supported(
                     kt, 0, param_descr='curve')
+
+    def generate_not_supported(self) -> None:
+        """Generate a test case file covering the creation of keys of unsupported types."""
+        # To be added: parametrized key types FFDH
         self.write_test_data_file(
             'test_suite_psa_crypto_not_supported.generated',
-            test_cases)
+            self.test_cases_for_not_supported())
 
     def generate_all(self):
         self.generate_not_supported()
