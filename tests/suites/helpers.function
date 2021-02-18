@@ -974,7 +974,8 @@ static void mbedtls_test_mutex_usage_check( void )
         if( test_info.mutex_usage_error == NULL )
             test_info.mutex_usage_error = "missing free";
     }
-    if( test_info.mutex_usage_error != NULL && ! test_info.failed )
+    if( test_info.mutex_usage_error != NULL &&
+        test_info.result != TEST_RESULT_FAILED )
     {
         /* Functionally, the test passed. But there was a mutex usage error,
          * so mark the test as failed after all. */
