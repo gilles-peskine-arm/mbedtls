@@ -231,7 +231,7 @@ void test_hooks_init( void );
  *
  * \note When implementing a test hook that detects errors on its own
  *       (as opposed to e.g. leaving the error for a memory sanitizer to
- *       eport), make sure to print a message to standard error either at
+ *       report), make sure to print a message to standard error either at
  *       the time the problem is detected or during the execution of this
  *       function. This function does not indicate what problem was detected,
  *       so printing a message is the only way to provide feedback in the
