@@ -1338,6 +1338,22 @@
  */
 #define MBEDTLS_PKCS1_V21
 
+/** \def MBEDTLS_PSA_CRYPTO_CLIENT
+ *
+ * Enable support for PSA crypto client.
+ *
+ * \note This option allows to include the code necessary for a PSA
+ *       crypto client when the PSA crypto implementation is not included in
+ *       the library (MBEDTLS_PSA_CRYPTO_C disabled). The code included is the
+ *       code to set and get PSA key attributes.
+ *       The development of PSA drivers partially relying on the library to
+ *       fulfill the hardware gaps is another possible usage of this option.
+ *
+ * \warning This interface is experimental and may change or be removed
+ * without notice.
+ */
+//#define MBEDTLS_PSA_CRYPTO_CLIENT
+
 /** \def MBEDTLS_PSA_CRYPTO_DRIVERS
  *
  * Enable support for the experimental PSA crypto driver interface.
@@ -3670,6 +3686,17 @@
  *   on unspecified heuristics.
  */
 //#define MBEDTLS_PSA_HMAC_DRBG_MD_TYPE MBEDTLS_MD_SHA256
+
+/** \def MBEDTLS_PSA_KEY_SLOT_COUNT
+ * Restrict the PSA library to supporting a maximum amount of simultaneously
+ * loaded keys. A loaded key is a key stored by the PSA Crypto core as a
+ * volatile key, or a persistent key which is loaded temporarily by the
+ * library as part of a crypto operation in flight.
+ *
+ * If this option is unset, the library will fall back to a default value of
+ * 32 keys.
+ */
+//#define MBEDTLS_PSA_KEY_SLOT_COUNT 32
 
 /* SSL Cache options */
 //#define MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT       86400 /**< 1 day  */

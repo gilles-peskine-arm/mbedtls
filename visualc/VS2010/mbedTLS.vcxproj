@@ -321,6 +321,7 @@
     <ClCompile Include="..\..\library\platform_util.c" />
     <ClCompile Include="..\..\library\poly1305.c" />
     <ClCompile Include="..\..\library\psa_crypto.c" />
+    <ClCompile Include="..\..\library\psa_crypto_client.c" />
     <ClCompile Include="..\..\library\psa_crypto_driver_wrappers.c" />
     <ClCompile Include="..\..\library\psa_crypto_ecp.c" />
     <ClCompile Include="..\..\library\psa_crypto_rsa.c" />
@@ -361,6 +362,7 @@
     <ClCompile Include="..\..\tests\src\psa_crypto_helpers.c" />
     <ClCompile Include="..\..\tests\src\psa_exercise_key.c" />
     <ClCompile Include="..\..\tests\src\random.c" />
+    <ClCompile Include="..\..\tests\src\threading_helpers.c" />
     <ClCompile Include="..\..\3rdparty\everest\library\everest.c" />
     <ClCompile Include="..\..\3rdparty\everest\library\Hacl_Curve25519_joined.c" />
     <ClCompile Include="..\..\3rdparty\everest\library\x25519.c" />

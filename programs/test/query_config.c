@@ -1226,6 +1226,14 @@ int query_config( const char *config )
     }
 #endif /* MBEDTLS_PKCS1_V21 */
 
+#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+    if( strcmp( "MBEDTLS_PSA_CRYPTO_CLIENT", config ) == 0 )
+    {
+        MACRO_EXPANSION_TO_STR( MBEDTLS_PSA_CRYPTO_CLIENT );
+        return( 0 );
+    }
+#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
+
 #if defined(MBEDTLS_PSA_CRYPTO_DRIVERS)
     if( strcmp( "MBEDTLS_PSA_CRYPTO_DRIVERS", config ) == 0 )
     {
@@ -2633,6 +2641,14 @@ int query_config( const char *config )
         return( 0 );
     }
 #endif /* MBEDTLS_PSA_HMAC_DRBG_MD_TYPE */
+
+#if defined(MBEDTLS_PSA_KEY_SLOT_COUNT)
+    if( strcmp( "MBEDTLS_PSA_KEY_SLOT_COUNT", config ) == 0 )
+    {
+        MACRO_EXPANSION_TO_STR( MBEDTLS_PSA_KEY_SLOT_COUNT );
+        return( 0 );
+    }
+#endif /* MBEDTLS_PSA_KEY_SLOT_COUNT */
 
 #if defined(MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT)
     if( strcmp( "MBEDTLS_SSL_CACHE_DEFAULT_TIMEOUT", config ) == 0 )

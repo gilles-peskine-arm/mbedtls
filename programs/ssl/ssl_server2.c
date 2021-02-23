@@ -1369,6 +1369,10 @@ int main( int argc, char *argv[] )
 #endif  /* MBEDTLS_MEMORY_DEBUG */
 #endif  /* MBEDTLS_MEMORY_BUFFER_ALLOC_C */
 
+#if defined(MBEDTLS_TEST_HOOKS)
+    test_hooks_init( );
+#endif /* MBEDTLS_TEST_HOOKS */
+
     /*
      * Make sure memory references are valid in case we exit early.
      */
@@ -1412,10 +1416,10 @@ int main( int argc, char *argv[] )
         ret = MBEDTLS_ERR_SSL_HW_ACCEL_FAILED;
         goto exit;
     }
+#endif  /* MBEDTLS_USE_PSA_CRYPTO */
 #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
     mbedtls_test_enable_insecure_external_rng( );
 #endif  /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
-#endif  /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if !defined(_WIN32)
     /* Abort cleanly on SIGTERM and SIGINT */
@@ -2295,7 +2299,8 @@ int main( int argc, char *argv[] )
     mbedtls_printf( "\n  . Seeding the random number generator..." );
     fflush( stdout );
 
-    if( rng_seed( &rng, opt.reproducible, pers ) != 0 )
+    ret = rng_seed( &rng, opt.reproducible, pers );
+    if( ret != 0 )
         goto exit;
     mbedtls_printf( " ok\n" );
 
@@ -2683,7 +2688,7 @@ int main( int argc, char *argv[] )
 #else
         fprintf( stderr, "Warning: reproducible option used without constant time\n" );
 #endif
-#endif
+#endif  /* MBEDTLS_HAVE_TIME */
     }
     mbedtls_ssl_conf_rng( &conf, rng_get, &rng );
     mbedtls_ssl_conf_dbg( &conf, my_debug, stdout );
@@ -3997,12 +4002,32 @@ exit:
     mbedtls_free( context_buf );
 #endif
 
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    mbedtls_psa_crypto_free( );
+#endif
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    /* Let test hooks detect errors such as resource leaks.
+     * Don't do it in query_config mode, because some test code prints
+     * information to stdout and this gets mixed with the regular output. */
+    if( opt.query_config_mode == DFL_QUERY_CONFIG_MODE )
+    {
+        if( test_hooks_failure_detected( ) )
+        {
+            if( ret == 0 )
+                ret = 1;
+            mbedtls_printf( "Test hooks detected errors.\n" );
+        }
+    }
+    test_hooks_free( );
+#endif /* MBEDTLS_TEST_HOOKS */
+
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
 #if defined(MBEDTLS_MEMORY_DEBUG)
     mbedtls_memory_buffer_alloc_status();
 #endif
     mbedtls_memory_buffer_alloc_free();
-#endif
+#endif  /* MBEDTLS_MEMORY_BUFFER_ALLOC_C */
 
     if( opt.query_config_mode == DFL_QUERY_CONFIG_MODE )
     {
