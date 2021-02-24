@@ -2,6 +2,20 @@
 
 #include "mbedtls/net_sockets.h"
 
+#if defined(unix) || defined(__unix__) || defined(__unix) || \
+    defined(__APPLE__) || defined(__QNXNTO__) || \
+    defined(__HAIKU__) || defined(__midipix__)
+#define MBEDTLS_PLATFORM_IS_UNIXLIKE
+#endif
+
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+#include <sys/fcntl.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#endif
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -24,5 +38,84 @@ void context_init_free( int reinit )
     /* This test case always succeeds, functionally speaking. A plausible
      * bug might trigger an invalid pointer dereference or a memory leak. */
     goto exit;
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void poll_beyond_fd_setsize( )
+{
+    /* Test that mbedtls_net_poll does not misbehave when given a file
+     * descriptor beyond FD_SETSIZE. This code is specific to platforms
+     * with a Unix-like select() function. */
+
+    struct rlimit rlim_nofile;
+    int restore_rlim_nofile = 0;
+    /* We want to have an open file descriptor >= FD_SETSIZE. This requires
+     * the file descriptor limit to be at least FD_SETSIZE + 1. Overshoot
+     * slightly in case the highest possible file descriptor(s) were already
+     * open, but not so much that we're likely to be blocked by a hard limit. */
+    rlim_t min_wanted_nofile = FD_SETSIZE + 4;
+    fd_set open_fds;
+    int ret;
+    int fd = -1;
+    mbedtls_net_context ctx;
+    uint8_t buf[1];
+
+    mbedtls_net_init( &ctx );
+    FD_ZERO( &open_fds );
+
+    /* On many systems, by default, the maximum number of open file descriptors
+     * is less or equal to FD_SETSIZE. If so, raise the limit, otherwise
+     * the test would not be meaningful. If the limit can't be raised,
+     * a newly open file descriptor won't be higher than FD_SETSIZE, so
+     * the test is not necessary and we mark it as skipped. */
+    TEST_ASSERT( getrlimit( RLIMIT_NOFILE, &rlim_nofile ) == 0 );
+    if( rlim_nofile.rlim_cur <= min_wanted_nofile )
+    {
+        rlim_nofile.rlim_cur = min_wanted_nofile;
+        TEST_ASSUME( setrlimit( RLIMIT_NOFILE, &rlim_nofile ) == 0 );
+        restore_rlim_nofile = 1;
+    }
+
+    /* Open file descriptors until we hit one that's over FD_SETSIZE.
+     * Since the file descriptors are non-negative and distinct, this loop
+     * terminates in at most FD_SETSIZE + 1 iterations. */
+    while( 1 )
+    {
+        fd = open( "/dev/null", O_RDONLY );
+        TEST_ASSERT( fd >= 0 );
+        if( fd >= FD_SETSIZE )
+            break;
+        FD_SET( fd, &open_fds );
+    }
+    ctx.fd = fd;
+
+    /* In principle, this call should succeed. However, we know that
+     * mbedtls_net_poll() on Unix-like platforms (and others) is implemented
+     * on top of select() and fd_set, which do not support file descriptors
+     * beyond FD_SETSIZE. So we expect to hit this platform limitation.
+     *
+     * If mbedtls_net_poll() does not proprely check that ctx.fd is in range,
+     * it may still happen to return the expected failure code, but if this
+     * is problematic on the particular platform where the code is running,
+     * a memory sanitizer such as UBSan should catch it.
+     */
+    ret = mbedtls_net_poll( &ctx, MBEDTLS_NET_POLL_READ, 0 );
+    TEST_EQUAL( ret, MBEDTLS_ERR_NET_POLL_FAILED );
+
+    /* mbedtls_net_recv_timeout() uses select() and fd_set in the same way. */
+    ret = mbedtls_net_recv_timeout( &ctx, buf, sizeof( buf ), 0 );
+    TEST_EQUAL( ret, MBEDTLS_ERR_NET_POLL_FAILED );
+
+exit:
+    if( fd >= 0 )
+        close( fd );
+    for( fd = 0; fd < FD_SETSIZE; fd++ )
+    {
+        if( FD_ISSET( fd, &open_fds ) )
+            close( fd );
+    }
+    if( restore_rlim_nofile )
+        setrlimit( RLIMIT_NOFILE, &rlim_nofile );
 }
 /* END_CASE */
