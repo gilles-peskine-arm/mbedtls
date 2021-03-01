@@ -21,11 +21,12 @@ import argparse
 import os
 import re
 import sys
-from typing import FrozenSet, Iterable, Iterator, List, Optional, TypeVar
+from typing import FrozenSet, Iterable, Iterator, List, Optional, Tuple, TypeVar
 
 import scripts_path # pylint: disable=unused-import
 from mbedtls_dev import crypto_knowledge
 from mbedtls_dev import macro_collector
+from mbedtls_dev import psa_storage
 from mbedtls_dev import test_case
 
 T = TypeVar('T') #pylint: disable=invalid-name
@@ -53,6 +54,18 @@ def finish_family_dependencies(dependencies: List[str], bits: int) -> List[str]:
     Apply `finish_family_dependency` to each element of `dependencies`.
     """
     return [finish_family_dependency(dep, bits) for dep in dependencies]
+
+def automatic_dependencies(*expressions: str) -> List[str]:
+    """Infer dependencies of a test case by looking for PSA_xxx symbols.
+
+    The arguments are strings which should be C expressions. Do not use
+    string literals or comments as this function is not smart enough to
+    skip them.
+    """
+    used = set()
+    for expr in expressions:
+        used.update(re.findall(r'PSA_(?:ALG|ECC_FAMILY|KEY_TYPE)_\w+', expr))
+    return sorted(psa_want_symbol(name) for name in used)
 
 # A temporary hack: at the time of writing, not all dependency symbols
 # are implemented yet. Skip test cases for which the dependency symbols are
@@ -206,8 +219,53 @@ class TestGenerator:
             'test_suite_psa_crypto_not_supported.generated',
             self.test_cases_for_not_supported())
 
+    @staticmethod
+    def keys_for_storage_format(
+            version: int
+    ) -> Iterator[Tuple[psa_storage.Key, str]]:
+        """WIP"""
+        yield psa_storage.Key(version=version,
+                              id=1, lifetime=0x00000001,
+                              type=0x2400, bits=128,
+                              usage=0x00000300, alg=0x05500200, alg2=0x04c01000,
+                              material=b'@ABCDEFGHIJKLMNO'), 'foo'
+
+    @staticmethod
+    def storage_test_case(key: psa_storage.Key,
+                          name: str) -> test_case.TestCase:
+        """Construct a storage format test case for the given key."""
+        tc = test_case.TestCase()
+        tc.set_description('PSA storage: ' + name)
+        dependencies = automatic_dependencies(
+            key.lifetime.string, key.type.string,
+            key.usage.string, key.alg.string, key.alg2.string,
+        )
+        tc.set_dependencies(dependencies)
+        tc.set_function('key_storage_format')
+        tc.set_arguments([key.lifetime.string,
+                          key.type.string, str(key.bits),
+                          key.usage.string, key.alg.string, key.alg2.string,
+                          '"' + key.material.hex() + '"',
+                          '"' + key.hex() + '"',
+                          '1'])
+        return tc
+
+    def generate_storage_format(self) -> None:
+        # First construct all the keys for which we want to generate test
+        # cases, then construct the corresponding test cases. This way the
+        # psa_storage module only needs to obtain numerical values once
+        # (this requires compiling and running a C program, so it's slow).
+        keys_v0 = list(self.keys_for_storage_format(0))
+        self.write_test_data_file(
+            'test_suite_psa_crypto_storage_format.v0',
+            [self.storage_test_case(key, name)
+             for key, name in keys_v0])
+
     def generate_all(self):
+        # When adding (or renaming or removing) generated files, remember
+        # to update check-generated-files.sh.
         self.generate_not_supported()
+        self.generate_storage_format()
 
 def main(args):
     """Command line entry point."""
