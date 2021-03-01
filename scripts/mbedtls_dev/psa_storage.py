@@ -21,11 +21,13 @@ import struct
 from typing import List, Optional, Union
 import unittest
 
+
 class Expr:
     """Representation of a C expression with a known or knowable numerical value."""
     def __init__(self, content: Union[int, str]):
         if isinstance(content, int):
-            self.string = str(content)
+            digits = 8 if content > 0xffff else 4
+            self.string = '{0:#0{1}x}'.format(content, digits + 2)
             self.value_if_known = content #type: Optional[int]
         else:
             self.string = content
@@ -75,6 +77,7 @@ def as_expr(thing: Exprable) -> Expr:
         return thing
     else:
         return Expr(thing)
+
 
 class Key:
     """Representation of a PSA crypto key object and its storage encoding.
@@ -148,7 +151,7 @@ class Key:
 
 class TestKey(unittest.TestCase):
     # pylint: disable=line-too-long
-    """A few smoke tests for the functionality of `Key`."""
+    """A few smoke tests for the functionality of the `Key` class."""
 
     def test_numerical(self):
         key = Key(version=0,

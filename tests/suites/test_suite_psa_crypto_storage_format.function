@@ -1,0 +1,93 @@
+/* BEGIN_HEADER */
+
+#include <psa/crypto.h>
+#include <test/psa_crypto_helpers.h>
+
+#include <psa_crypto_its.h>
+
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PSA_CRYPTO_C:MBEDTLS_PSA_CRYPTO_STORAGE_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void current_key_storage_format( int lifetime_arg, int type_arg, int bits_arg,
+                                 int usage_arg, int alg_arg, int alg2_arg,
+                                 data_t *material,
+                                 data_t *representation )
+{
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    psa_key_type_t type = type_arg;
+    size_t bits = bits_arg;
+    psa_key_usage_t usage = usage_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t alg2 = alg_arg;
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make( 0, 1 );
+    psa_storage_uid_t uid = 1;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    struct psa_storage_info_t storage_info;
+    uint8_t *contents = NULL;
+    size_t length;
+
+    /* Prime the storage with a key file. */
+    PSA_ASSERT( psa_its_set( uid, representation->len, representation->x, 0 ) );
+
+    PSA_INIT( );
+
+    /* Check that the injected key exists and looks as expected. */
+    PSA_ASSERT( psa_get_key_attributes( &attributes, key_id ) );
+    TEST_EQUAL( lifetime, psa_get_key_lifetime( &attributes ) );
+    TEST_EQUAL( type, psa_get_key_type( &attributes ) );
+    TEST_EQUAL( bits, psa_get_key_bits( &attributes ) );
+    TEST_EQUAL( usage, psa_get_key_usage_flags( &attributes ) );
+    TEST_EQUAL( alg, psa_get_key_algorithm( &attributes ) );
+    TEST_EQUAL( alg2, psa_get_key_enrollment_algorithm( &attributes ) );
+    if( ( usage & PSA_KEY_USAGE_EXPORT ) ||
+        PSA_KEY_TYPE_IS_PUBLIC_KEY( type ) )
+    {
+        ASSERT_ALLOC( contents, material->len );
+        PSA_ASSERT( psa_export_key( key_id,
+                                    contents, material->len, &length ) );
+        ASSERT_COMPARE( material->x, material->len,
+                        contents, length );
+        mbedtls_free( contents );
+        contents = NULL;
+    }
+    psa_reset_key_attributes( &attributes );
+
+    /* Destroy the key. Confirm through direct access to the storage. */
+    PSA_ASSERT( psa_destroy_key( key_id ) );
+    TEST_EQUAL( PSA_ERROR_DOES_NOT_EXIST,
+                psa_its_get_info( uid, &storage_info ) );
+
+    /* Create a key with the given parameters. */
+    psa_set_key_lifetime( &attributes, lifetime );
+    psa_set_key_id( &attributes, id );
+    psa_set_key_type( &attributes, type );
+    psa_set_key_bits( &attributes, bits );
+    psa_set_key_usage_flags( &attributes, usage );
+    psa_set_key_algorithm( &attributes, alg );
+    psa_set_key_enrollment_algorithm( &attributes, alg2 );
+    PSA_ASSERT( psa_import_key( &attributes, material->x, material->len,
+                                &id ) );
+
+    /* Check that the key is represented as expected. */
+    PSA_ASSERT( psa_its_get_info( uid, &storage_info ) );
+    TEST_EQUAL( storage_info.size, representation->len );
+    ASSERT_ALLOC( contents, storage_info.size );
+    PSA_ASSERT( psa_its_get( uid, 0, storage_info.size,
+                             contents, &length ) );
+    ASSERT_COMPARE( representation->x, representation->len,
+                    contents, length );
+    mbedtls_free( contents );
+    contents = NULL;
+
+exit:
+    psa_reset_key_attributes( &attributes );
+    psa_destroy_key( key_id );
+    PSA_DONE( );
+    mbedtls_free( contents );
+}
+/* END_CASE */
