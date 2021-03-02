@@ -64,7 +64,7 @@ def automatic_dependencies(*expressions: str) -> List[str]:
     """
     used = set()
     for expr in expressions:
-        used.update(re.findall(r'PSA_(ALG|KEY_TYPE)_\w+', expr))
+        used.update(re.findall(r'PSA_(?:ALG|ECC_FAMILY|KEY_TYPE)_\w+', expr))
     return sorted(psa_want_symbol(name) for name in used)
 
 # A temporary hack: at the time of writing, not all dependency symbols
@@ -220,34 +220,127 @@ class TestGenerator:
             self.test_cases_for_not_supported())
 
     @staticmethod
-    def keys_for_storage_format(
-            version: int
+    def storage_format_for_key_type(
+            version: int, kt: crypto_knowledge.KeyType
     ) -> Iterator[Tuple[psa_storage.Key, str]]:
-        """WIP"""
-        yield psa_storage.Key(version=version,
-                              id=1, lifetime=0x00000001,
-                              type=0x2400, bits=128,
-                              usage=0x00000300, alg=0x05500200, alg2=0x04c01000,
-                              material=b'@ABCDEFGHIJKLMNO'), 'foo'
+        """Generate storage format test cases for the given key type."""
+        for bits in kt.sizes_to_test():
+            usage_flags = 'PSA_KEY_USAGE_EXPORT'
+            alg = 0
+            alg2 = 0
+            key_material = kt.key_material(bits)
+            short_expression = re.sub(r'\bPSA_(?:KEY_TYPE|ECC_FAMILY)_',
+                                      r'',
+                                      kt.expression)
+            description = 'type: {} {}-bit'.format(short_expression, bits)
+            yield (psa_storage.Key(version=version,
+                                   id=1, lifetime=0x00000001,
+                                   type=kt.expression, bits=bits,
+                                   usage=usage_flags, alg=alg, alg2=alg2,
+                                   material=key_material),
+                   description)
+
+    def keys_for_storage_format_by_type(
+            self, version: int
+    ) -> Iterator[Tuple[psa_storage.Key, str]]:
+        """Generate `Key` objects to test. Cover supported key types.
+        """
+        for key_type in sorted(self.constructors.key_types):
+            kt = crypto_knowledge.KeyType(key_type)
+            yield from self.storage_format_for_key_type(version, kt)
+        for curve_family in sorted(self.constructors.ecc_curves):
+            for constr in ('PSA_KEY_TYPE_ECC_KEY_PAIR',
+                           'PSA_KEY_TYPE_ECC_PUBLIC_KEY'):
+                kt = crypto_knowledge.KeyType(constr, [curve_family])
+                yield from self.storage_format_for_key_type(version, kt)
+
+    @staticmethod
+    def storage_format_for_usage_flags(
+            version: int, *usage_flags: str,
+            short: Optional[str] = None
+    ) -> Iterator[Tuple[psa_storage.Key, str]]:
+        """Generate storage format test cases for the given key usage."""
+        usage = ' | '.join(usage_flags) if usage_flags else '0'
+        if short is None:
+            short = re.sub(r'\bPSA_KEY_USAGE_', r'', usage)
+        description = 'usage: ' + short
+        yield (psa_storage.Key(version=version,
+                               id=1, lifetime=0x00000001,
+                               type='PSA_KEY_TYPE_RAW_DATA', bits=8,
+                               usage=usage, alg=0, alg2=0,
+                               material=b'K'),
+               description)
+
+    def keys_for_storage_format_by_usage_flags(
+            self, version: int
+    ) -> Iterator[Tuple[psa_storage.Key, str]]:
+        """Generate `Key` objects to test. Cover supported key usage flags.
+        """
+        known_flags = sorted(self.constructors.key_usages)
+        yield from self.storage_format_for_usage_flags(version, '0')
+        for usage_flag in known_flags:
+            yield from self.storage_format_for_usage_flags(version,
+                                                           usage_flag)
+        for flag1, flag2 in zip(known_flags,
+                                known_flags[1:] + [known_flags[0]]):
+            yield from self.storage_format_for_usage_flags(version,
+                                                           flag1, flag2)
+        yield from self.storage_format_for_usage_flags(version,
+                                                       *known_flags,
+                                                       short='all known')
+
+    def keys_for_storage_format(
+            self, version: int
+    ) -> Iterator[Tuple[psa_storage.Key, str]]:
+        """Generate `Key` objects to test.
+
+        This function generates tuples `((key, description))` where
+        ``key`` is a `psa_storage.Key` object and ``description`` is
+        a short, human-readable description of the key.
+
+        This method generates keys and their current storage format
+        representation.
+        """
+        yield from self.keys_for_storage_format_by_type(version)
+        yield from self.keys_for_storage_format_by_usage_flags(version)
 
     @staticmethod
     def storage_test_case(key: psa_storage.Key,
-                          name: str) -> test_case.TestCase:
-        """Construct a storage format test case for the given key."""
+                          name: str, forward: bool) -> test_case.TestCase:
+        """Construct a storage format test case for the given key.
+
+        If ``forward`` is true, generate a forward compatibility test case:
+        create a key and validate that it has the expected representation.
+        Otherwise generate a backward compatibility test case: inject the
+        key representation into storage and validate that it can be read
+        correctly.
+        """
+        verb = 'save' if forward else 'read'
         tc = test_case.TestCase()
-        tc.set_description('PSA storage: ' + name)
+        tc.set_description('PSA storage {}: {}'.format(verb, name))
         dependencies = automatic_dependencies(
             key.lifetime.string, key.type.string,
             key.usage.string, key.alg.string, key.alg2.string,
         )
+        dependencies = finish_family_dependencies(dependencies, key.bits)
         tc.set_dependencies(dependencies)
-        tc.set_function('key_storage_format')
+        tc.set_function('key_storage_' + verb)
+        if forward:
+            extra_arguments = []
+        else:
+            # Some test keys have the RAW_DATA type and attributes that don't
+            # necessarily make sense. We do this to validate numerical
+            # encodings of the attributes.
+            # Raw data keys have no useful exercise anyway so there is no
+            # loss of test coverage.
+            exercise = key.type.string != 'PSA_KEY_TYPE_RAW_DATA'
+            extra_arguments = ['1' if exercise else '0']
         tc.set_arguments([key.lifetime.string,
                           key.type.string, str(key.bits),
                           key.usage.string, key.alg.string, key.alg2.string,
                           '"' + key.material.hex() + '"',
                           '"' + key.hex() + '"',
-                          '1'])
+                          *extra_arguments])
         return tc
 
     def generate_storage_format(self) -> None:
@@ -258,8 +351,9 @@ class TestGenerator:
         keys_v0 = list(self.keys_for_storage_format(0))
         self.write_test_data_file(
             'test_suite_psa_crypto_storage_format.v0',
-            [self.storage_test_case(key, name)
-             for key, name in keys_v0])
+            [self.storage_test_case(key, name, forward)
+             for key, name in keys_v0
+             for forward in (True, False)])
 
     def generate_all(self):
         # When adding (or renaming or removing) generated files, remember

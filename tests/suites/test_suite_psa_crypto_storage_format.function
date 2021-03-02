@@ -66,7 +66,8 @@ static int can_export( const psa_key_attributes_t *attributes )
 static int test_read_key( const psa_key_attributes_t *expected_attributes,
                           const data_t *expected_material,
                           psa_storage_uid_t uid,
-                          const data_t *representation )
+                          const data_t *representation,
+                          int exercise )
 {
     psa_key_attributes_t actual_attributes = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_svc_key_id_t key_id = psa_get_key_id( expected_attributes );
@@ -104,10 +105,13 @@ static int test_read_key( const psa_key_attributes_t *expected_attributes,
                         exported_material, length );
     }
 
-    TEST_ASSERT( mbedtls_test_psa_exercise_key(
-                     key_id,
-                     psa_get_key_usage_flags( expected_attributes ),
-                     psa_get_key_algorithm( expected_attributes ) ) );
+    if( exercise )
+    {
+        TEST_ASSERT( mbedtls_test_psa_exercise_key(
+                         key_id,
+                         psa_get_key_usage_flags( expected_attributes ),
+                         psa_get_key_algorithm( expected_attributes ) ) );
+    }
 
     /* Destroy the key. Confirm through direct access to the storage. */
     PSA_ASSERT( psa_destroy_key( key_id ) );
@@ -131,11 +135,10 @@ exit:
  */
 
 /* BEGIN_CASE */
-void key_storage_format( int lifetime_arg, int type_arg, int bits_arg,
-                         int usage_arg, int alg_arg, int alg2_arg,
-                         data_t *material,
-                         data_t *representation,
-                         int current )
+void key_storage_save( int lifetime_arg, int type_arg, int bits_arg,
+                       int usage_arg, int alg_arg, int alg2_arg,
+                       data_t *material,
+                       data_t *representation )
 {
     psa_key_lifetime_t lifetime = lifetime_arg;
     psa_key_type_t type = type_arg;
@@ -148,6 +151,7 @@ void key_storage_format( int lifetime_arg, int type_arg, int bits_arg,
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
     PSA_INIT( );
+    TEST_USES_KEY_ID( key_id );
 
     psa_set_key_lifetime( &attributes, lifetime );
     psa_set_key_id( &attributes, key_id );
@@ -157,21 +161,52 @@ void key_storage_format( int lifetime_arg, int type_arg, int bits_arg,
     psa_set_key_algorithm( &attributes, alg );
     psa_set_key_enrollment_algorithm( &attributes, alg2 );
 
-    if( current )
-    {
-        /* This is the current storage format. Test that we know exactly how
-         * the key is stored. The stability of the test data in future
-         * versions of the Mbed TLS will guarantee that future versions
-         * can read back what this version wrote. */
-        TEST_ASSERT( test_written_key( &attributes, material,
-                                       uid, representation ) );
-    }
+    /* This is the current storage format. Test that we know exactly how
+     * the key is stored. The stability of the test data in future
+     * versions of the Mbed TLS will guarantee that future versions
+     * can read back what this version wrote. */
+    TEST_ASSERT( test_written_key( &attributes, material,
+                                   uid, representation ) );
+
+exit:
+    psa_reset_key_attributes( &attributes );
+    psa_destroy_key( key_id );
+    PSA_DONE( );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void key_storage_read( int lifetime_arg, int type_arg, int bits_arg,
+                       int usage_arg, int alg_arg, int alg2_arg,
+                       data_t *material,
+                       data_t *representation, int exercise )
+{
+    psa_key_lifetime_t lifetime = lifetime_arg;
+    psa_key_type_t type = type_arg;
+    size_t bits = bits_arg;
+    psa_key_usage_t usage = usage_arg;
+    psa_algorithm_t alg = alg_arg;
+    psa_algorithm_t alg2 = alg2_arg;
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make( 0, 1 );
+    psa_storage_uid_t uid = 1;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    PSA_INIT( );
+    TEST_USES_KEY_ID( key_id );
+
+    psa_set_key_lifetime( &attributes, lifetime );
+    psa_set_key_id( &attributes, key_id );
+    psa_set_key_type( &attributes, type );
+    psa_set_key_bits( &attributes, bits );
+    psa_set_key_usage_flags( &attributes, usage );
+    psa_set_key_algorithm( &attributes, alg );
+    psa_set_key_enrollment_algorithm( &attributes, alg2 );
 
     /* Test that we can use a key with the given representation. This
      * guarantees backward compatibility with keys that were stored by
      * past versionf of Mbed TLS. */
     TEST_ASSERT( test_read_key( &attributes, material,
-                                uid, representation ) );
+                                uid, representation, exercise ) );
 
 exit:
     psa_reset_key_attributes( &attributes );
