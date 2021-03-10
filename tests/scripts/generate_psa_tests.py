@@ -232,22 +232,40 @@ class TestGenerator:
 
     @staticmethod
     def storage_test_case(key: psa_storage.Key,
-                          name: str) -> test_case.TestCase:
-        """Construct a storage format test case for the given key."""
+                          name: str, forward: bool) -> test_case.TestCase:
+        """Construct a storage format test case for the given key.
+
+        If ``forward`` is true, generate a forward compatibility test case:
+        create a key and validate that it has the expected representation.
+        Otherwise generate a backward compatibility test case: inject the
+        key representation into storage and validate that it can be read
+        correctly.
+        """
+        verb = 'save' if forward else 'read'
         tc = test_case.TestCase()
-        tc.set_description('PSA storage: ' + name)
+        tc.set_description('PSA storage {}: {}'.format(verb, name))
         dependencies = automatic_dependencies(
             key.lifetime.string, key.type.string,
             key.usage.string, key.alg.string, key.alg2.string,
         )
         tc.set_dependencies(dependencies)
-        tc.set_function('key_storage_format')
+        tc.set_function('key_storage_' + verb)
+        if forward:
+            extra_arguments = []
+        else:
+            # Some test keys have the RAW_DATA type and attributes that don't
+            # necessarily make sense. We do this to validate numerical
+            # encodings of the attributes.
+            # Raw data keys have no useful exercise anyway so there is no
+            # loss of test coverage.
+            exercise = key.type.string != 'PSA_KEY_TYPE_RAW_DATA'
+            extra_arguments = ['1' if exercise else '0']
         tc.set_arguments([key.lifetime.string,
                           key.type.string, str(key.bits),
                           key.usage.string, key.alg.string, key.alg2.string,
                           '"' + key.material.hex() + '"',
                           '"' + key.hex() + '"',
-                          '1'])
+                          *extra_arguments])
         return tc
 
     def generate_storage_format(self) -> None:
@@ -258,7 +276,11 @@ class TestGenerator:
         keys_v0 = list(self.keys_for_storage_format(0))
         self.write_test_data_file(
             'test_suite_psa_crypto_storage_format.v0',
-            [self.storage_test_case(key, name)
+            [self.storage_test_case(key, name, False)
+             for key, name in keys_v0])
+        self.write_test_data_file(
+            'test_suite_psa_crypto_storage_format.current',
+            [self.storage_test_case(key, name, True)
              for key, name in keys_v0])
 
     def generate_all(self):
