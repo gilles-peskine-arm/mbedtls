@@ -329,7 +329,7 @@ static int dhm_random_below( mbedtls_mpi *R, const mbedtls_mpi *M,
         if( count++ > 10 )
             return( MBEDTLS_ERR_MPI_NOT_ACCEPTABLE );
     }
-    while( mbedtls_mpi_cmp_int( R, 1 ) <= 0 );
+    while( dhm_check_range( R, M ) != 0 );
 
 cleanup:
     return( ret );
