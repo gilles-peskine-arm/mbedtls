@@ -1,0 +1,3 @@
+PKCS#12 MD2 id=1 iter=1 pass=#1 salt=#1 len=88
+depends_on:MBEDTLS_MD2_C
+pkcs12_derivation:MBEDTLS_MD_MD2:1:1:"81":"01":"de5aeecf1fbf8b7fc0a290c3bf24c07aa3d80f2a42ab3b8b6daeb1cff49e99f13c893bb682bff9152e6581c0529f398e289011494f7c9cb797edcb1a7359a498efff6fb9aa5a2cbec7595c5ecfe1443b66255acaddce795f"
