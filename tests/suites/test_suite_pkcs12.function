@@ -1,0 +1,31 @@
+/* BEGIN_HEADER */
+#include "mbedtls/md.h"
+#include "mbedtls/pkcs12.h"
+/* END_HEADER */
+
+/* BEGIN_DEPENDENCIES
+ * depends_on:MBEDTLS_PKCS12_C
+ * END_DEPENDENCIES
+ */
+
+/* BEGIN_CASE */
+void pkcs12_derivation( int md_type, int purpose, int iterations,
+                        data_t *password, data_t *salt,
+                        data_t *expected )
+{
+    uint8_t *actual = NULL;
+    size_t output_len = expected->len;
+
+    ASSERT_ALLOC( actual, output_len );
+
+    TEST_EQUAL( 0, mbedtls_pkcs12_derivation( actual, output_len,
+                                              password->x, password->len,
+                                              salt->x, salt->len,
+                                              md_type, purpose, iterations ) );
+
+    ASSERT_COMPARE( actual, output_len, expected->x, expected->len );
+
+exit:
+    mbedtls_free( actual );
+}
+/* END_CASE */
