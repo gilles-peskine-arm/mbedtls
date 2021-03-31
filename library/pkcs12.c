@@ -273,6 +273,18 @@ int mbedtls_pkcs12_derivation( unsigned char *data, size_t datalen,
         return( ret );
     hlen = mbedtls_md_get_size( md_info );
 
+#if defined(MBEDTLS_MD2_C)
+    /* PKCS#12 explicitly specifies that v = 512 bits = 64 bytes for MD2,
+     * but also specifies that v is the size of the message input to the
+     * compression function, which for MD2 is 128 bits = 16 bytes.
+     * Historically, Mbed TLS used the explicit value, but most other
+     * implementations followed the generic rule of using the input
+     * block size. So use the block size instead.
+     * https://github.com/ARMmbed/mbedtls/issues/4267 */
+    if( md_type == MBEDTLS_MD_MD2 )
+        v = 16;
+    else
+#endif
     if( hlen <= 32 )
         v = 64;
     else

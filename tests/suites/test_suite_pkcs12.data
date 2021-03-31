@@ -1,3 +1,11 @@
-PKCS#12 MD2 id=1 iter=1 pass=#1 salt=#1 len=88
+## With MD2, there are two possible interpretations of PKCS#12:
+## v=512 is explicitly stated in the specification, but
+## v=128 according to the general rule given in the specification.
+## https://github.com/ARMmbed/mbedtls/issues/4267
+# PKCS#12 MD2[v=512] id=1 iter=1 pass=#1 salt=#1 len=88
+# depends_on:MBEDTLS_MD2_C
+# pkcs12_derivation:MBEDTLS_MD_MD2:1:1:"81":"01":"de5aeecf1fbf8b7fc0a290c3bf24c07aa3d80f2a42ab3b8b6daeb1cff49e99f13c893bb682bff9152e6581c0529f398e289011494f7c9cb797edcb1a7359a498efff6fb9aa5a2cbec7595c5ecfe1443b66255acaddce795f"
+
+PKCS#12 MD2[v=128] id=1 iter=1 pass=#1 salt=#1 len=88
 depends_on:MBEDTLS_MD2_C
-pkcs12_derivation:MBEDTLS_MD_MD2:1:1:"81":"01":"de5aeecf1fbf8b7fc0a290c3bf24c07aa3d80f2a42ab3b8b6daeb1cff49e99f13c893bb682bff9152e6581c0529f398e289011494f7c9cb797edcb1a7359a498efff6fb9aa5a2cbec7595c5ecfe1443b66255acaddce795f"
+pkcs12_derivation:MBEDTLS_MD_MD2:1:1:"81":"01":"b1bacd02858bfa52ab0b3592b3c18b3881a97d59136f30435f0495c3089d2a8719fbd4052dc1e35b4e786b2eb64175a503ab8368a2ffd2025a9b4ae8e53dcbbde9672fb96dbabb6271cb722920f7ec149cfcf8d89a506145"
