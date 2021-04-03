@@ -1028,13 +1028,14 @@ static inline void sub32( uint32_t *dst, uint32_t src, signed char *carry )
     STORE32; i++;                               \
     cur = c > 0 ? c : 0; STORE32;               \
     cur = 0; while( ++i < MAX32 ) { STORE32; }  \
-    if( c < 0 ) fix_negative( N, c, bits );
+    if( c < 0 ) mbedtls_ecp_fix_negative( N, c, bits );
 
 /*
  * If the result is negative, we get it in the form
  * c * 2^bits + N, with c negative and N positive shorter than 'bits'
  */
-static inline void fix_negative( mbedtls_mpi *N, signed char c, size_t bits )
+MBEDTLS_STATIC_TESTABLE
+void mbedtls_ecp_fix_negative( mbedtls_mpi *N, signed char c, size_t bits )
 {
     size_t i;
 
