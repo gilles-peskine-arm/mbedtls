@@ -30,7 +30,7 @@
 #include "psa/crypto.h"
 #include "psa/crypto_se_driver.h"
 
-#include <mbedtls/md_internal.h>
+#include <md_wrap.h>
 
 /** The data structure representing a key slot, containing key material
  * and metadata for one key.
