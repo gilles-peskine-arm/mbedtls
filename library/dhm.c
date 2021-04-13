@@ -150,7 +150,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
 }
 
 /*
- * Pick a random R in the range [2, M) for blinding or key generation.
+ * Pick a random R in the range [2, M-2] for blinding or key generation.
  */
 static int dhm_random_below( mbedtls_mpi *R, const mbedtls_mpi *M,
                 int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
