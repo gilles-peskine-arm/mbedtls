@@ -2398,6 +2398,7 @@ cleanup:
 
 /* Fill X with n_bytes random bytes.
  * X must already have room for those bytes.
+ * The size and sign of X are unchanged.
  * n_bytes must not be 0.
  */
 static int mpi_fill_random_internal(
@@ -2410,9 +2411,9 @@ static int mpi_fill_random_internal(
 
     if( X->n < limbs )
         return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( X, 0 ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( X, limbs ) );
 
+    memset( X->p, 0, overhead );
+    memset( (unsigned char *) X->p + limbs * ciL, 0, ( X->n - limbs ) * ciL );
     MBEDTLS_MPI_CHK( f_rng( p_rng, (unsigned char *) X->p + overhead, n_bytes ) );
     mpi_bigendian_to_host( X->p, limbs );
 
@@ -2444,6 +2445,7 @@ int mbedtls_mpi_fill_random( mbedtls_mpi *X, size_t size,
         mbedtls_mpi_init( X );
         MBEDTLS_MPI_CHK( mbedtls_mpi_grow( X, limbs ) );
     }
+    X->s = 1;
     if( size == 0 )
         return( 0 );
 
@@ -2502,6 +2504,7 @@ int mbedtls_mpi_random( mbedtls_mpi *X,
         mbedtls_mpi_init( X );
         MBEDTLS_MPI_CHK( mbedtls_mpi_grow( X, N->n ) );
     }
+    X->s = 1;
 
     /*
      * Match the procedure given in RFC 6979 §3.3 (deterministic ECDSA)
