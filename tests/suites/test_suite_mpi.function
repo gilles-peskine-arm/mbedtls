@@ -71,12 +71,9 @@ static int f_rng_bytes_left( void *state, unsigned char *buf, size_t len )
  * Let n be the bit-size of b, i.e. the integer such that 2^n <= b < 2^{n+1}.
  * This function returns 1 if, when drawing a number between 0 and b,
  * the probability that this number is at least 2^n is not negligible.
- * The threshold for negligible is heuristic and based on the needs of
- * mpi_random_many().
- *
- * b is significantly above a power of 2 if (b - 2^n) / 2^n >= A, where
- * 0 < A < 1 is a constant chosen such that it is statistically unlikely
- * that drawing a number between 0 and 1+A.
+ * This probability is (b - 2^n) / 2^n and this function checks that this
+ * number is above some threshold A. The threshold value is heuristic and
+ * based on the needs of mpi_random_many().
  */
 static int is_significantly_above_a_power_of_2( data_t *bytes )
 {
