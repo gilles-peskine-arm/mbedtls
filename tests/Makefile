@@ -97,6 +97,20 @@ src/drivers/%.o : src/drivers/%.c
 
 C_FILES := $(addsuffix .c,$(APPS))
 
+.PHONY: generated_files
+GENERATED_DATA_FILES := $(patsubst tests/%,%,$(shell $(PYTHON) scripts/generate_psa_tests.py --list))
+GENERATED_FILES := $(GENERATED_DATA_FILES)
+generated_files: $(GENERATED_FILES)
+
+$(GENERATED_DATA_FILES): scripts/generate_psa_tests.py
+$(GENERATED_DATA_FILES): ../include/psa/crypto_config.h
+$(GENERATED_DATA_FILES): ../include/psa/crypto_values.h
+$(GENERATED_DATA_FILES): ../include/psa/crypto_extra.h
+$(GENERATED_DATA_FILES): suites/test_suite_psa_crypto_metadata.data
+$(GENERATED_DATA_FILES):
+	echo "  Gen   $@ ..."
+	$(PYTHON) scripts/generate_psa_tests.py
+
 # Wildcard target for test code generation:
 # A .c file is generated for each .data file in the suites/ directory. Each .c
 # file depends on a .data and .function file from suites/ directory. Following
@@ -143,6 +157,13 @@ else
 ifneq ($(wildcard TESTS/.*),)
 	rmdir /Q /S TESTS
 endif
+endif
+
+neat: clean
+ifndef WINDOWS
+	rm -f $(GENERATED_FILES)
+else
+	for %f in ($(subst /,\,$(GENERATED_FILES))) if exist %f del /Q /F %f
 endif
 
 # Test suites caught by SKIP_TEST_SUITES are built but not executed.
