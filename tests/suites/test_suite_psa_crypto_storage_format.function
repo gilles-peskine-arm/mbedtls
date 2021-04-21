@@ -121,6 +121,7 @@ static int test_read_key( const psa_key_attributes_t *expected_attributes,
     {
         /* Read-only keys cannot be removed through the API.
          * The key will be removed through ITS in the cleanup code below. */
+        TEST_EQUAL( PSA_ERROR_NOT_PERMITTED, psa_destroy_key( key_id ) );
     }
     else
     {
