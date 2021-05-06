@@ -63,7 +63,7 @@ BINARIES := $(addsuffix $(EXEXT),$(APPS))
 
 .SILENT:
 
-.PHONY: all check test clean
+.PHONY: all c_files check test clean
 
 all: $(BINARIES)
 
@@ -71,6 +71,7 @@ $(DEP):
 	$(MAKE) -C ../library
 
 C_FILES := $(addsuffix .c,$(APPS))
+c_files: $(C_FILES)
 
 # Wildcard target for test code generation:
 # A .c file is generated for each .data file in the suites/ directory. Each .c
