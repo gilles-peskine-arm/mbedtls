@@ -898,7 +898,7 @@ static const mbedtls_ssl_ciphersuite_t ciphersuite_definitions[] =
       MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
       MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3,
       0 },
-#endif /* MBEDTLS_SHA1_C */
+#endif /* MBEDTLS_SHA384_C */
 #endif /* MBEDTLS_GCM_C */
 #endif /* MBEDTLS_CAMELLIA_C */
 
