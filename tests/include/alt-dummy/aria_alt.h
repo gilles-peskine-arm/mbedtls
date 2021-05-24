@@ -19,8 +19,8 @@
 #ifndef ARIA_ALT_H
 #define ARIA_ALT_H
 
-#ifdef __cplusplus
-extern "C" {
+typedef struct mbedtls_aria_context
+{
     int dummy;
 }
 mbedtls_aria_context;
