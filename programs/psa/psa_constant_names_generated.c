@@ -169,11 +169,11 @@ static int psa_snprint_algorithm(char *buffer, size_t buffer_size,
         } else if (alg & PSA_ALG_AEAD_AT_LEAST_THIS_LENGTH_FLAG) {
             append(&buffer, buffer_size, &required_size,
                    "PSA_ALG_AEAD_WITH_AT_LEAST_THIS_LENGTH_TAG(", 43);
-            length_modifier = PSA_AEAD_TAG_LENGTH(alg);
+            length_modifier = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
         } else if (core_alg != alg) {
             append(&buffer, buffer_size, &required_size,
                    "PSA_ALG_AEAD_WITH_SHORTENED_TAG(", 32);
-            length_modifier = PSA_AEAD_TAG_LENGTH(alg);
+            length_modifier = PSA_ALG_AEAD_GET_TAG_LENGTH(alg);
         }
     } else if (PSA_ALG_IS_KEY_AGREEMENT(alg) &&
                !PSA_ALG_IS_RAW_KEY_AGREEMENT(alg)) {
@@ -394,12 +394,26 @@ static int psa_snprint_key_usage(char *buffer, size_t buffer_size,
         append(&buffer, buffer_size, &required_size, "PSA_KEY_USAGE_SIGN_HASH", 23);
         usage ^= PSA_KEY_USAGE_SIGN_HASH;
     }
+    if (usage & PSA_KEY_USAGE_SIGN_MESSAGE) {
+        if (required_size != 0) {
+            append(&buffer, buffer_size, &required_size, " | ", 3);
+        }
+        append(&buffer, buffer_size, &required_size, "PSA_KEY_USAGE_SIGN_MESSAGE", 26);
+        usage ^= PSA_KEY_USAGE_SIGN_MESSAGE;
+    }
     if (usage & PSA_KEY_USAGE_VERIFY_HASH) {
         if (required_size != 0) {
             append(&buffer, buffer_size, &required_size, " | ", 3);
         }
         append(&buffer, buffer_size, &required_size, "PSA_KEY_USAGE_VERIFY_HASH", 25);
         usage ^= PSA_KEY_USAGE_VERIFY_HASH;
+    }
+    if (usage & PSA_KEY_USAGE_VERIFY_MESSAGE) {
+        if (required_size != 0) {
+            append(&buffer, buffer_size, &required_size, " | ", 3);
+        }
+        append(&buffer, buffer_size, &required_size, "PSA_KEY_USAGE_VERIFY_MESSAGE", 28);
+        usage ^= PSA_KEY_USAGE_VERIFY_MESSAGE;
     }
     if (usage != 0) {
         if (required_size != 0) {
