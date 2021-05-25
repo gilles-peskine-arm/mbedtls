@@ -1383,6 +1383,21 @@ component_build_default_make_gcc_and_cxx () {
     make TEST_CPP=1
 }
 
+component_build_module_alt () {
+    msg "build: MBEDTLS_XXX_ALT" # ~30s
+    scripts/config.py full
+    # Disable modules that are incompatible with some ALT implementation.
+    scripts/config.py unset MBEDTLS_AESNI_C
+    scripts/config.py unset MBEDTLS_DEBUG_C
+    scripts/config.py unset MBEDTLS_THREADING_PTHREAD
+    # Enable all MBEDTLS_XXX_ALT for whole modules. Do not enable
+    # MBEDTLS_XXX_YYY_ALT which are for single functions.
+    scripts/config.py set-all 'MBEDTLS_([A-Z0-9]*|NIST_KW)_ALT'
+    # We can only compile, not link, since we don't have any implementations
+    # suitable for testing with the dummy alt headers.
+    make CC=gcc CFLAGS='-Werror -Wall -Wextra -I../tests/include/alt-dummy' lib
+}
+
 component_test_no_use_psa_crypto_full_cmake_asan() {
     # full minus MBEDTLS_USE_PSA_CRYPTO: run the same set of tests as basic-build-test.sh
     msg "build: cmake, full config minus MBEDTLS_USE_PSA_CRYPTO, ASan"
