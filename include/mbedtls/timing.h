@@ -91,7 +91,7 @@ unsigned long mbedtls_timing_hardclock( void );
  *                 get_timer(0) }` the value time1+time2 is only approximately
  *                 the delay since the first reset.
  */
-unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset );
+unsigned long mbedtls_timing_get_timer( const struct mbedtls_timing_hr_time *val, int reset );
 
 /**
  * \brief          Setup an alarm clock
@@ -133,7 +133,7 @@ void mbedtls_timing_set_delay( void *data, uint32_t int_ms, uint32_t fin_ms );
  *                  1 if only the intermediate delay is passed,
  *                  2 if the final delay is passed.
  */
-int mbedtls_timing_get_delay( void *data );
+int mbedtls_timing_get_delay( const void *data );
 
 #if defined(MBEDTLS_SELF_TEST)
 /**
