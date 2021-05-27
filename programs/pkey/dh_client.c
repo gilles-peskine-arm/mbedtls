@@ -193,7 +193,8 @@ int main( void )
         goto exit;
     }
 
-    if( dhm.len < 64 || dhm.len > 512 )
+    n = mbedtls_dhm_get_len( &dhm );
+    if( n < 64 || n > 512 )
     {
         mbedtls_printf( " failed\n  ! Invalid DHM modulus size\n\n" );
         goto exit;
@@ -233,8 +234,8 @@ int main( void )
     mbedtls_printf( "\n  . Sending own public value to server" );
     fflush( stdout );
 
-    n = dhm.len;
-    if( ( ret = mbedtls_dhm_make_public( &dhm, (int) dhm.len, buf, n,
+    n = mbedtls_dhm_get_len( &dhm );
+    if( ( ret = mbedtls_dhm_make_public( &dhm, (int) n, buf, n,
                                  mbedtls_ctr_drbg_random, &ctr_drbg ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_dhm_make_public returned %d\n\n", ret );
