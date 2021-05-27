@@ -203,10 +203,16 @@ mbedtls_ecp_point;
  * additions or subtractions. Therefore, it is only an approximative modular
  * reduction. It must return 0 on success and non-zero on failure.
  *
- * \note        Alternative implementations must keep the group IDs distinct. If
- *              two group structures have the same ID, then they must be
- *              identical.
- *
+ * \note        Alternative implementations of the ECP module must obey the
+ *              following constraints.
+ *              * Group IDs must be distinct: if two group structures have
+ *                the same ID, then they must be identical.
+ *              * The fields \c id, \c P, \c A, \c B, \c G, \c N,
+ *                \c pbits and \c nbits must have the same type and semantics
+ *                as in the built-in implementation.
+ *                They must be available for reading, but direct modification
+ *                of these fields does not need to be supported.
+ *                They do not need to be at the same offset in the structure.
  */
 typedef struct mbedtls_ecp_group
 {
@@ -222,6 +228,8 @@ typedef struct mbedtls_ecp_group
     size_t nbits;               /*!< For Short Weierstrass: The number of bits in \p P.
                                      For Montgomery curves: the number of bits in the
                                      private keys. */
+    /* End of public fields */
+
     unsigned int h;             /*!< \internal 1 if the constants are static. */
     int (*modp)(mbedtls_mpi *); /*!< The function for fast pseudo-reduction
                                      mod \p P (see above).*/
