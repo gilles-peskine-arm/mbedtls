@@ -385,6 +385,8 @@ void mbedtls_ecp_curve_info( int id, int tls_id, int size, char * name )
     TEST_ASSERT( by_id == by_name );
 
     TEST_ASSERT( by_id->bit_size == size );
+    TEST_ASSERT( size <= MBEDTLS_ECP_MAX_BITS );
+    TEST_ASSERT( size <= MBEDTLS_ECP_MAX_BYTES * 8 );
 }
 /* END_CASE */
 
@@ -793,6 +795,7 @@ void ecp_muladd( int id,
     TEST_EQUAL( 0, mbedtls_ecp_point_write_binary(
                     &grp, &R, MBEDTLS_ECP_PF_UNCOMPRESSED,
                     &len, actual_result, sizeof( actual_result ) ) );
+    TEST_ASSERT( len <= MBEDTLS_ECP_MAX_PT_LEN );
 
     ASSERT_COMPARE( expected_result->x, expected_result->len,
                     actual_result, len );
@@ -861,6 +864,7 @@ void ecp_write_binary( int id, char * x, char * y, char * z, int format,
 
     TEST_ASSERT( mbedtls_ecp_point_write_binary( &grp, &P, format,
                                    &olen, buf, blen ) == ret );
+    TEST_ASSERT( olen <= MBEDTLS_ECP_MAX_PT_LEN );
 
     if( ret == 0 )
     {
