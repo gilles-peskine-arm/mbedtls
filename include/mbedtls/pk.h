@@ -870,6 +870,12 @@ int mbedtls_pk_wrap_as_opaque( mbedtls_pk_context *pk,
                                psa_algorithm_t hash_alg );
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
+#if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_PK_PARSE_EC_EXTENDED)
+#include "mbedtls/asn1.h"
+int mbedtls_pk_group_id_from_specified( const mbedtls_asn1_buf *params,
+                                        mbedtls_ecp_group_id *grp_id );
+#endif
+
 #ifdef __cplusplus
 }
 #endif
