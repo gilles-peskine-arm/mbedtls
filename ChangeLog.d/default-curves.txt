@@ -1,0 +1,4 @@
+Default behavior changes
+   * Some default policies for X.509 certificate verification and TLS have
+     changed: curves and hashes weaker than 255 bits are no longer accepted
+     by default.
