@@ -5944,9 +5944,12 @@ run_test    "Large server packet TLS 1.2 AEAD shorter tag" \
 
 # Tests for restartable ECC
 
+# Force the use of a curve that supports restartable ECC (secp256r1).
+
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, default" \
-            "$P_SRV auth_mode=required" \
+            "$P_SRV curves=secp256r1 auth_mode=required" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
              key_file=data_files/server5.key crt_file=data_files/server5.crt  \
              debug_level=1" \
@@ -5957,8 +5960,9 @@ run_test    "EC restart: TLS, default" \
             -C "mbedtls_pk_sign.*4b00"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=0" \
-            "$P_SRV auth_mode=required" \
+            "$P_SRV curves=secp256r1 auth_mode=required" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
              key_file=data_files/server5.key crt_file=data_files/server5.crt  \
              debug_level=1 ec_max_ops=0" \
@@ -5969,8 +5973,9 @@ run_test    "EC restart: TLS, max_ops=0" \
             -C "mbedtls_pk_sign.*4b00"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=65535" \
-            "$P_SRV auth_mode=required" \
+            "$P_SRV curves=secp256r1 auth_mode=required" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
              key_file=data_files/server5.key crt_file=data_files/server5.crt  \
              debug_level=1 ec_max_ops=65535" \
@@ -5981,8 +5986,9 @@ run_test    "EC restart: TLS, max_ops=65535" \
             -C "mbedtls_pk_sign.*4b00"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=1000" \
-            "$P_SRV auth_mode=required" \
+            "$P_SRV curves=secp256r1 auth_mode=required" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
              key_file=data_files/server5.key crt_file=data_files/server5.crt  \
              debug_level=1 ec_max_ops=1000" \
@@ -5993,8 +5999,9 @@ run_test    "EC restart: TLS, max_ops=1000" \
             -c "mbedtls_pk_sign.*4b00"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=1000, badsign" \
-            "$P_SRV auth_mode=required \
+            "$P_SRV curves=secp256r1 auth_mode=required \
              crt_file=data_files/server5-badsign.crt \
              key_file=data_files/server5.key" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
@@ -6010,8 +6017,9 @@ run_test    "EC restart: TLS, max_ops=1000, badsign" \
             -c "X509 - Certificate verification failed"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=1000, auth_mode=optional badsign" \
-            "$P_SRV auth_mode=required \
+            "$P_SRV curves=secp256r1 auth_mode=required \
              crt_file=data_files/server5-badsign.crt \
              key_file=data_files/server5.key" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
@@ -6027,8 +6035,9 @@ run_test    "EC restart: TLS, max_ops=1000, auth_mode=optional badsign" \
             -C "X509 - Certificate verification failed"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=1000, auth_mode=none badsign" \
-            "$P_SRV auth_mode=required \
+            "$P_SRV curves=secp256r1 auth_mode=required \
              crt_file=data_files/server5-badsign.crt \
              key_file=data_files/server5.key" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
@@ -6044,8 +6053,9 @@ run_test    "EC restart: TLS, max_ops=1000, auth_mode=none badsign" \
             -C "X509 - Certificate verification failed"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: DTLS, max_ops=1000" \
-            "$P_SRV auth_mode=required dtls=1" \
+            "$P_SRV curves=secp256r1 auth_mode=required dtls=1" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
              key_file=data_files/server5.key crt_file=data_files/server5.crt  \
              dtls=1 debug_level=1 ec_max_ops=1000" \
@@ -6056,8 +6066,9 @@ run_test    "EC restart: DTLS, max_ops=1000" \
             -c "mbedtls_pk_sign.*4b00"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=1000 no client auth" \
-            "$P_SRV" \
+            "$P_SRV curves=secp256r1" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 \
              debug_level=1 ec_max_ops=1000" \
             0 \
@@ -6067,8 +6078,9 @@ run_test    "EC restart: TLS, max_ops=1000 no client auth" \
             -C "mbedtls_pk_sign.*4b00"
 
 requires_config_enabled MBEDTLS_ECP_RESTARTABLE
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
 run_test    "EC restart: TLS, max_ops=1000, ECDHE-PSK" \
-            "$P_SRV psk=abc123" \
+            "$P_SRV curves=secp256r1 psk=abc123" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-PSK-WITH-AES-128-CBC-SHA256 \
              psk=abc123 debug_level=1 ec_max_ops=1000" \
             0 \
