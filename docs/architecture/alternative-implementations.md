@@ -15,11 +15,11 @@ The storage of the non-volatile seed for random generation, enabled with `MBEDTL
 
 For timing functions, you can [declare an alternative implementation of the timing module](#module-alternative-implementations).
 
-For networking, on systems without a BSD-like socket interface, you can replace `net_sockets.c` by a compatible module, or use custom functions for TLS.
-
 On multithreaded platforms, [declare an alternative implementation of the threading module](#module-alternative-implementations).
 
 To configure entropy sources (hardware random generators), see the `MBEDTLS_ENTROPY_XXX` options in the configuration file.
+
+For networking, the `net_sockets` module does not currently support alternative implementations. If this module does not work on your platform, disable `MBEDTLS_NET_C` and use custom functions for TLS.
 
 If your platform has a cryptographic accelerator, you can use it via a [PSA driver](#psa-cryptography-drivers) or an [declare an alternative implementation of the corresponding module(s)](#module-alternative-implementations) or [specific functions](#function-alternative-implementations).
 
