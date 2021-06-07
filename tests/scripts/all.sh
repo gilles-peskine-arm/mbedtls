@@ -1381,7 +1381,7 @@ component_build_module_alt () {
 }
 
 component_build_dhm_alt () {
-    msg "build: MBEDTLS_XXX_ALT" # ~30s
+    msg "build: MBEDTLS_DHM_ALT" # ~30s
     scripts/config.py full
     scripts/config.py set MBEDTLS_DHM_ALT
     scripts/config.py unset MBEDTLS_DEBUG_C
