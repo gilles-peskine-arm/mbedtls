@@ -224,7 +224,10 @@ int mbedtls_mpi_copy( mbedtls_mpi *X, const mbedtls_mpi *Y )
     if( Y->n == 0 )
     {
         if( X->n != 0 )
+        {
+            X->s = 1;
             memset( X->p, 0, X->n * ciL );
+        }
         return( 0 );
     }
 
