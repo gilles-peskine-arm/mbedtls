@@ -639,30 +639,21 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void mpi_copy_self( int input_X )
+void mpi_copy_self( char *input_X )
 {
-    mbedtls_mpi X;
+    mbedtls_mpi X, A;
+    mbedtls_mpi_init( &A );
     mbedtls_mpi_init( &X );
 
-    TEST_ASSERT( mbedtls_mpi_lset( &X, input_X ) == 0 );
+    TEST_ASSERT( mbedtls_mpi_read_string( &X, 16, input_X ) == 0 );
     TEST_ASSERT( mbedtls_mpi_copy( &X, &X ) == 0 );
-    TEST_ASSERT( mbedtls_mpi_cmp_int( &X, input_X ) == 0 );
+
+    TEST_ASSERT( mbedtls_mpi_read_string( &A, 16, input_X ) == 0 );
+    TEST_ASSERT( sign_is_valid( &X ) );
+    TEST_ASSERT( mbedtls_mpi_cmp_mpi( &X, &A ) == 0 );
 
 exit:
-    mbedtls_mpi_free( &X );
-}
-/* END_CASE */
-
-/* BEGIN_CASE */
-void mpi_copy_self_null( )
-{
-    mbedtls_mpi X;
-    mbedtls_mpi_init( &X );
-
-    TEST_ASSERT( mbedtls_mpi_copy( &X, &X ) == 0 );
-    TEST_ASSERT( mbedtls_mpi_cmp_int( &X, 0 ) == 0 );
-
-exit:
+    mbedtls_mpi_free( &A );
     mbedtls_mpi_free( &X );
 }
 /* END_CASE */
