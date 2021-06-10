@@ -624,15 +624,13 @@ void mbedtls_mpi_copy( char *src_hex, char *dst_hex )
     mbedtls_mpi_init( &src );
     mbedtls_mpi_init( &dst );
 
-    if( src_hex[0] != 0 )
-        TEST_ASSERT( mbedtls_mpi_read_string( &src, 16, src_hex ) == 0 );
-    if( dst_hex[0] != 0 )
-        TEST_ASSERT( mbedtls_mpi_read_string( &dst, 16, dst_hex ) == 0 );
+    TEST_ASSERT( mbedtls_mpi_read_string( &src, 16, src_hex ) == 0 );
+    TEST_ASSERT( mbedtls_mpi_read_string( &dst, 16, dst_hex ) == 0 );
 
     TEST_ASSERT( mbedtls_mpi_copy( &dst, &src ) == 0 );
 
-    TEST_ASSERT( mbedtls_mpi_cmp_mpi( &dst, &src ) == 0 );
     TEST_ASSERT( sign_is_valid( &dst ) );
+    TEST_ASSERT( mbedtls_mpi_cmp_mpi( &dst, &src ) == 0 );
 
 exit:
     mbedtls_mpi_free( &src );
