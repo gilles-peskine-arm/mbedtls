@@ -362,16 +362,16 @@ Base test mbedtls_mpi_cmp_abs (Mix values) #3
 mbedtls_mpi_cmp_abs:10:"-2":10:"1":1
 
 Copy large negative to large negative
-mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"-ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"-face1e55ca11ab1ecab005e5"
 
 Copy large negative to large positive
-mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"face1e55ca11ab1ecab005e5"
 
 Copy large negative to small negative
-mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"-bead"
+mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"-beef"
 
 Copy large negative to small positive
-mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"bead"
+mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"beef"
 
 Copy large negative to zero (1 limb)
 mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"0"
@@ -380,16 +380,16 @@ Copy large negative to zero (null)
 mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":""
 
 Copy large positive to large negative
-mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"-ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"-face1e55ca11ab1ecab005e5"
 
 Copy large positive to large positive
-mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"face1e55ca11ab1ecab005e5"
 
 Copy large positive to small negative
-mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"-bead"
+mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"-beef"
 
 Copy large positive to small positive
-mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"bead"
+mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"beef"
 
 Copy large positive to zero (1 limb)
 mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":"0"
@@ -398,16 +398,16 @@ Copy large positive to zero (null)
 mbedtls_mpi_copy:"ca5cadedb01dfaceacc01ade":""
 
 Copy small negative to large negative
-mbedtls_mpi_copy:"-bead":"-ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"-bead":"-face1e55ca11ab1ecab005e5"
 
 Copy small negative to large positive
-mbedtls_mpi_copy:"-bead":"ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"-bead":"face1e55ca11ab1ecab005e5"
 
 Copy small negative to small negative
-mbedtls_mpi_copy:"-bead":"-bead"
+mbedtls_mpi_copy:"-bead":"-beef"
 
 Copy small negative to small positive
-mbedtls_mpi_copy:"-bead":"bead"
+mbedtls_mpi_copy:"-bead":"beef"
 
 Copy small negative to zero (1 limb)
 mbedtls_mpi_copy:"-bead":"0"
@@ -416,16 +416,16 @@ Copy small negative to zero (null)
 mbedtls_mpi_copy:"-bead":""
 
 Copy small positive to large negative
-mbedtls_mpi_copy:"bead":"-ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"bead":"-face1e55ca11ab1ecab005e5"
 
 Copy small positive to large positive
-mbedtls_mpi_copy:"bead":"ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"bead":"face1e55ca11ab1ecab005e5"
 
 Copy small positive to small negative
-mbedtls_mpi_copy:"bead":"-bead"
+mbedtls_mpi_copy:"bead":"-beef"
 
 Copy small positive to small positive
-mbedtls_mpi_copy:"bead":"bead"
+mbedtls_mpi_copy:"bead":"beef"
 
 Copy small positive to zero (1 limb)
 mbedtls_mpi_copy:"bead":"0"
@@ -434,16 +434,16 @@ Copy small positive to zero (null)
 mbedtls_mpi_copy:"bead":""
 
 Copy zero (1 limb) to large negative
-mbedtls_mpi_copy:"0":"-ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"0":"-face1e55ca11ab1ecab005e5"
 
 Copy zero (1 limb) to large positive
-mbedtls_mpi_copy:"0":"ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"0":"face1e55ca11ab1ecab005e5"
 
 Copy zero (1 limb) to small negative
-mbedtls_mpi_copy:"0":"-bead"
+mbedtls_mpi_copy:"0":"-beef"
 
 Copy zero (1 limb) to small positive
-mbedtls_mpi_copy:"0":"bead"
+mbedtls_mpi_copy:"0":"beef"
 
 Copy zero (1 limb) to zero (1 limb)
 mbedtls_mpi_copy:"0":"0"
@@ -452,16 +452,16 @@ Copy zero (1 limb) to zero (null)
 mbedtls_mpi_copy:"0":""
 
 Copy zero (null) to large negative
-mbedtls_mpi_copy:"":"-ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"":"-face1e55ca11ab1ecab005e5"
 
 Copy zero (null) to large positive
-mbedtls_mpi_copy:"":"ca5cadedb01dfaceacc01ade"
+mbedtls_mpi_copy:"":"face1e55ca11ab1ecab005e5"
 
 Copy zero (null) to small negative
-mbedtls_mpi_copy:"":"-bead"
+mbedtls_mpi_copy:"":"-beef"
 
 Copy zero (null) to small positive
-mbedtls_mpi_copy:"":"bead"
+mbedtls_mpi_copy:"":"beef"
 
 Copy zero (null) to zero (1 limb)
 mbedtls_mpi_copy:"":"0"
