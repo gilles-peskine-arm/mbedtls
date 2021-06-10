@@ -212,7 +212,12 @@ int mbedtls_mpi_shrink( mbedtls_mpi *X, size_t nblimbs )
 }
 
 /*
- * Copy the contents of Y into X
+ * Copy the contents of Y into X.
+ *
+ * This function is not constant-time. Leading zeros in Y may be removed.
+ *
+ * Note that this function does not systematically shrink X to the size of Y,
+ * but it also does not guarantee that X will not shrink.
  */
 int mbedtls_mpi_copy( mbedtls_mpi *X, const mbedtls_mpi *Y )
 {
@@ -870,7 +875,10 @@ int mbedtls_mpi_read_binary( mbedtls_mpi *X, const unsigned char *buf, size_t bu
     MPI_VALIDATE_RET( X != NULL );
     MPI_VALIDATE_RET( buflen == 0 || buf != NULL );
 
-    /* Ensure that target MPI has exactly the necessary number of limbs */
+    /* Ensure that target MPI has exactly the necessary number of limbs.
+     * Exception: for maximal backward compatibility, the target will
+     * always have at least one limb, even if the source is 0 represented
+     * with 0 limbs. */
     if( X->n != limbs )
     {
         mbedtls_mpi_free( X );
