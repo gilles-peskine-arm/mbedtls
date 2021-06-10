@@ -469,14 +469,23 @@ mbedtls_mpi_copy:"":"0"
 Copy zero (null) to zero (null)
 mbedtls_mpi_copy:"":""
 
-Copy self: positive (1 limb)
-mpi_copy_self:14
+Copy self: zero (null)
+mpi_copy_self:""
 
 Copy self: zero (1 limb)
-mpi_copy_self:0
+mpi_copy_self:"0"
 
-Copy self: zero (null)
-mpi_copy_self_null:
+Copy self: positive (1 limb)
+mpi_copy_self:"123"
+
+Copy self: positive (>1 limbs)
+mpi_copy_self:"0f1e2d3c4b5a69780123456789"
+
+Copy self: negative (1 limb)
+mpi_copy_self:"-123"
+
+Copy self: negative (>1 limbs)
+mpi_copy_self:"-0f1e2d3c4b5a69780123456789"
 
 Swap zero (1 limb) with positive (1 limb)
 mbedtls_mpi_swap_sint:0:1500
