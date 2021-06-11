@@ -294,4 +294,25 @@ void mbedtls_test_err_add_check( int high, int low,
                                  const char *file, int line);
 #endif
 
+
+/** Read an MPI from a string.
+ *
+ * Like mbedtls_mpi_read_string(), but size the resulting bignum based
+ * on the number of digits in the string. In particular, construct a
+ * bignum with 0 limbs for an empty string, and a bignum with leading 0
+ * limbs if the string has sufficiently many leading 0 digits.
+ *
+ * This is important so that the "0 (null)" and "0 (1 limb)" and
+ * "leading zeros" test cases do what they claim.
+ *
+ * \param[out] X        The MPI object to populate. It must be initialized.
+ * \param radix         The radix (2 to 16).
+ * \param[in] string    The null-terminated string to read from.
+ *
+ * \return \c 0 on success, an \c MBEDTLS_ERR_MPI_xxx error code otherwise.
+ */
+/* Since the library has exactly the desired behavior, this is trivial. */
+#define mbedtls_test_read_mpi( X, radix, string )       \
+    mbedtls_mpi_read_string( X, radix, string )
+
 #endif /* TEST_HELPERS_H */
