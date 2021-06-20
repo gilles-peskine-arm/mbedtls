@@ -51,6 +51,9 @@
 #if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
     !defined(EFI32)
 
+/* The value returned by socket creation functions on error. */
+#define INVALID_FD ( (int) INVALID_SOCKET )
+
 #define IS_EINTR( ret ) ( ( ret ) == WSAEINTR )
 
 #if !defined(_WIN32_WINNT)
@@ -92,6 +95,9 @@ static int wsa_init_done = 0;
 #include <fcntl.h>
 #include <netdb.h>
 #include <errno.h>
+
+/* The value returned by socket creation functions on error. */
+#define INVALID_FD ( -1 )
 
 #define IS_EINTR( ret ) ( ( ret ) == EINTR )
 
@@ -142,7 +148,7 @@ static int net_prepare( void )
  */
 static int check_fd( int fd, int for_select )
 {
-    if( fd < 0 )
+    if( fd == INVALID_FD )
         return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
 
 #if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
@@ -165,7 +171,7 @@ static int check_fd( int fd, int for_select )
  */
 void mbedtls_net_init( mbedtls_net_context *ctx )
 {
-    ctx->fd = -1;
+    ctx->fd = INVALID_FD;
 }
 
 /*
@@ -195,7 +201,7 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
     {
         ctx->fd = (int) socket( cur->ai_family, cur->ai_socktype,
                             cur->ai_protocol );
-        if( ctx->fd < 0 )
+        if( ctx->fd == INVALID_FD )
         {
             ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
             continue;
@@ -244,7 +250,7 @@ int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char 
     {
         ctx->fd = (int) socket( cur->ai_family, cur->ai_socktype,
                             cur->ai_protocol );
-        if( ctx->fd < 0 )
+        if( ctx->fd == INVALID_FD )
         {
             ret = MBEDTLS_ERR_NET_SOCKET_FAILED;
             continue;
@@ -406,13 +412,13 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
             return( MBEDTLS_ERR_NET_ACCEPT_FAILED );
 
         client_ctx->fd = bind_ctx->fd;
-        bind_ctx->fd   = -1; /* In case we exit early */
+        bind_ctx->fd   = INVALID_FD; /* In case we exit early */
 
         n = sizeof( struct sockaddr_storage );
         if( getsockname( client_ctx->fd,
                          (struct sockaddr *) &local_addr, &n ) != 0 ||
             ( bind_ctx->fd = (int) socket( local_addr.ss_family,
-                                           SOCK_DGRAM, IPPROTO_UDP ) ) < 0 ||
+                                           SOCK_DGRAM, IPPROTO_UDP ) ) == INVALID_FD ||
             setsockopt( bind_ctx->fd, SOL_SOCKET, SO_REUSEADDR,
                         (const char *) &one, sizeof( one ) ) != 0 )
         {
@@ -688,12 +694,12 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
  */
 void mbedtls_net_close( mbedtls_net_context *ctx )
 {
-    if( ctx->fd == -1 )
+    if( ctx->fd == INVALID_FD )
         return;
 
     close( ctx->fd );
 
-    ctx->fd = -1;
+    ctx->fd = INVALID_FD;
 }
 
 /*
@@ -701,13 +707,13 @@ void mbedtls_net_close( mbedtls_net_context *ctx )
  */
 void mbedtls_net_free( mbedtls_net_context *ctx )
 {
-    if( ctx->fd == -1 )
+    if( ctx->fd == INVALID_FD )
         return;
 
     shutdown( ctx->fd, 2 );
     close( ctx->fd );
 
-    ctx->fd = -1;
+    ctx->fd = INVALID_FD;
 }
 
 #endif /* MBEDTLS_NET_C */
