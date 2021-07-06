@@ -306,6 +306,13 @@ class KeyGenerate:
 class StorageKey(psa_storage.Key):
     """Representation of a key for storage format testing."""
 
+    def __init__(self, *, description: str, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.description = description #type: str
+
+class StorageKeyWithUsage(StorageKey):
+    """Storage key with implicit usage flag processing."""
+
     IMPLICIT_USAGE_FLAGS = {
         'PSA_KEY_USAGE_SIGN_HASH': 'PSA_KEY_USAGE_SIGN_MESSAGE',
         'PSA_KEY_USAGE_VERIFY_HASH': 'PSA_KEY_USAGE_VERIFY_MESSAGE'
@@ -331,24 +338,21 @@ class StorageKey(psa_storage.Key):
                    self.usage.value() & psa_storage.Expr(implicit).value() == 0:
                     self.usage = psa_storage.Expr(self.usage.string + ' | ' + implicit)
 
-class StorageTestData(StorageKey):
+class StorageTestData(StorageKeyWithUsage):
     """Representation of test case data for storage format testing."""
 
     def __init__(
             self,
-            description: str,
             expected_usage: Optional[str] = None,
             **kwargs
     ) -> None:
         """Prepare to generate test data
 
-        * `description`   : used for the the test case names
         * `expected_usage`: the usage flags generated as the expected usage flags
                             in the test cases. CAn differ from the usage flags
                             stored in the keys because of the usage flags extension.
         """
         super().__init__(**kwargs)
-        self.description = description #type: str
         self.expected_usage = expected_usage if expected_usage else self.usage.string #type: str
 
 class StorageFormat:
@@ -605,7 +609,7 @@ class StorageFormatV0(StorageFormat):
            algorithm and key type combination.
         """
         bits = key_type.sizes_to_test()[0]
-        implicit_usage = StorageKey.IMPLICIT_USAGE_FLAGS[implyer_usage]
+        implicit_usage = StorageKeyWithUsage.IMPLICIT_USAGE_FLAGS[implyer_usage]
         usage_flags = 'PSA_KEY_USAGE_EXPORT'
         material_usage_flags = usage_flags + ' | ' + implyer_usage
         expected_usage_flags = material_usage_flags + ' | ' + implicit_usage
@@ -685,7 +689,7 @@ class StorageFormatV0(StorageFormat):
         # without usage extension to check the extension compatiblity.
         alg_with_keys = self.gather_key_types_for_sign_alg()
 
-        for usage in sorted(StorageKey.IMPLICIT_USAGE_FLAGS, key=str):
+        for usage in sorted(StorageKeyWithUsage.IMPLICIT_USAGE_FLAGS, key=str):
             for alg in sorted(alg_with_keys):
                 for key_type in sorted(alg_with_keys[alg]):
                     # The key types must be filtered to fit the specific usage flag.
