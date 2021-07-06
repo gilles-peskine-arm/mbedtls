@@ -246,40 +246,28 @@ class StorageKeyWithUsage(StorageKey):
     def __init__(
             self,
             usage: str,
+            expected_usage: Optional[str] = None,
             without_implicit_usage: Optional[bool] = False,
             **kwargs
     ) -> None:
         """Prepare to generate a key.
 
         * `usage`                 : The usage flags used for the key.
+        * `expected_usage`: the usage flags generated as the expected usage flags
+                            in the test cases. CAn differ from the usage flags
+                            stored in the keys because of the usage flags extension.
         * `without_implicit_usage`: Flag to defide to apply the usage extension
         """
         super().__init__(usage=usage, **kwargs)
+        self.override_expected_usage = None #type: Optional[str]
+        if expected_usage:
+            self.override_expected_usage = expected_usage
 
         if not without_implicit_usage:
             for flag, implicit in self.IMPLICIT_USAGE_FLAGS.items():
                 if self.usage.value() & psa_storage.Expr(flag).value() and \
                    self.usage.value() & psa_storage.Expr(implicit).value() == 0:
                     self.usage = psa_storage.Expr(self.usage.string + ' | ' + implicit)
-
-class StorageTestData(StorageKeyWithUsage):
-    """Representation of test case data for storage format testing."""
-
-    def __init__(
-            self,
-            expected_usage: Optional[str] = None,
-            **kwargs
-    ) -> None:
-        """Prepare to generate test data
-
-        * `expected_usage`: the usage flags generated as the expected usage flags
-                            in the test cases. CAn differ from the usage flags
-                            stored in the keys because of the usage flags extension.
-        """
-        super().__init__(**kwargs)
-        self.override_expected_usage = None #type: Optional[str]
-        if expected_usage:
-            self.override_expected_usage = expected_usage
 
     def expected_usage(self) -> str:
         if self.override_expected_usage is None:
@@ -383,34 +371,34 @@ class StorageFormat:
             usage_flags: List[str],
             short: Optional[str] = None,
             test_implicit_usage: Optional[bool] = False
-    ) -> Iterator[StorageTestData]:
+    ) -> Iterator[StorageKeyWithUsage]:
         """Construct a test key for the given key usage."""
         usage = ' | '.join(usage_flags) if usage_flags else '0'
         if short is None:
             short = re.sub(r'\bPSA_KEY_USAGE_', r'', usage)
         extra_desc = ' with implication' if test_implicit_usage else ''
         description = 'usage' + extra_desc + ': ' + short
-        key1 = StorageTestData(version=self.version,
-                               id=1, lifetime=0x00000001,
-                               type='PSA_KEY_TYPE_RAW_DATA', bits=8,
-                               expected_usage=usage,
-                               usage=usage, alg=0, alg2=0,
-                               material=b'K',
-                               description=description)
+        key1 = StorageKeyWithUsage(version=self.version,
+                                   id=1, lifetime=0x00000001,
+                                   type='PSA_KEY_TYPE_RAW_DATA', bits=8,
+                                   expected_usage=usage,
+                                   usage=usage, alg=0, alg2=0,
+                                   material=b'K',
+                                   description=description)
         yield key1
 
         if test_implicit_usage:
             description = 'usage without implication' + ': ' + short
-            key2 = StorageTestData(version=self.version,
-                                   id=1, lifetime=0x00000001,
-                                   type='PSA_KEY_TYPE_RAW_DATA', bits=8,
-                                   without_implicit_usage=True,
-                                   usage=usage, alg=0, alg2=0,
-                                   material=b'K',
-                                   description=description)
+            key2 = StorageKeyWithUsage(version=self.version,
+                                       id=1, lifetime=0x00000001,
+                                       type='PSA_KEY_TYPE_RAW_DATA', bits=8,
+                                       without_implicit_usage=True,
+                                       usage=usage, alg=0, alg2=0,
+                                       material=b'K',
+                                       description=description)
             yield key2
 
-    def generate_keys_for_usage_flags(self, **kwargs) -> Iterator[StorageTestData]:
+    def generate_keys_for_usage_flags(self, **kwargs) -> Iterator[StorageKeyWithUsage]:
         """Generate test keys covering usage flags."""
         known_flags = sorted(self.constructors.key_usage_flags)
         yield from self.keys_for_usage_flags(['0'], **kwargs)
@@ -420,11 +408,11 @@ class StorageFormat:
                                 known_flags[1:] + [known_flags[0]]):
             yield from self.keys_for_usage_flags([flag1, flag2], **kwargs)
 
-    def generate_key_for_all_usage_flags(self) -> Iterator[StorageTestData]:
+    def generate_key_for_all_usage_flags(self) -> Iterator[StorageKeyWithUsage]:
         known_flags = sorted(self.constructors.key_usage_flags)
         yield from self.keys_for_usage_flags(known_flags, short='all known')
 
-    def all_keys_for_usage_flags(self) -> Iterator[StorageTestData]:
+    def all_keys_for_usage_flags(self) -> Iterator[StorageKeyWithUsage]:
         yield from self.generate_keys_for_usage_flags()
         yield from self.generate_key_for_all_usage_flags()
 
@@ -526,7 +514,7 @@ class StorageFormatV0(StorageFormat):
     def __init__(self, info: Information) -> None:
         super().__init__(info, 0, False)
 
-    def all_keys_for_usage_flags(self) -> Iterator[StorageTestData]:
+    def all_keys_for_usage_flags(self) -> Iterator[StorageKeyWithUsage]:
         """Generate test keys covering usage flags."""
         yield from self.generate_keys_for_usage_flags(test_implicit_usage=True)
         yield from self.generate_key_for_all_usage_flags()
@@ -536,7 +524,7 @@ class StorageFormatV0(StorageFormat):
             implyer_usage: str,
             alg: str,
             key_type: crypto_knowledge.KeyType
-    ) -> StorageTestData:
+    ) -> StorageKeyWithUsage:
         # pylint: disable=too-many-locals
         """Generate test keys for the specified implicit usage flag,
            algorithm and key type combination.
@@ -556,15 +544,15 @@ class StorageFormatV0(StorageFormat):
                                      key_type.expression)
         description = 'implied by {}: {} {} {}-bit'.format(
             usage_expression, alg_expression, key_type_expression, bits)
-        key = StorageTestData(version=self.version,
-                              id=1, lifetime=0x00000001,
-                              type=key_type.expression, bits=bits,
-                              usage=material_usage_flags,
-                              expected_usage=expected_usage_flags,
-                              without_implicit_usage=True,
-                              alg=alg, alg2=alg2,
-                              material=key_material,
-                              description=description)
+        key = StorageKeyWithUsage(version=self.version,
+                                  id=1, lifetime=0x00000001,
+                                  type=key_type.expression, bits=bits,
+                                  usage=material_usage_flags,
+                                  expected_usage=expected_usage_flags,
+                                  without_implicit_usage=True,
+                                  alg=alg, alg2=alg2,
+                                  material=key_material,
+                                  description=description)
         return key
 
     def gather_key_types_for_sign_alg(self) -> Dict[str, List[str]]:
@@ -615,7 +603,7 @@ class StorageFormatV0(StorageFormat):
                         alg_with_keys[alg] = [key_type]
         return alg_with_keys
 
-    def all_keys_for_implicit_usage(self) -> Iterator[StorageTestData]:
+    def all_keys_for_implicit_usage(self) -> Iterator[StorageKeyWithUsage]:
         """Generate test keys for usage flag extensions."""
         # Generate a key type and algorithm pair for each extendable usage
         # flag to generate a valid key for exercising. The key is generated
