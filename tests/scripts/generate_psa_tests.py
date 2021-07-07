@@ -457,8 +457,7 @@ class StorageFormat:
         usage = ' | '.join(usage_flags) if usage_flags else '0'
         if short is None:
             short = re.sub(r'\bPSA_KEY_USAGE_', r'', usage)
-        extra_desc = ' with implication' if test_implicit_usage else ''
-        description = 'usage' + extra_desc + ': ' + short
+        description = 'usage: ' + short
         key1 = StorageKeyWithUsage(version=self.version,
                                    id=1, lifetime=0x00000001,
                                    type='PSA_KEY_TYPE_RAW_DATA', bits=8,
