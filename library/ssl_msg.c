@@ -949,7 +949,7 @@ int mbedtls_ssl_encrypt_buf( mbedtls_ssl_context *ssl,
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_ssl_cf_mask_from_bit( size_t bit )
+static size_t mbedtls_cf_size_mask( size_t bit )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
      * but this is well-defined and precisely what we want to do here. */
@@ -974,7 +974,7 @@ static size_t mbedtls_ssl_cf_mask_from_bit( size_t bit )
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_ssl_cf_mask_lt( size_t x, size_t y )
+static size_t mbedtls_cf_size_mask_lt( size_t x, size_t y )
 {
     /* This has the most significant bit set if and only if x < y */
     const size_t sub = x - y;
@@ -983,7 +983,7 @@ static size_t mbedtls_ssl_cf_mask_lt( size_t x, size_t y )
     const size_t sub1 = sub >> ( sizeof( sub ) * 8 - 1 );
 
     /* mask = (x < y) ? 0xff... : 0x00... */
-    const size_t mask = mbedtls_ssl_cf_mask_from_bit( sub1 );
+    const size_t mask = mbedtls_cf_size_mask( sub1 );
 
     return( mask );
 }
@@ -999,9 +999,9 @@ static size_t mbedtls_ssl_cf_mask_lt( size_t x, size_t y )
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_ssl_cf_mask_ge( size_t x, size_t y )
+static size_t mbedtls_cf_size_mask_ge( size_t x, size_t y )
 {
-    return( ~mbedtls_ssl_cf_mask_lt( x, y ) );
+    return( ~mbedtls_cf_size_mask_lt( x, y ) );
 }
 
 /*
@@ -1010,12 +1010,12 @@ static size_t mbedtls_ssl_cf_mask_ge( size_t x, size_t y )
  *
  * This function can be used to write constant-time code by replacing branches
  * with bit operations - it can be used in conjunction with
- * mbedtls_ssl_cf_mask_from_bit().
+ * mbedtls_cf_size_mask().
  *
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_ssl_cf_bool_eq( size_t x, size_t y )
+static size_t mbedtls_cf_size_bool_eq( size_t x, size_t y )
 {
     /* diff = 0 if x == y, non-zero otherwise */
     const size_t diff = x ^ y;
@@ -1049,14 +1049,14 @@ static size_t mbedtls_ssl_cf_bool_eq( size_t x, size_t y )
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static void mbedtls_ssl_cf_memcpy_if_eq( unsigned char *dst,
-                                         const unsigned char *src,
-                                         size_t len,
-                                         size_t c1, size_t c2 )
+static void mbedtls_cf_memcpy_if_eq( unsigned char *dst,
+                                     const unsigned char *src,
+                                     size_t len,
+                                     size_t c1, size_t c2 )
 {
     /* mask = c1 == c2 ? 0xff : 0x00 */
-    const size_t equal = mbedtls_ssl_cf_bool_eq( c1, c2 );
-    const unsigned char mask = (unsigned char) mbedtls_ssl_cf_mask_from_bit( equal );
+    const size_t equal = mbedtls_cf_size_bool_eq( c1, c2 );
+    const unsigned char mask = (unsigned char) mbedtls_cf_size_mask( equal );
 
     /* dst[i] = c1 == c2 ? src[i] : dst[i] */
     for( size_t i = 0; i < len; i++ )
@@ -1125,8 +1125,8 @@ MBEDTLS_STATIC_TESTABLE int mbedtls_ssl_cf_hmac(
         MD_CHK( mbedtls_md_clone( &aux, ctx ) );
         MD_CHK( mbedtls_md_finish( &aux, aux_out ) );
         /* Keep only the correct inner_hash in the output buffer */
-        mbedtls_ssl_cf_memcpy_if_eq( output, aux_out, hash_size,
-                                     offset, data_len_secret );
+        mbedtls_cf_memcpy_if_eq( output, aux_out, hash_size,
+                                 offset, data_len_secret );
 
         if( offset < max_data_len )
             MD_CHK( mbedtls_md_update( ctx, data + offset, 1 ) );
@@ -1167,8 +1167,8 @@ MBEDTLS_STATIC_TESTABLE void mbedtls_ssl_cf_memcpy_offset(
 
     for( offset = offset_min; offset <= offset_max; offset++ )
     {
-        mbedtls_ssl_cf_memcpy_if_eq( dst, src_base + offset, len,
-                                     offset, offset_secret );
+        mbedtls_cf_memcpy_if_eq( dst, src_base + offset, len,
+                                 offset, offset_secret );
     }
 }
 #endif /* MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC */
@@ -1494,7 +1494,7 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
 
         if( auth_done == 1 )
         {
-            const size_t mask = mbedtls_ssl_cf_mask_ge(
+            const size_t mask = mbedtls_cf_size_mask_ge(
                                 rec->data_len,
                                 padlen + 1 );
             correct &= mask;
@@ -1514,7 +1514,7 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
             }
 #endif
 
-            const size_t mask = mbedtls_ssl_cf_mask_ge(
+            const size_t mask = mbedtls_cf_size_mask_ge(
                                 rec->data_len,
                                 transform->maclen + padlen + 1 );
             correct &= mask;
@@ -1548,18 +1548,18 @@ int mbedtls_ssl_decrypt_buf( mbedtls_ssl_context const *ssl,
             /* pad_count += (idx >= padding_idx) &&
                 *              (check[idx] == padlen - 1);
                 */
-            const size_t mask = mbedtls_ssl_cf_mask_ge( idx, padding_idx );
-            const size_t equal = mbedtls_ssl_cf_bool_eq( check[idx],
-                                                            padlen - 1 );
+            const size_t mask = mbedtls_cf_size_mask_ge( idx, padding_idx );
+            const size_t equal = mbedtls_cf_size_bool_eq( check[idx],
+                                                          padlen - 1 );
             pad_count += mask & equal;
         }
-        correct &= mbedtls_ssl_cf_bool_eq( pad_count, padlen );
+        correct &= mbedtls_cf_size_bool_eq( pad_count, padlen );
 
 #if defined(MBEDTLS_SSL_DEBUG_ALL)
         if( padlen > 0 && correct == 0 )
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad padding byte detected" ) );
 #endif
-        padlen &= mbedtls_ssl_cf_mask_from_bit( correct );
+        padlen &= mbedtls_cf_size_mask( correct );
 
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2 */
 

@@ -68,8 +68,8 @@ static const unsigned char base64_dec_map[128] =
 /*
  * Constant flow conditional assignment to unsigned char
  */
-static void mbedtls_base64_cond_assign_uchar( unsigned char * dest, const unsigned char * const src,
-                                       unsigned char condition )
+static void mbedtls_cf_uchar_cond_assign( unsigned char * dest, const unsigned char * const src,
+                                          unsigned char condition )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
      * but this is well-defined and precisely what we want to do here. */
@@ -93,8 +93,8 @@ static void mbedtls_base64_cond_assign_uchar( unsigned char * dest, const unsign
 /*
  * Constant flow conditional assignment to uint_32
  */
-static void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t src,
-                                       uint32_t condition )
+static void mbedtls_cf_uint32_cond_assign( uint32_t * dest, const uint32_t src,
+                                           uint32_t condition )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
      * but this is well-defined and precisely what we want to do here. */
@@ -118,7 +118,7 @@ static void mbedtls_base64_cond_assign_uint32( uint32_t * dest, const uint32_t s
 /*
  * Constant flow check for equality
  */
-static unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
+static unsigned char mbedtls_cf_size_bool_eq( size_t in_a, size_t in_b )
 {
     size_t difference = in_a ^ in_b;
 
@@ -144,15 +144,15 @@ static unsigned char mbedtls_base64_eq( size_t in_a, size_t in_b )
 /*
  * Constant flow lookup into table.
  */
-static unsigned char mbedtls_base64_table_lookup( const unsigned char * const table,
-                                                 const size_t table_size, const size_t table_index )
+static unsigned char mbedtls_cf_uchar_table_lookup( const unsigned char * const table,
+                                                    const size_t table_size, const size_t table_index )
 {
     size_t i;
     unsigned char result = 0;
 
     for( i = 0; i < table_size; ++i )
     {
-        mbedtls_base64_cond_assign_uchar( &result, &table[i], mbedtls_base64_eq( i, table_index ) );
+        mbedtls_cf_uchar_cond_assign( &result, &table[i], mbedtls_cf_size_bool_eq( i, table_index ) );
     }
 
     return result;
@@ -198,17 +198,17 @@ int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
         C2 = *src++;
         C3 = *src++;
 
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( C1 >> 2 ) & 0x3F ) );
+        *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                              ( ( C1 >> 2 ) & 0x3F ) );
 
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( ( ( C1 &  3 ) << 4 ) + ( C2 >> 4 ) ) & 0x3F ) );
+        *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                              ( ( ( ( C1 &  3 ) << 4 ) + ( C2 >> 4 ) ) & 0x3F ) );
 
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( ( ( C2 & 15 ) << 2 ) + ( C3 >> 6 ) ) & 0x3F ) );
+        *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                              ( ( ( ( C2 & 15 ) << 2 ) + ( C3 >> 6 ) ) & 0x3F ) );
 
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( C3 & 0x3F ) );
+        *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                              ( C3 & 0x3F ) );
     }
 
     if( i < slen )
@@ -216,15 +216,15 @@ int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
         C1 = *src++;
         C2 = ( ( i + 1 ) < slen ) ? *src++ : 0;
 
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( C1 >> 2 ) & 0x3F ) );
+        *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                              ( ( C1 >> 2 ) & 0x3F ) );
 
-        *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                            ( ( ( ( C1 & 3 ) << 4 ) + ( C2 >> 4 ) ) & 0x3F ) );
+        *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                              ( ( ( ( C1 & 3 ) << 4 ) + ( C2 >> 4 ) ) & 0x3F ) );
 
         if( ( i + 1 ) < slen )
-             *p++ = mbedtls_base64_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
-                                                 ( ( ( C2 & 15 ) << 2 ) & 0x3F ) );
+             *p++ = mbedtls_cf_uchar_table_lookup( base64_enc_map, sizeof( base64_enc_map ),
+                                                   ( ( ( C2 & 15 ) << 2 ) & 0x3F ) );
         else *p++ = '=';
 
         *p++ = '=';
@@ -276,7 +276,7 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
         if( src[i] == '=' && ++j > 2 )
             return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
 
-        dec_map_lookup = mbedtls_base64_table_lookup( base64_dec_map, sizeof( base64_dec_map ), src[i] );
+        dec_map_lookup = mbedtls_cf_uchar_table_lookup( base64_dec_map, sizeof( base64_dec_map ), src[i] );
 
         if( src[i] > 127 || dec_map_lookup == 127 )
             return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
@@ -311,9 +311,9 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
         if( *src == '\r' || *src == '\n' || *src == ' ' )
             continue;
 
-        dec_map_lookup = mbedtls_base64_table_lookup( base64_dec_map, sizeof( base64_dec_map ), *src );
+        dec_map_lookup = mbedtls_cf_uchar_table_lookup( base64_dec_map, sizeof( base64_dec_map ), *src );
 
-        mbedtls_base64_cond_assign_uint32( &j, j - 1, mbedtls_base64_eq( dec_map_lookup, 64 ) );
+        mbedtls_cf_uint32_cond_assign( &j, j - 1, mbedtls_cf_size_bool_eq( dec_map_lookup, 64 ) );
         x  = ( x << 6 ) | ( dec_map_lookup & 0x3F );
 
         if( ++n == 4 )
