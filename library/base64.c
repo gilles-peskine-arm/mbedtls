@@ -66,22 +66,30 @@
 #endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
+/* Return 0xff if low <= c <= high, 0 otherwise.
+ *
+ * Constant flow with respect to c.
+ */
+static uint8_t mask_of_range( uint8_t low, uint8_t high, uint8_t c )
+{
+    unsigned low_mask = ( c - low ) >> 8;
+    unsigned high_mask = ( c - high - 1 ) >> 8;
+    return( ~low_mask & high_mask & 0xff );
+}
+
 /* Given a value in the range 0..63, return the corresponding base64 digit.
  * The implementation assumes that letters are consecutive (e.g. ASCII
  * but not EBCDIC).
  */
 static unsigned char base64_enc_char( unsigned char value )
 {
-    if( value < 26 )
-        return( 'A' + value );
-    else if( value < 52 )
-        return( 'a' + value - 26 );
-    else if( value < 62 )
-        return( '0' + value - 52 );
-    else if( value == 62 )
-        return( '+' );
-    else
-        return( '/' );
+    unsigned char digit = 0;
+    digit |= mask_of_range(  0, 25, value ) & ( 'A' + value );
+    digit |= mask_of_range( 26, 51, value ) & ( 'a' + value - 26 );
+    digit |= mask_of_range( 52, 61, value ) & ( '0' + value - 52 );
+    digit |= mask_of_range( 62, 62, value ) & '+';
+    digit |= mask_of_range( 63, 63, value ) & '/';
+    return( digit );
 }
 
 #define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
@@ -162,17 +170,6 @@ typedef enum
     EQUAL,
     BODY,
 } base64_character_type;
-
-/* Return 0xff if low <= c <= high, 0 otherwise.
- *
- * Constant flow with respect to c.
- */
-static uint8_t mask_of_range( uint8_t low, uint8_t high, uint8_t c )
-{
-    unsigned low_mask = ( c - low ) >> 8;
-    unsigned high_mask = ( c - high - 1 ) >> 8;
-    return( ~low_mask & high_mask & 0xff );
-}
 
 /* Given any byte value, return its syntactic category in Base64 source.
  * The implementation assumes that the input is in a character set where
