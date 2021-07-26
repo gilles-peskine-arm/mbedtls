@@ -222,23 +222,13 @@ __attribute__((__noinline__))
 #endif
 static uint8_t base64_dec_char( uint8_t c )
 {
-    /* Both xxx1 and xxx2 have the high bit clear iff c is in range. */
-    uint8_t upper1 = c - 'A', upper2 = 'Z' - c;
-    uint8_t lower1 = c - 'a', lower2 = 'z' - c;
-    uint8_t digit1 = c - '0', digit2 = '9' - c;
-    uint8_t  plus1 = c - '+',  plus2 = '+' - c;
-    uint8_t slash1 = c - '/', slash2 = '/' - c;
-    /* is_xxx is 0xff is c is in range, otherwise 0x00. */
-    uint8_t upper_mask = - ( ( ( ~upper1 & ~upper2 ) & 0x80 ) >> 7 );
-    uint8_t lower_mask = - ( ( ( ~lower1 & ~lower2 ) & 0x80 ) >> 7 );
-    uint8_t digit_mask = - ( ( ( ~digit1 & ~digit2 ) & 0x80 ) >> 7 );
-    uint8_t  plus_mask = - ( ( ( ~ plus1 & ~ plus2 ) & 0x80 ) >> 7 );
-    uint8_t slash_mask = - ( ( ( ~slash1 & ~slash2 ) & 0x80 ) >> 7 );
-    return( ( upper_mask & ( c - 'A' ) ) |
-            ( lower_mask & ( c - 'a' + 26 ) ) |
-            ( digit_mask & ( c - '0' + 52 ) ) |
-            ( plus_mask & 62 ) |
-            ( slash_mask & 63 ) );
+    uint8_t value = 0;
+    value |= mask_of_range( 'A', 'Z', c ) & ( c - 'A' + 0 );
+    value |= mask_of_range( 'a', 'z', c ) & ( c - 'a' + 26 );
+    value |= mask_of_range( '0', '9', c ) & ( c - '0' + 52 );
+    value |= mask_of_range( '+', '+', c ) & ( c - '+' + 62 );
+    value |= mask_of_range( '/', '/', c ) & ( c - '/' + 63 );
+    return( value );
 }
 
 /*
