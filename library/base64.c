@@ -155,37 +155,55 @@ int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
 
 typedef enum
 {
+    INVALID = 0,
     CR,
     LF,
     SPACE,
     EQUAL,
     BODY,
-    INVALID
 } base64_character_type;
 
+/* Return 0xff if low <= c <= high, 0 otherwise.
+ *
+ * Constant flow with respect to c.
+ */
+static uint8_t mask_of_range( uint8_t low, uint8_t high, uint8_t c )
+{
+    unsigned low_mask = ( c - low ) >> 8;
+    unsigned high_mask = ( c - high - 1 ) >> 8;
+    return( ~low_mask & high_mask & 0xff );
+}
+
 /* Given any byte value, return its syntactic category in Base64 source.
- * The implementation assumes that letters are consecutive (e.g. ASCII
- * but not EBCDIC).
+ * The implementation assumes that the input is in a character set where
+ * letters, digits and '+' and '/' are encoded as the same value as in ASCII.
  */
 static base64_character_type base64_get_type( unsigned char c )
 {
-    switch( c )
-    {
-        case '\r': return( CR );
-        case '\n': return( LF );
-        case ' ': return( SPACE );
-        case '=': return( EQUAL );
-        case '+': return( BODY );
-        case '/': return( BODY );
-        default:
-            if( '0' <= c && c <= '9' )
-                return( BODY );
-            if( 'A' <= c && c <= 'Z' )
-                return( BODY );
-            if( 'a' <= c && c <= 'z' )
-                return( BODY );
-            return( INVALID );
-    }
+    base64_character_type type = INVALID;
+
+    /* Halve the input space */
+    if( c & 0x80 )
+        return( INVALID );
+
+    /* Body characters (constant-flow) */
+    type |= mask_of_range( 'A', 'Z', c ) & BODY;
+    type |= mask_of_range( 'a', 'z', c ) & BODY;
+    type |= mask_of_range( '0', '9', c ) & BODY;
+    type |= mask_of_range( '+', '+', c ) & BODY;
+    type |= mask_of_range( '/', '/', c ) & BODY;
+
+    /* Non-body characters. Doesn't have to be constant-flow, but using a
+     * switch-case here causes GCC 9.3.0 -O2 on x86_64 to emit code that
+     * checks the switch-case values before calling mask_of_range, which
+     * leaks information about c <= '=', and doesn't improve performance
+     * measurably. */
+    type |= mask_of_range( '=', '=', c ) & EQUAL;
+    type |= mask_of_range( '\r', '\r', c ) & CR;
+    type |= mask_of_range( '\n', '\n', c ) & LF;
+    type |= mask_of_range( ' ', ' ', c ) & SPACE;
+
+    return( type );
 }
 
 /* Given a Base64 digit, return its value.
