@@ -189,21 +189,38 @@ static base64_character_type base64_get_type( unsigned char c )
 }
 
 /* Given a Base64 digit, return its value.
+ * The result is unspecified if c is not a Base64 digit ('A'..'Z', 'a'..'z',
+ * '0'..'9', '+' or '/').
+ *
  * The implementation assumes that letters are consecutive (e.g. ASCII
  * but not EBCDIC).
+ *
+ * The implementation is constant-flow (no branch or memory access depending
+ * on the value of c) unless the compiler inlines and optimizes a specific
+ * access.
  */
-static unsigned char base64_dec_char( unsigned char c )
+#if defined(__GNUC__)
+__attribute__((__noinline__))
+#endif
+static uint8_t base64_dec_char( uint8_t c )
 {
-    if( 'A' <= c && c <= 'Z' )
-        return( c - 'A' );
-    else if( '0' <= c && c <= '9' )
-        return( c - '0' + 52 );
-    else if( 'a' <= c && c <= 'z' )
-        return( c - 'a' + 26 );
-    else if( c == '+' )
-        return( 62 );
-    else
-        return( 63 );
+    /* Both xxx1 and xxx2 have the high bit clear iff c is in range. */
+    uint8_t upper1 = c - 'A', upper2 = 'Z' - c;
+    uint8_t lower1 = c - 'a', lower2 = 'z' - c;
+    uint8_t digit1 = c - '0', digit2 = '9' - c;
+    uint8_t  plus1 = c - '+',  plus2 = '+' - c;
+    uint8_t slash1 = c - '/', slash2 = '/' - c;
+    /* is_xxx is 0xff is c is in range, otherwise 0x00. */
+    uint8_t upper_mask = - ( ( ( ~upper1 & ~upper2 ) & 0x80 ) >> 7 );
+    uint8_t lower_mask = - ( ( ( ~lower1 & ~lower2 ) & 0x80 ) >> 7 );
+    uint8_t digit_mask = - ( ( ( ~digit1 & ~digit2 ) & 0x80 ) >> 7 );
+    uint8_t  plus_mask = - ( ( ( ~ plus1 & ~ plus2 ) & 0x80 ) >> 7 );
+    uint8_t slash_mask = - ( ( ( ~slash1 & ~slash2 ) & 0x80 ) >> 7 );
+    return( ( upper_mask & ( c - 'A' ) ) |
+            ( lower_mask & ( c - 'a' + 26 ) ) |
+            ( digit_mask & ( c - '0' + 52 ) ) |
+            ( plus_mask & 62 ) |
+            ( slash_mask & 63 ) );
 }
 
 /*
