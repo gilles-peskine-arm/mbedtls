@@ -83,7 +83,7 @@ foreach my $file (@files) {
           if defined($before) && defined($after);
         my $description = (defined($before) ? $before : $after);
         $description =~ s/^\s+//;
-        $description =~ s/\n( \*)?//g;
+        $description =~ s/\n( *\*)? */ /g;
         $description =~ s/\.?\s+$//;
         push @matches, [$name, $value, $description];
         ++$found;
@@ -106,19 +106,14 @@ my %included_headers;
 
 my %error_codes_seen;
 
-foreach my $line (@matches)
+foreach my $match (@matches)
 {
-    my ($error_name, $error_code) = $line =~ /(MBEDTLS_ERR_\w+)\s+\-(0x\w+)/;
-    my ($description) = $line =~ /\/\*\*< (.*?)\.? \*\//;
+    my ($error_name, $error_code, $description) = @$match;
 
     die "Duplicated error code: $error_code ($error_name)\n"
         if( $error_codes_seen{$error_code}++ );
 
     $description =~ s/\\/\\\\/g;
-    if ($description eq "") {
-        $description = "DESCRIPTION MISSING";
-        warn "Missing description for $error_name\n";
-    }
 
     my ($module_name) = $error_name =~ /^MBEDTLS_ERR_([^_]+)/;
 
