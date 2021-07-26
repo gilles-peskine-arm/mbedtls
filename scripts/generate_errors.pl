@@ -53,26 +53,46 @@ my @high_level_modules = qw( CIPHER DHM ECP MD
                              PEM PK PKCS12 PKCS5
                              RSA SSL X509 );
 
-my $line_separator = $/;
 undef $/;
 
 open(FORMAT_FILE, '<:crlf', "$error_format_file") or die "Opening error format file '$error_format_file': $!";
 my $error_format = <FORMAT_FILE>;
 close(FORMAT_FILE);
 
-$/ = $line_separator;
-
 my @files = <$include_dir/*.h>;
 my @necessary_include_files;
 my @matches;
 foreach my $file (@files) {
     open(FILE, '<:crlf', "$file");
-    my @grep_res = grep(/^\s*#define\s+MBEDTLS_ERR_\w+\s+\-0x[0-9A-Fa-f]+/, <FILE>);
-    push(@matches, @grep_res);
+    my $content = <FILE>;
     close FILE;
-    my $include_name = $file;
-    $include_name =~ s!.*/!!;
-    push @necessary_include_files, $include_name if @grep_res;
+    my $found = 0;
+    while ($content =~ m[
+            (?:/\*[*!]([^<](?:[^*]|\*+[^*/])*)\*/)?
+            \s*\#\s*define\s+(MBEDTLS_ERR_\w+)\s+\-(0[Xx][0-9A-Fa-f]+)\s*
+            (?:/\*[*!]<((?:[^*]|\*+[^*/])*)\*/)?
+    ]gsx) {
+        my ($before, $name, $value, $after) = ($1, $2, $3, $4);
+        # Discard Doxygen comments that are coincidentally present before
+        # an error definition but not attached to it. This is ad hoc, based
+        # on what actually matters (or mattered at some point).
+        undef $before if $before =~ /\s*\\name\s/s;
+        die "Description neither before nor after $name in $file\n"
+          if !defined($before) && !defined($after);
+        die "Description both before and after $name in $file\n"
+          if defined($before) && defined($after);
+        my $description = (defined($before) ? $before : $after);
+        $description =~ s/^\s+//;
+        $description =~ s/\n( \*)?//g;
+        $description =~ s/\.?\s+$//;
+        push @matches, [$name, $value, $description];
+        ++$found;
+    }
+    if ($found) {
+        my $include_name = $file;
+        $include_name =~ s!.*/!!;
+        push @necessary_include_files, $include_name;
+    }
 }
 
 my $ll_old_define = "";
