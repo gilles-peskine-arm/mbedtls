@@ -195,6 +195,39 @@ static signed char dec_value( unsigned char c )
     return( val - 1 );
 }
 
+/* Decode a valid base64 string into a sufficiently large buffer. */
+static
+void mbedtls_base64_decode_valid( unsigned char *dst,
+                                  const unsigned char *src,
+                                  size_t slen )
+{
+    size_t i; /* index in source */
+    uint32_t x = 0; /* value accumulator */
+    unsigned accumulated_digits = 0;
+    unsigned equals = 0;
+    unsigned char *p = dst;
+
+    for( i = slen; i > 0; i--, src++ )
+    {
+        if( *src == '\r' || *src == '\n' || *src == ' ' )
+            continue;
+
+        x = x << 6;
+        if( *src == '=' )
+            ++equals;
+        else
+            x |= dec_value( *src );
+
+        if( ++accumulated_digits == 4 )
+        {
+            accumulated_digits = 0;
+            *p++ = (unsigned char)( x >> 16 );
+            if( equals <= 1 ) *p++ = (unsigned char)( x >>  8 );
+            if( equals <= 0 ) *p++ = (unsigned char)( x       );
+        }
+    }
+}
+
 /*
  * Decode a base64-formatted buffer
  */
@@ -203,11 +236,8 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
 {
     size_t i; /* index in source */
     size_t n; /* number of digits or trailing = in source */
-    uint32_t x; /* value accumulator */
-    unsigned accumulated_digits = 0;
     unsigned equals = 0;
     int spaces_present = 0;
-    unsigned char *p;
 
     /* First pass: check for validity and get output length */
     for( i = n = 0; i < slen; i++ )
@@ -266,34 +296,14 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
     n = ( 6 * ( n >> 3 ) ) + ( ( 6 * ( n & 0x7 ) + 7 ) >> 3 );
     n -= equals;
 
+    *olen = n;
+
     if( dst == NULL || dlen < n )
     {
-        *olen = n;
         return( MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL );
     }
 
-    equals = 0;
-    for( x = 0, p = dst; i > 0; i--, src++ )
-    {
-        if( *src == '\r' || *src == '\n' || *src == ' ' )
-            continue;
-
-        x = x << 6;
-        if( *src == '=' )
-            ++equals;
-        else
-            x |= dec_value( *src );
-
-        if( ++accumulated_digits == 4 )
-        {
-            accumulated_digits = 0;
-            *p++ = (unsigned char)( x >> 16 );
-            if( equals <= 1 ) *p++ = (unsigned char)( x >>  8 );
-            if( equals <= 0 ) *p++ = (unsigned char)( x       );
-        }
-    }
-
-    *olen = p - dst;
+    mbedtls_base64_decode_valid( dst, src, slen );
 
     return( 0 );
 }
