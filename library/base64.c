@@ -68,18 +68,18 @@
 
 #define BASE64_SIZE_T_MAX   ( (size_t) -1 ) /* SIZE_T_MAX is not standard */
 
-/* Return 0xff if low <= c <= high, 0 otherwise.
+/* Return 0xffff if low <= c <= high, 0 otherwise.
  *
  * Constant flow with respect to c.
  */
-static unsigned char mask_of_range( unsigned char low, unsigned char high,
-                                    unsigned char c )
+static unsigned mask_of_range( unsigned char low, unsigned char high,
+                               unsigned char c )
 {
     /* low_mask is: 0 if low <= c, 0x...ff if low > c */
     unsigned low_mask = ( (unsigned) c - low ) >> 8;
     /* high_mask is: 0 if c <= high, 0x...ff if high > c */
     unsigned high_mask = ( (unsigned) high - c ) >> 8;
-    return( ~( low_mask | high_mask ) & 0xff );
+    return( ~( low_mask | high_mask ) & 0xffff );
 }
 
 /* Given a value in the range 0..63, return the corresponding Base64 digit.
@@ -167,9 +167,10 @@ int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
     return( 0 );
 }
 
-/* Given a Base64 digit, return its value.
- * If c is not a Base64 digit ('A'..'Z', 'a'..'z', '0'..'9', '+' or '/'),
- * return -1.
+/* Given a Base64 digit, calculate its value and type.
+ * If c is a Base64 digit ('A'..'Z', 'a'..'z', '0'..'9', '+' or '/'),
+ * its type is 'A', otherwise its type is c.
+ * If c is not a Base64 digit, its value is 0.
  *
  * The implementation assumes that letters are consecutive (e.g. ASCII
  * but not EBCDIC).
@@ -178,21 +179,23 @@ int mbedtls_base64_encode( unsigned char *dst, size_t dlen, size_t *olen,
  * on the value of c) unless the compiler inlines and optimizes a specific
  * access.
  */
-static signed char dec_value( unsigned char c )
+static void dec_digit( unsigned char c,
+                       unsigned char *type, unsigned char *value )
 {
-    unsigned char val = 0;
+    unsigned val = 0;
     /* For each range of digits, if c is in that range, mask val with
      * the corresponding value. Since c can only be in a single range,
      * only at most one masking will change val. Set val to one plus
      * the desired value so that it stays 0 if c is in none of the ranges. */
-    val |= mask_of_range( 'A', 'Z', c ) & ( c - 'A' +  0 + 1 );
-    val |= mask_of_range( 'a', 'z', c ) & ( c - 'a' + 26 + 1 );
-    val |= mask_of_range( '0', '9', c ) & ( c - '0' + 52 + 1 );
-    val |= mask_of_range( '+', '+', c ) & ( c - '+' + 62 + 1 );
-    val |= mask_of_range( '/', '/', c ) & ( c - '/' + 63 + 1 );
+    val |= mask_of_range( 'A', 'Z', c ) & ( ( c - 'A' +  0 ) | 0xff00 );
+    val |= mask_of_range( 'a', 'z', c ) & ( ( c - 'a' + 26 ) | 0xff00 );
+    val |= mask_of_range( '0', '9', c ) & ( ( c - '0' + 52 ) | 0xff00 );
+    val |= mask_of_range( '+', '+', c ) & ( ( c - '+' + 62 ) | 0xff00 );
+    val |= mask_of_range( '/', '/', c ) & ( ( c - '/' + 63 ) | 0xff00 );
     /* At this point, val is 0 if c is an invalid digit and v+1 if c is
      * a digit with the value v. */
-    return( val - 1 );
+    *value = val & 0xff;
+    *type = ( ( val >> 8 ) & 'A' ) | ( ~( val >> 8 ) & c );
 }
 
 /* Decode a valid base64 string into a sufficiently large buffer. */
@@ -206,6 +209,8 @@ void mbedtls_base64_decode_valid( unsigned char *dst,
     unsigned accumulated_digits = 0;
     unsigned equals = 0;
     unsigned char *p = dst;
+    unsigned char type;
+    unsigned char value;
 
     for( i = slen; i > 0; i--, src++ )
     {
@@ -216,7 +221,10 @@ void mbedtls_base64_decode_valid( unsigned char *dst,
         if( *src == '=' )
             ++equals;
         else
-            x |= dec_value( *src );
+        {
+            dec_digit( *src, &type, &value );
+            x |= value;
+        }
 
         if( ++accumulated_digits == 4 )
         {
@@ -238,6 +246,8 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
     size_t n; /* number of digits or trailing = in source */
     unsigned equals = 0;
     int spaces_present = 0;
+    unsigned char type;
+    unsigned char value;
 
     /* First pass: check for validity and get output length */
     for( i = n = 0; i < slen; i++ )
@@ -277,7 +287,8 @@ int mbedtls_base64_decode( unsigned char *dst, size_t dlen, size_t *olen,
         {
             if( equals != 0 )
                 return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
-            if( dec_value( src[i] ) < 0 )
+            dec_digit( src[i], &type, &value );
+            if( type != 'A' )
                 return( MBEDTLS_ERR_BASE64_INVALID_CHARACTER );
         }
         n++;
