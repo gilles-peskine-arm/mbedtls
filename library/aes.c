@@ -922,11 +922,22 @@ int mbedtls_internal_aes_encrypt( mbedtls_aes_context *ctx,
 #endif /* !MBEDTLS_AES_ENCRYPT_ALT */
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
+
+/* This silences warning about unused return value. */
+#define MBEDTLS_IGNORE_RETURN(result) if( result ) {}
+
 void mbedtls_aes_encrypt( mbedtls_aes_context *ctx,
                           const unsigned char input[16],
                           unsigned char output[16] )
 {
-    mbedtls_internal_aes_encrypt( ctx, input, output );
+    MBEDTLS_IGNORE_RETURN( mbedtls_internal_aes_encrypt( ctx, input, output ) );
+}
+
+void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
+                          const unsigned char input[16],
+                          unsigned char output[16] )
+{
+    MBEDTLS_IGNORE_RETURN( mbedtls_internal_aes_decrypt( ctx, input, output ) );
 }
 #endif /* !MBEDTLS_DEPRECATED_REMOVED */
 
@@ -993,15 +1004,6 @@ int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
     return( 0 );
 }
 #endif /* !MBEDTLS_AES_DECRYPT_ALT */
-
-#if !defined(MBEDTLS_DEPRECATED_REMOVED)
-void mbedtls_aes_decrypt( mbedtls_aes_context *ctx,
-                          const unsigned char input[16],
-                          unsigned char output[16] )
-{
-    mbedtls_internal_aes_decrypt( ctx, input, output );
-}
-#endif /* !MBEDTLS_DEPRECATED_REMOVED */
 
 /*
  * AES-ECB block encryption/decryption
