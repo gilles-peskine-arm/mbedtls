@@ -1017,9 +1017,9 @@ size_t mbedtls_cf_size_bool_eq( size_t x, size_t y );
  * might be translated to branches by some compilers on some platforms.
  */
 void mbedtls_cf_memcpy_if_eq( unsigned char *dst,
-                                     const unsigned char *src,
-                                     size_t len,
-                                     size_t c1, size_t c2 )
+                              const unsigned char *src,
+                              size_t len,
+                              size_t c1, size_t c2 )
 {
     /* mask = c1 == c2 ? 0xff : 0x00 */
     const size_t equal = mbedtls_cf_size_bool_eq( c1, c2 );

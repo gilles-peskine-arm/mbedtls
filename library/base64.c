@@ -68,8 +68,9 @@ static const unsigned char base64_dec_map[128] =
 /*
  * Constant flow conditional assignment to unsigned char
  */
-void mbedtls_cf_uchar_cond_assign( unsigned char * dest, const unsigned char * const src,
-                                          unsigned char condition )
+void mbedtls_cf_uchar_cond_assign( unsigned char * dest,
+                                   const unsigned char * const src,
+                                   unsigned char condition )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
      * but this is well-defined and precisely what we want to do here. */
@@ -93,8 +94,9 @@ void mbedtls_cf_uchar_cond_assign( unsigned char * dest, const unsigned char * c
 /*
  * Constant flow conditional assignment to uint_32
  */
-void mbedtls_cf_uint32_cond_assign( uint32_t * dest, const uint32_t src,
-                                           uint32_t condition )
+void mbedtls_cf_uint32_cond_assign( uint32_t * dest,
+                                    const uint32_t src,
+                                    uint32_t condition )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
      * but this is well-defined and precisely what we want to do here. */
@@ -122,7 +124,8 @@ size_t mbedtls_cf_size_bool_eq( size_t in_a, size_t in_b );
  * Constant flow lookup into table.
  */
 unsigned char mbedtls_cf_uchar_table_lookup( const unsigned char * const table,
-                                                    const size_t table_size, const size_t table_index )
+                                             const size_t table_size,
+                                             const size_t table_index )
 {
     size_t i;
     unsigned char result = 0;

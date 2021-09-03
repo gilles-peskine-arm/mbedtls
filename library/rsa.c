@@ -1542,8 +1542,8 @@ unsigned mbedtls_cf_uint_if( unsigned cond, unsigned if1, unsigned if0 )
  * \param offset    Offset from which to copy \p total - \p offset bytes.
  */
 void mbedtls_cf_mem_move_to_left( void *start,
-                                         size_t total,
-                                         size_t offset )
+                                  size_t total,
+                                  size_t offset )
 {
     volatile unsigned char *buf = start;
     size_t i, n;

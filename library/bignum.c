@@ -280,7 +280,9 @@ void mbedtls_mpi_swap( mbedtls_mpi *X, mbedtls_mpi *Y )
  *
  * \return The selected sign value.
  */
-int mbedtls_cf_cond_select_sign( int a, int b, unsigned char second )
+int mbedtls_cf_cond_select_sign( int a,
+                                 int b,
+                                 unsigned char second )
 {
     /* In order to avoid questions about what we can reasonnably assume about
      * the representations of signed integers, move everything to unsigned
@@ -334,7 +336,9 @@ void mbedtls_cf_mpi_uint_cond_assign( size_t n,
  * about whether the assignment was made or not.
  * (Leaking information about the respective sizes of X and Y is ok however.)
  */
-int mbedtls_mpi_safe_cond_assign( mbedtls_mpi *X, const mbedtls_mpi *Y, unsigned char assign )
+int mbedtls_mpi_safe_cond_assign( mbedtls_mpi *X,
+                                  const mbedtls_mpi *Y,
+                                  unsigned char assign )
 {
     int ret = 0;
     size_t i;
@@ -377,7 +381,9 @@ cleanup:
  * Here it is not ok to simply swap the pointers, which whould lead to
  * different memory access patterns when X and Y are used afterwards.
  */
-int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X, mbedtls_mpi *Y, unsigned char swap )
+int mbedtls_mpi_safe_cond_swap( mbedtls_mpi *X,
+                                mbedtls_mpi *Y,
+                                unsigned char swap )
 {
     int ret, s;
     size_t i;
@@ -1254,7 +1260,7 @@ int mbedtls_mpi_cmp_mpi( const mbedtls_mpi *X, const mbedtls_mpi *Y )
  * \return          1 if \p x is less than \p y, 0 otherwise
  */
 unsigned mbedtls_cf_mpi_uint_lt( const mbedtls_mpi_uint x,
-        const mbedtls_mpi_uint y )
+                                 const mbedtls_mpi_uint y )
 {
     mbedtls_mpi_uint ret;
     mbedtls_mpi_uint cond;
