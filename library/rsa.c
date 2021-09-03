@@ -1478,7 +1478,7 @@ cleanup:
  * \param value     The value to analyze.
  * \return          Zero if \p value is zero, otherwise all-bits-one.
  */
-static unsigned mbedtls_cf_uint_mask( unsigned value )
+unsigned mbedtls_cf_uint_mask( unsigned value )
 {
     /* MSVC has a warning about unary minus on unsigned, but this is
      * well-defined and precisely what we want to do here */
@@ -1502,7 +1502,7 @@ static unsigned mbedtls_cf_uint_mask( unsigned value )
  * \return          \c 0 if `size <= max`.
  * \return          \c 1 if `size > max`.
  */
-static unsigned mbedtls_cf_size_gt( size_t size, size_t max )
+unsigned mbedtls_cf_size_gt( size_t size, size_t max )
 {
     /* Return the sign bit (1 for negative) of (max - size). */
     return( ( max - size ) >> ( sizeof( size_t ) * 8 - 1 ) );
@@ -1518,7 +1518,7 @@ static unsigned mbedtls_cf_size_gt( size_t size, size_t max )
  * \param if0       Value to use if \p cond is zero.
  * \return          \c if1 if \p cond is nonzero, otherwise \c if0.
  */
-static unsigned mbedtls_cf_uint_if( unsigned cond, unsigned if1, unsigned if0 )
+unsigned mbedtls_cf_uint_if( unsigned cond, unsigned if1, unsigned if0 )
 {
     unsigned mask = mbedtls_cf_uint_mask( cond );
     return( ( mask & if1 ) | (~mask & if0 ) );
@@ -1541,7 +1541,7 @@ static unsigned mbedtls_cf_uint_if( unsigned cond, unsigned if1, unsigned if0 )
  * \param total     Total size of the buffer.
  * \param offset    Offset from which to copy \p total - \p offset bytes.
  */
-static void mbedtls_cf_mem_move_to_left( void *start,
+void mbedtls_cf_mem_move_to_left( void *start,
                                          size_t total,
                                          size_t offset )
 {

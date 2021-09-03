@@ -68,7 +68,7 @@ static const unsigned char base64_dec_map[128] =
 /*
  * Constant flow conditional assignment to unsigned char
  */
-static void mbedtls_cf_uchar_cond_assign( unsigned char * dest, const unsigned char * const src,
+void mbedtls_cf_uchar_cond_assign( unsigned char * dest, const unsigned char * const src,
                                           unsigned char condition )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
@@ -93,7 +93,7 @@ static void mbedtls_cf_uchar_cond_assign( unsigned char * dest, const unsigned c
 /*
  * Constant flow conditional assignment to uint_32
  */
-static void mbedtls_cf_uint32_cond_assign( uint32_t * dest, const uint32_t src,
+void mbedtls_cf_uint32_cond_assign( uint32_t * dest, const uint32_t src,
                                            uint32_t condition )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
@@ -115,36 +115,13 @@ static void mbedtls_cf_uint32_cond_assign( uint32_t * dest, const uint32_t src,
     *dest = ( src & mask ) | ( ( *dest ) & ~mask );
 }
 
-/*
- * Constant flow check for equality
- */
-static unsigned char mbedtls_cf_size_bool_eq( size_t in_a, size_t in_b )
-{
-    size_t difference = in_a ^ in_b;
-
-    /* MSVC has a warning about unary minus on unsigned integer types,
-     * but this is well-defined and precisely what we want to do here. */
-#if defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4146 )
-#endif
-
-    difference |= -difference;
-
-#if defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
-    /* cope with the varying size of size_t per platform */
-    difference >>= ( sizeof( difference ) * 8 - 1 );
-
-    return (unsigned char) ( 1 ^ difference );
-}
+// From bignum.c
+size_t mbedtls_cf_size_bool_eq( size_t in_a, size_t in_b );
 
 /*
  * Constant flow lookup into table.
  */
-static unsigned char mbedtls_cf_uchar_table_lookup( const unsigned char * const table,
+unsigned char mbedtls_cf_uchar_table_lookup( const unsigned char * const table,
                                                     const size_t table_size, const size_t table_index )
 {
     size_t i;

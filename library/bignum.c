@@ -280,7 +280,7 @@ void mbedtls_mpi_swap( mbedtls_mpi *X, mbedtls_mpi *Y )
  *
  * \return The selected sign value.
  */
-static int mbedtls_cf_cond_select_sign( int a, int b, unsigned char second )
+int mbedtls_cf_cond_select_sign( int a, int b, unsigned char second )
 {
     /* In order to avoid questions about what we can reasonnably assume about
      * the representations of signed integers, move everything to unsigned
@@ -1253,7 +1253,7 @@ int mbedtls_mpi_cmp_mpi( const mbedtls_mpi *X, const mbedtls_mpi *Y )
  *
  * \return          1 if \p x is less than \p y, 0 otherwise
  */
-static unsigned mbedtls_cf_mpi_uint_lt( const mbedtls_mpi_uint x,
+unsigned mbedtls_cf_mpi_uint_lt( const mbedtls_mpi_uint x,
         const mbedtls_mpi_uint y )
 {
     mbedtls_mpi_uint ret;
@@ -2238,7 +2238,7 @@ static void mpi_montred( mbedtls_mpi *A, const mbedtls_mpi *N,
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_cf_size_bool_eq( size_t x, size_t y )
+size_t mbedtls_cf_size_bool_eq( size_t x, size_t y )
 {
     /* diff = 0 if x == y, non-zero otherwise */
     const size_t diff = x ^ y;

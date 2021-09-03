@@ -949,7 +949,7 @@ int mbedtls_ssl_encrypt_buf( mbedtls_ssl_context *ssl,
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_cf_size_mask( size_t bit )
+size_t mbedtls_cf_size_mask( size_t bit )
 {
     /* MSVC has a warning about unary minus on unsigned integer types,
      * but this is well-defined and precisely what we want to do here. */
@@ -974,7 +974,7 @@ static size_t mbedtls_cf_size_mask( size_t bit )
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_cf_size_mask_lt( size_t x, size_t y )
+size_t mbedtls_cf_size_mask_lt( size_t x, size_t y )
 {
     /* This has the most significant bit set if and only if x < y */
     const size_t sub = x - y;
@@ -999,46 +999,13 @@ static size_t mbedtls_cf_size_mask_lt( size_t x, size_t y )
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static size_t mbedtls_cf_size_mask_ge( size_t x, size_t y )
+size_t mbedtls_cf_size_mask_ge( size_t x, size_t y )
 {
     return( ~mbedtls_cf_size_mask_lt( x, y ) );
 }
 
-/*
- * Constant-flow boolean "equal" comparison:
- * return x == y
- *
- * This function can be used to write constant-time code by replacing branches
- * with bit operations - it can be used in conjunction with
- * mbedtls_cf_size_mask().
- *
- * This function is implemented without using comparison operators, as those
- * might be translated to branches by some compilers on some platforms.
- */
-static size_t mbedtls_cf_size_bool_eq( size_t x, size_t y )
-{
-    /* diff = 0 if x == y, non-zero otherwise */
-    const size_t diff = x ^ y;
-
-    /* MSVC has a warning about unary minus on unsigned integer types,
-     * but this is well-defined and precisely what we want to do here. */
-#if defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4146 )
-#endif
-
-    /* diff_msb's most significant bit is equal to x != y */
-    const size_t diff_msb = ( diff | -diff );
-
-#if defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
-    /* diff1 = (x != y) ? 1 : 0 */
-    const size_t diff1 = diff_msb >> ( sizeof( diff_msb ) * 8 - 1 );
-
-    return( 1 ^ diff1 );
-}
+// From bignum.c
+size_t mbedtls_cf_size_bool_eq( size_t x, size_t y );
 
 /*
  * Constant-flow conditional memcpy:
@@ -1049,7 +1016,7 @@ static size_t mbedtls_cf_size_bool_eq( size_t x, size_t y )
  * This function is implemented without using comparison operators, as those
  * might be translated to branches by some compilers on some platforms.
  */
-static void mbedtls_cf_memcpy_if_eq( unsigned char *dst,
+void mbedtls_cf_memcpy_if_eq( unsigned char *dst,
                                      const unsigned char *src,
                                      size_t len,
                                      size_t c1, size_t c2 )
