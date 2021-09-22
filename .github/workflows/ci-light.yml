@@ -4,5 +4,12 @@ jobs:
   checks:
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
-      - run: tests/scripts/all.sh -k 'check_*'
+      - name: Check out the code
+        uses: actions/checkout@v2
+      - name: Install necessary software
+        run: |
+          sudo apt-get update
+          sudo apt-get install doxygen graphviz
+          pip3 install --user mypy==0.780 pylint==2.4
+      - name: Basic checks
+        run: tests/scripts/all.sh -k 'check_*'
