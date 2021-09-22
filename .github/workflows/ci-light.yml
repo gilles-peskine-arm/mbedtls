@@ -1,0 +1,8 @@
+name: lightweight CI
+on: [push]
+jobs:
+  checks:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: tests/scripts/all.sh -k 'check_*'
