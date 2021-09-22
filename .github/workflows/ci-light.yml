@@ -10,6 +10,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install doxygen graphviz
-          pip3 install --user mypy==0.780 pylint==2.4
+          pip3 install --user setuptools
+          pip3 install --user mypy==0.780 pylint==2.4.4
       - name: Basic checks
         run: tests/scripts/all.sh -k 'check_*'
