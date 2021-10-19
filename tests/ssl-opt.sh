@@ -6630,12 +6630,50 @@ run_test    "DTLS cookie: enabled, nbio" \
 
 # Tests for client reconnecting from the same port with DTLS
 
+pxy_drop_until() {
+    times_left_min=$1; shift
+    if [ $TIMES_LEFT -ge $times_left_min ]; then
+        set seed=1 drop=3 "$@"
+    fi
+    exec $P_PXY "$@"
+}
+
 not_with_valgrind # spurious resend
 run_test    "DTLS client reconnect from same port: reference" \
             "$P_SRV dtls=1 exchanges=2 read_timeout=20000 hs_timeout=10000-20000" \
             "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=10000-20000" \
             0 \
             -C "resend" \
+            -S "The operation timed out" \
+            -S "Client initiated reconnection from same port"
+
+not_with_valgrind # spurious resend
+run_test    "DTLS client reconnect from same port: reference (forced retry)" \
+            -p "pxy_drop_until 1" \
+            "$P_SRV dtls=1 exchanges=2 read_timeout=20000 hs_timeout=10000-20000" \
+            "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=10000-20000" \
+            0 \
+            -C "resend" \
+            -S "The operation timed out" \
+            -S "Client initiated reconnection from same port"
+
+not_with_valgrind # spurious resend
+run_test    "DTLS client reconnect from same port: reference (forced retry-fail)" \
+            -p "pxy_drop_until 0" \
+            "$P_SRV dtls=1 exchanges=2 read_timeout=20000 hs_timeout=10000-20000" \
+            "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=10000-20000" \
+            0 \
+            -C "resend" \
+            -S "The operation timed out" \
+            -S "Client initiated reconnection from same port"
+
+not_with_valgrind # spurious resend
+run_test    "DTLS client reconnect from same port: reference (forced fail)" \
+            -p "pxy_drop_until 0" \
+            "$P_SRV dtls=1 exchanges=2 read_timeout=20000 hs_timeout=10000-20000" \
+            "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=10000-20000" \
+            0 \
+            -C "a" \
             -S "The operation timed out" \
             -S "Client initiated reconnection from same port"
 
