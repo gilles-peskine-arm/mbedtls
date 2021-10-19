@@ -6608,8 +6608,16 @@ run_test    "DTLS cookie: enabled, nbio" \
 
 # Tests for client reconnecting from the same port with DTLS
 
+pxy_drop_first_time() {
+    if [ $TIMES_LEFT -gt 0 ]; then
+        set seed=1 drop=3 "$@"
+    fi
+    exec $P_PXY "$@"
+}
+
 not_with_valgrind # spurious resend
 run_test    "DTLS client reconnect from same port: reference" \
+            -p "pxy_drop_first_time" \
             "$P_SRV dtls=1 exchanges=2 read_timeout=20000 hs_timeout=10000-20000" \
             "$P_CLI dtls=1 exchanges=2 debug_level=2 hs_timeout=10000-20000" \
             0 \
