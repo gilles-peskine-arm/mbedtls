@@ -641,8 +641,8 @@ if type lsof >/dev/null 2>/dev/null; then
               # are checking for as well as the server and lsof will list both.
               # If multiple PIDs are returned, each one will be on a separate
               # line, each prepended with 'p'.
-              case ${SERVER_PIDS}${newline} in
-                  *p${2}${newline}) break;;
+              case ${newline}${SERVER_PIDS}${newline} in
+                  *${newline}p${2}${newline}*) break;;
               esac
               if [ $(( $(date +%s) - $START_TIME )) -gt $DOG_DELAY ]; then
                   echo "$3 START TIMEOUT"
