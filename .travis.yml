@@ -32,6 +32,7 @@ jobs:
       os: windows
       before_install:
         - choco install python --version=3.5.4
+        - mklink c:\\Python35\\python3.exe python.exe
       env:
         # Add the directory where the Choco packages go
         - PATH=/c/Python35:/c/Python35/Scripts:$PATH
