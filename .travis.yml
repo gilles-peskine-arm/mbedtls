@@ -8,30 +8,30 @@ cache: ccache
 jobs:
   include:
     - name: basic checks and reference configurations
-      addons:
-        apt:
-          packages:
-          - gnutls-bin
-          - doxygen
-          - graphviz
-          - gcc-arm-none-eabi
-          - libnewlib-arm-none-eabi
-          - gcc-arm-linux-gnueabi
-          - libc6-dev-armel-cross
+      # addons:
+      #   apt:
+      #     packages:
+      #     - gnutls-bin
+      #     - doxygen
+      #     - graphviz
+      #     - gcc-arm-none-eabi
+      #     - libnewlib-arm-none-eabi
+      #     - gcc-arm-linux-gnueabi
+      #     - libc6-dev-armel-cross
       script:
-        - tests/scripts/all.sh -k 'check_*'
+        - tests/scripts/all.sh -k check_python_files
         - tests/scripts/all.sh -k test_default_out_of_box
-        - tests/scripts/all.sh -k test_ref_configs
-        - tests/scripts/all.sh -k build_arm_linux_gnueabi_gcc_arm5vte build_arm_none_eabi_gcc_m0plus
+        # - tests/scripts/all.sh -k test_ref_configs
+        # - tests/scripts/all.sh -k build_arm_linux_gnueabi_gcc_arm5vte build_arm_none_eabi_gcc_m0plus
 
-    - name: full configuration
-      script:
-        - tests/scripts/all.sh -k test_full_cmake_gcc_asan
+    # - name: full configuration
+    #   script:
+    #     - tests/scripts/all.sh -k test_full_cmake_gcc_asan
 
     - name: Windows
       os: windows
       # The language 'python' is currently unsupported on the Windows Build Environment.
-      language: generic
+      language: c
       before_install:
         - choco install python --version=3.5.4
         - mklink c:\\Python35\\python3.exe python.exe
@@ -44,7 +44,7 @@ jobs:
         - scripts/make_generated_files.bat
         # Logs appear out of sequence on Windows. Give time to catch up.
         - sleep 5
-        - scripts/windows_msbuild.bat v141 # Visual Studio 2017
+        # - scripts/windows_msbuild.bat v141 # Visual Studio 2017
 
 after_failure:
 - tests/scripts/travis-log-failure.sh
