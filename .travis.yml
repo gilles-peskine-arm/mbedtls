@@ -36,7 +36,7 @@ jobs:
       language: c
       before_install:
         - choco install python --version=3.5.4
-        - mklink c:\\Python35\\python3.exe python.exe
+        - echo 'c:\Python35\python.exe %*' >/c/Python35/python3.bat
       env:
         # Add the directory where the Choco packages go
         - PATH=/c/Python35:/c/Python35/Scripts:$PATH
