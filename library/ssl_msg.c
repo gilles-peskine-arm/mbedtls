@@ -919,7 +919,6 @@ int mbedtls_ssl_encrypt_buf( mbedtls_ssl_context *ssl,
         if( auth_done == 0 )
         {
             unsigned char mac[MBEDTLS_SSL_MAC_ADD];
-            int ret;
 
             /*
              * MAC(MAC_write_key, seq_num +
