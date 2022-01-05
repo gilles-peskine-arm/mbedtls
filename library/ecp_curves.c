@@ -5060,6 +5060,7 @@ static int ecp_mod_p256( mbedtls_mpi *N )
 {
     INIT( 256 );
 
+#if 0
     ADD(  8 ); ADD(  9 );
     SUB( 11 ); SUB( 12 ); SUB( 13 ); SUB( 14 );             NEXT; // A0
 
@@ -5083,6 +5084,51 @@ static int ecp_mod_p256( mbedtls_mpi *N )
 
     ADD( 15 ); ADD( 15 ); ADD( 15 ); ADD( 8 );
     SUB( 10 ); SUB( 11 ); SUB( 12 ); SUB( 13 );             LAST; // A7
+#else
+#define IADD( n ) ( n )
+#define ISUB( n ) ( n | 0x40 )
+#define INEXT 0
+    static uint8_t instructions[] = {
+        IADD(  8 ), IADD(  9 ),
+        ISUB( 11 ), ISUB( 12 ), ISUB( 13 ), ISUB( 14 ),
+        INEXT, // A0
+        IADD(  9 ), IADD( 10 ),
+        ISUB( 12 ), ISUB( 13 ), ISUB( 14 ), ISUB( 15 ),
+        INEXT, // A1
+        IADD( 10 ), IADD( 11 ),
+        ISUB( 13 ), ISUB( 14 ), ISUB( 15 ),
+        INEXT, // A2
+        IADD( 11 ), IADD( 11 ), IADD( 12 ), IADD( 12 ), IADD( 13 ),
+        ISUB( 15 ), ISUB(  8 ), ISUB(  9 ),
+        INEXT, // A3
+        IADD( 12 ), IADD( 12 ), IADD( 13 ), IADD( 13 ), IADD( 14 ),
+        ISUB(  9 ), ISUB( 10 ),
+        INEXT, // A4
+        IADD( 13 ), IADD( 13 ), IADD( 14 ), IADD( 14 ), IADD( 15 ),
+        ISUB( 10 ), ISUB( 11 ),
+        INEXT, // A5
+        IADD( 14 ), IADD( 14 ), IADD( 15 ), IADD( 15 ), IADD( 14 ), IADD( 13 ),
+        ISUB(  8 ), ISUB(  9 ),
+        INEXT, // A6
+        IADD( 15 ), IADD( 15 ), IADD( 15 ), IADD( 8 ),
+        ISUB( 10 ), ISUB( 11 ), ISUB( 12 ), ISUB( 13 ), // A7
+    };
+    for( size_t k = 0; k < sizeof( instructions ); k++ ) {
+        if( instructions[k] == 0 )
+        {
+            NEXT;
+        }
+        else if( instructions[k] & 0x40 )
+        {
+            SUB( instructions[k] & 0x3f );
+        }
+        else
+        {
+            ADD( instructions[k] );
+        }
+    }
+    LAST;
+#endif
 
 cleanup:
     return( ret );
