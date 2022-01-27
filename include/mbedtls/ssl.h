@@ -2341,10 +2341,10 @@ static inline void mbedtls_ssl_conf_set_user_data_n(
 
 /** \brief Retrieve the user data in an SSL configuration as a pointer.
  *
- * This is the value last set with mbedtls_ssl_conf_set_user_data_n(), or
- * \c 0 if mbedtls_ssl_conf_set_user_data_n() has not previously been
- * called. The value is undefined if mbedtls_ssl_conf_set_user_data_p() has
- * been called without a subsequent call to mbedtls_ssl_conf_set_user_data_n().
+ * This is the value last set with mbedtls_ssl_conf_set_user_data_p(), or
+ * \c NULL if mbedtls_ssl_conf_set_user_data_p() has not previously been
+ * called. The value is undefined if mbedtls_ssl_conf_set_user_data_n() has
+ * been called without a subsequent call to mbedtls_ssl_conf_set_user_data_p().
  *
  * \param conf           The SSL configuration context to modify.
  * \return               The current value of the user data.
@@ -2357,10 +2357,10 @@ static inline void *mbedtls_ssl_conf_get_user_data_p(
 
 /** \brief Retrieve the user data in an SSL configuration as an integer.
  *
- * This is the value last set with mbedtls_ssl_conf_set_user_data_p(), or
- * \c NULL if mbedtls_ssl_conf_set_user_data_p() has not previously been
- * called. The value is undefined if mbedtls_ssl_conf_set_user_data_n() has
- * been called without a subsequent call to mbedtls_ssl_conf_set_user_data_p().
+ * This is the value last set with mbedtls_ssl_conf_set_user_data_n(), or
+ * \c 0 if mbedtls_ssl_conf_set_user_data_n() has not previously been
+ * called. The value is undefined if mbedtls_ssl_conf_set_user_data_p() has
+ * been called without a subsequent call to mbedtls_ssl_conf_set_user_data_n().
  *
  * \param conf           The SSL configuration context to modify.
  * \return               The current value of the user data.
