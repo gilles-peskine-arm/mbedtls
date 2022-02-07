@@ -129,19 +129,37 @@ const mbedtls_pk_info_t * mbedtls_pk_info_from_type( mbedtls_pk_type_t pk_type )
     }
 }
 
+#if defined(MBEDTLS_TEST_HOOKS)
+void ( *mbedtls_test_hook_pk_setup_override_alloc )(
+    mbedtls_pk_context *ctx ) = NULL;
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /*
  * Initialise context
  */
 int mbedtls_pk_setup( mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info )
 {
     PK_VALIDATE_RET( ctx != NULL );
+
     if( info == NULL || ctx->pk_info != NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 
-    if( ( ctx->pk_ctx = info->ctx_alloc_func() ) == NULL )
-        return( MBEDTLS_ERR_PK_ALLOC_FAILED );
-
-    ctx->pk_info = info;
+#if defined(MBEDTLS_TEST_HOOKS)
+    if( mbedtls_test_hook_pk_setup_override_alloc != NULL )
+    {
+        ctx->pk_info = info;
+        mbedtls_test_hook_pk_setup_override_alloc( ctx );
+        if( ctx->pk_ctx == NULL )
+            return( MBEDTLS_ERR_PK_ALLOC_FAILED );
+    }
+    else
+#endif /* MBEDTLS_TEST_HOOKS */
+    {
+        ctx->pk_ctx = info->ctx_alloc_func( );
+        if( ctx->pk_ctx == NULL )
+            return( MBEDTLS_ERR_PK_ALLOC_FAILED );
+        ctx->pk_info = info;
+    }
 
     return( 0 );
 }

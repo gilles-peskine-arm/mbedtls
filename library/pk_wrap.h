@@ -135,4 +135,13 @@ extern const mbedtls_pk_info_t mbedtls_rsa_alt_info;
 extern const mbedtls_pk_info_t mbedtls_pk_opaque_info;
 #endif
 
+#if defined(MBEDTLS_TEST_HOOKS)
+/* If this function is non-NULL, mbedtls_pk_setup() calls it instead of
+ * setting `ctx->pk_ctx = info->ctx_alloc_func()`. `ctx->pk_info` is set to
+ * the info pointer, and this function may change it. Note that it's
+ * this function's job to set `ctx->pk_ctx`. */
+extern void ( *mbedtls_test_hook_pk_setup_override_alloc )(
+    mbedtls_pk_context *ctx );
+#endif /* MBEDTLS_TEST_HOOKS */
+
 #endif /* MBEDTLS_PK_WRAP_H */
