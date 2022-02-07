@@ -129,12 +129,23 @@ const mbedtls_pk_info_t * mbedtls_pk_info_from_type( mbedtls_pk_type_t pk_type )
     }
 }
 
+#if defined(MBEDTLS_TEST_HOOKS)
+const mbedtls_pk_info_t * ( *mbedtls_test_hook_pk_setup_override_info )(
+    const mbedtls_pk_info_t *original_info ) = NULL;
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /*
  * Initialise context
  */
 int mbedtls_pk_setup( mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info )
 {
     PK_VALIDATE_RET( ctx != NULL );
+
+#if defined(MBEDTLS_TEST_HOOKS)
+    if( mbedtls_test_hook_pk_setup_override_info != NULL )
+        info = mbedtls_test_hook_pk_setup_override_info( info );
+#endif /* MBEDTLS_TEST_HOOKS */
+
     if( info == NULL || ctx->pk_info != NULL )
         return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
 

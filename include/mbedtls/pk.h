@@ -902,6 +902,13 @@ int mbedtls_pk_wrap_as_opaque( mbedtls_pk_context *pk,
                                psa_algorithm_t hash_alg );
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
+#if defined(MBEDTLS_TEST_HOOKS)
+/* If this function is non-NULL, mbedtls_pk_setup() calls it to override
+ * the info that was passed to it. */
+extern const mbedtls_pk_info_t * ( *mbedtls_test_hook_pk_setup_override_info )(
+    const mbedtls_pk_info_t *original_info );
+#endif /* MBEDTLS_TEST_HOOKS */
+
 #ifdef __cplusplus
 }
 #endif
