@@ -2,6 +2,20 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/pem.h"
 #include "mbedtls/oid.h"
+
+#if defined(MBEDTLS_TEST_HOOKS)
+#include "pk_wrap.h"
+
+static size_t pk_info_override_always_null_call_count = 0;
+static const mbedtls_pk_info_t *pk_info_override_always_null(
+    const mbedtls_pk_info_t *info )
+{
+    (void) info;
+    ++pk_info_override_always_null_call_count;
+    return( NULL );
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -86,6 +100,26 @@ void pk_parse_public_keyfile_ec( char * key_file, int result )
 
 exit:
     mbedtls_pk_free( &ctx );
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void parse_public_setup_fail( data_t *input, int expected_ret )
+{
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init( &pk );
+    pk_info_override_always_null_call_count = 0;
+
+    mbedtls_test_hook_pk_setup_override_info = pk_info_override_always_null;
+    TEST_EQUAL( expected_ret,
+                mbedtls_pk_parse_public_key( &pk, input->x, input->len ) );
+    TEST_EQUAL( pk_info_override_always_null_call_count, 1 );
+
+exit:
+    mbedtls_test_hook_pk_setup_override_info = NULL;
+    pk_info_override_always_null_call_count = 0;
+    mbedtls_pk_free( &pk );
 }
 /* END_CASE */
 
