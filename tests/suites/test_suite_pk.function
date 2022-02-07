@@ -319,6 +319,126 @@ exit:
 }
 /* END_CASE */
 
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C */
+void parse_public_der( data_t *input, int expected_ret )
+{
+    mbedtls_pk_context pk;
+    size_t len;
+    uint8_t *buf = NULL;
+    /* Trailing garbage: ASN.1 NULL then a tag Mbed TLS doesn't know about. */
+    const uint8_t garbage[4] = {0x05, 0x00, 0x07, 0x00};
+    int ret;
+
+    mbedtls_pk_init( &pk );
+
+    /* Test all prefixes of the input, and the input with some trailing
+     * garbage. Skip testing the empty input: valid_parameters takes
+     * care of it. */
+    for( len = 1; len <= input->len + sizeof( garbage ); len++ )
+    {
+        mbedtls_test_set_step( len );
+        /* Make a copy of the input into an exact-sized heap buffer, so that
+         * sanitizers can detect buffer overreads. */
+        ASSERT_ALLOC( buf, len );
+        if( len > input->len )
+        {
+            memcpy( buf, input->x, input->len );
+            memcpy( buf, garbage, len - input->len );
+        }
+        else
+            memcpy( buf, input->x, len );
+        ret = mbedtls_pk_parse_public_key( &pk, buf, len );
+        if( len == input->len )
+            TEST_EQUAL( expected_ret, ret );
+        else
+        {
+            /* Truncated input or input with trailing garbage: it can't be
+             * valid, but there's no sensible way to predict the exact error. */
+            TEST_ASSERT( ret != 0 );
+        }
+        mbedtls_free( buf );
+        buf = NULL;
+        mbedtls_pk_free( &pk );
+    }
+
+exit:
+    mbedtls_free( buf );
+    mbedtls_pk_free( &pk );
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PK_PARSE_C:MBEDTLS_PEM_PARSE_C */
+void parse_public_pem( char *input, int expected_ret )
+{
+    mbedtls_pk_context pk;
+    const size_t input_len = strlen( input );
+    size_t len;
+    uint8_t *buf = NULL;
+    int ret;
+
+    mbedtls_pk_init( &pk );
+
+    /* Test all prefixes of the input, with and without a trailing null byte.
+     * No need to test empty input: valid_parameters takes care of it. */
+    for( len = 1; len <= input_len; len++ )
+    {
+        mbedtls_test_set_step( len );
+        /* Make a copy of the input into an exact-sized heap buffer, so that
+         * sanitizers can detect buffer overreads. */
+        ASSERT_ALLOC( buf, len );
+        memcpy( buf, input, len );
+
+        /* No trailing null byte (len bytes from input) */
+        ret = mbedtls_pk_parse_public_key( &pk, buf, len );
+        /* Without a null byte, currently, the library tries to parse the
+         * input as DER, and this fails with a specific error if the first
+         * byte is not 0x30. Require this specific error to have additional
+         * confidence that the library is doing what we expect. This test
+         * will need to become looser or more sophisticated if the library
+         * behavior changes. */
+        if( input[0] == 0x30 )
+        {
+            TEST_EQUAL( MBEDTLS_ERR_PK_KEY_INVALID_FORMAT +
+                        MBEDTLS_ERR_ASN1_UNEXPECTED_TAG,
+                        ret );
+        }
+        else
+            TEST_ASSERT( ret != 0 );
+
+        /* With trailing null byte (len - 1 bytes from input) */
+        buf[len - 1] = 0;
+        ret = mbedtls_pk_parse_public_key( &pk, buf, len );
+        TEST_ASSERT( ret != 0 );
+
+        mbedtls_free( buf );
+        buf = NULL;
+        mbedtls_pk_free( &pk );
+    }
+
+    /* Good cases: input followed by at least one null byte. */
+    for( len = input_len + 1; len <= input_len + 2; len++ )
+    {
+        mbedtls_test_set_step( len );
+        /* Make a copy of the input into an exact-sized heap buffer, so that
+         * sanitizers can detect buffer overreads. */
+        ASSERT_ALLOC( buf, len );
+        memcpy( buf, input, input_len );
+        /* The remainder of the buffer consists of null bytes. */
+
+        ret = mbedtls_pk_parse_public_key( &pk, buf, len );
+        TEST_EQUAL( expected_ret, ret );
+
+        mbedtls_free( buf );
+        buf = NULL;
+        mbedtls_pk_free( &pk );
+    }
+
+exit:
+    mbedtls_free( buf );
+    mbedtls_pk_free( &pk );
+}
+/* END_CASE */
+
 /* BEGIN_CASE */
 void pk_utils( int type, int parameter, int bitlen, int len, char * name )
 {
