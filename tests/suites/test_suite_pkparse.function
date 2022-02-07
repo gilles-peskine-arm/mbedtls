@@ -2,6 +2,18 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/pem.h"
 #include "mbedtls/oid.h"
+
+#if defined(MBEDTLS_TEST_HOOKS)
+#include "pk_wrap.h"
+
+static size_t setup_override_fail_call_count = 0;
+static void setup_override_fail( mbedtls_pk_context *ctx )
+{
+    (void) ctx;
+    ++setup_override_fail_call_count;
+}
+#endif /* MBEDTLS_TEST_HOOKS */
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -86,6 +98,26 @@ void pk_parse_public_keyfile_ec( char * key_file, int result )
 
 exit:
     mbedtls_pk_free( &ctx );
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_HOOKS */
+void parse_public_setup_fail( data_t *input, int expected_ret )
+{
+    mbedtls_pk_context pk;
+
+    mbedtls_pk_init( &pk );
+    setup_override_fail_call_count = 0;
+
+    mbedtls_test_hook_pk_setup_override_alloc = setup_override_fail;
+    TEST_EQUAL( expected_ret,
+                mbedtls_pk_parse_public_key( &pk, input->x, input->len ) );
+    TEST_EQUAL( setup_override_fail_call_count, 1 );
+
+exit:
+    mbedtls_test_hook_pk_setup_override_alloc = NULL;
+    setup_override_fail_call_count = 0;
+    mbedtls_pk_free( &pk );
 }
 /* END_CASE */
 
