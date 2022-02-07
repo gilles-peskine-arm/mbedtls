@@ -135,4 +135,11 @@ extern const mbedtls_pk_info_t mbedtls_rsa_alt_info;
 extern const mbedtls_pk_info_t mbedtls_pk_opaque_info;
 #endif
 
+#if defined(MBEDTLS_TEST_HOOKS)
+/* If this function is non-NULL, mbedtls_pk_setup() calls it to override
+ * the info that was passed to it. */
+extern const mbedtls_pk_info_t * ( *mbedtls_test_hook_pk_setup_override_info )(
+    const mbedtls_pk_info_t *original_info );
+#endif /* MBEDTLS_TEST_HOOKS */
+
 #endif /* MBEDTLS_PK_WRAP_H */
