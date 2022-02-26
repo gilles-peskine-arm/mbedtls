@@ -16,16 +16,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Purpose
-#
-# For each reference configuration file in the configs directory, build the
-# configuration, run the test suites and compat.sh
-#
-# Usage: tests/scripts/test-ref-configs.pl [config-name [...]]
 
 use warnings;
 use strict;
+use Getopt::Std;
 
 my %configs = (
     'config-ccm-psk-tls1_2.h' => {
@@ -54,6 +48,29 @@ my %configs = (
         'test_again_with_use_psa' => 1,
     },
 );
+
+sub HELP_MESSAGE {
+    my ($fh) = @_;
+    print $fh <<EOF;
+Usage: $0 [OPTION]... [CONFIG_NAME [...]]
+
+For each reference configuration file in the configs directory, build the
+configuration, run the test suites and, for some configurations, TLS tests.
+If given one or more config name, only test these configurations.
+
+Options:
+  --help        Print this help and exit
+
+Config names:
+EOF
+    print $fh map {"  $_\n"} sort keys %configs;
+}
+sub VERSION_MESSAGE {
+}
+
+my %opts;
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+getopts('', \%opts);
 
 # If no config-name is provided, use all known configs.
 # Otherwise, use the provided names only.
