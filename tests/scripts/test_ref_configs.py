@@ -32,6 +32,8 @@ from typing import List
 CONFIGS_DIR = 'configs'
 LIVE_CONFIG = 'include/mbedtls/mbedtls_config.h'
 BACKUP_CONFIG = LIVE_CONFIG + '.bak'
+SEEDFILE = 'tests/seedfile'
+SEEDFILE_SIZE = 64
 
 def test_configuration(config: str) -> None:
     """Test the given configuration.
@@ -69,6 +71,12 @@ def test_configurations(options) -> None:
 def prepare_for_testing() -> None:
     """Initial setup before running any tests."""
     shutil.copy(LIVE_CONFIG, BACKUP_CONFIG)
+    # For configurations that enable MBEDTLS_ENTROPY_NV_SEED, ensure that
+    # a seedfile is present.
+    if not os.path.exists(SEEDFILE) or \
+       os.stat(SEEDFILE).st_size < SEEDFILE_SIZE:
+        with open(SEEDFILE, 'wb') as seedfile:
+            seedfile.write(os.urandom(SEEDFILE_SIZE))
 
 def final_cleanup() -> None:
     """Final cleanup after running all the tests."""
