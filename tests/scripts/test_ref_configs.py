@@ -27,7 +27,7 @@ import glob
 import os
 import shutil
 import subprocess
-from typing import List
+from typing import Iterable, List
 
 CONFIGS_DIR = 'configs'
 LIVE_CONFIG = 'include/mbedtls/mbedtls_config.h'
@@ -35,33 +35,87 @@ BACKUP_CONFIG = LIVE_CONFIG + '.bak'
 SEEDFILE = 'tests/seedfile'
 SEEDFILE_SIZE = 64
 
+class Spec:
+    """Specification of additional testing for a configuration."""
+    # In Python >=3.6, this could be a typing.NamedTuple. But Python 3.5
+    # doesn't have NamedTuple with both types and default values.
+    #pylint: disable=too-few-public-methods
+
+    def __init__(self,
+                 psa: bool = False):
+        self.psa = psa
+
+# Describe additional testing for some configurations. If a configuration is
+# not listed here, this script only builds the library and runs the unit tests.
+CONFIGS = {
+    'config-ccm-psk-tls1_2.h': Spec(
+        psa=True,
+    ),
+    'config-ccm-psk-dtls1_2.h': Spec(
+        psa=True,
+    ),
+    'config-suite-b.h': Spec(
+        psa=True,
+    ),
+    'config-symmetric-only.h': Spec(
+        psa=False, # Uses PSA by default, no need to test it twice
+    ),
+    'config-thread.h': Spec(
+        psa=True,
+    ),
+}
+
+def tweak_config(symbols_to_set: Iterable[str]) -> None:
+    """Additionally set the given configuration options."""
+    for symbol in symbols_to_set:
+        subprocess.check_call(['scripts/config.py', 'set', symbol])
+
+def test_configuration_variant(config_name: str,
+                               config_file: str,
+                               psa: bool = False) -> None:
+    """Test the specified configuration variant.
+
+    Assume that `prepare_for_testing` has run.
+    Running `final_cleanup` may be necessary afterwards.
+    """
+    env = os.environ.copy()
+    env['MBEDTLS_TEST_CONFIGURATION'] = config_name
+    # 1. Prepare
+    print("""
+******************************************
+* Testing configuration: {}
+******************************************
+""".format(config_name))
+    subprocess.check_call(['make', 'clean'])
+    shutil.copy(config_file, LIVE_CONFIG)
+    if psa:
+        tweak_config(['MBEDTLS_PSA_CRYPTO_C', 'MBEDTLS_USE_PSA_CRYPTO'])
+    # 2. Build and run unit tests
+    subprocess.check_call(['echo', 'make'],
+                          env=env)
+    subprocess.check_call(['echo', 'make', 'test'],
+                          env=env)
+
+def all_configurations() -> List[str]:
+    """List the available configurations."""
+    return glob.glob(os.path.join(CONFIGS_DIR, '*.h'))
+
 def test_configuration(config: str) -> None:
     """Test the given configuration.
 
     Assume that `prepare_for_testing` has run.
     Running `final_cleanup` may be necessary afterwards.
     """
-    config_file = os.path.join(CONFIGS_DIR, config)
-    env = os.environ.copy()
-    env['MBEDTLS_TEST_CONFIGURATION'] = config
-    # 1. Prepare
-    print("""
-******************************************
-* Testing configuration: {}
-******************************************
-""".format(config))
-    subprocess.check_call(['make', 'clean'])
-    shutil.copy(config_file, LIVE_CONFIG)
-    # 2. Build and run unit tests
-    subprocess.check_call(['make'],
-                          env=env)
-    subprocess.check_call(['make', 'test'],
-                          env=env)
-
-def all_configurations() -> List[str]:
-    """List the available configurations."""
-    return [os.path.basename(path)
-            for path in glob.glob(os.path.join(CONFIGS_DIR, '*.h'))]
+    if '/' in config:
+        config_file = config
+        config_name = os.path.basename(config)
+    else:
+        config_file = os.path.join(CONFIGS_DIR, config)
+        config_name = config
+    spec = CONFIGS.get(config_name, Spec())
+    test_configuration_variant(config_name, config_file)
+    if spec.psa:
+        test_configuration_variant(config_name + '+PSA', config_file, psa=True)
 
 def test_configurations(options) -> None:
     """Test the specified configurations."""
@@ -95,7 +149,9 @@ def main() -> None:
     """Command line entry point."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('configs', nargs='*', metavar='CONFIGS',
-                        help='Configurations to test (default: all)')
+                        help=('Configurations to test'
+                              ' (files; relative to configs/ if no slash;'
+                              ' default: all in configs/)'))
     options = parser.parse_args()
     if not options.configs:
         options.configs = all_configurations()
