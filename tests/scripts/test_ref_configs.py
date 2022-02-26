@@ -42,25 +42,33 @@ class Spec:
     #pylint: disable=too-few-public-methods
 
     def __init__(self,
+                 compat: Iterable[List[str]] = frozenset(),
+                 opt: Iterable[List[str]] = frozenset(),
                  psa: bool = False):
+        self.compat = compat
+        self.opt = opt
         self.psa = psa
 
 # Describe additional testing for some configurations. If a configuration is
 # not listed here, this script only builds the library and runs the unit tests.
 CONFIGS = {
     'config-ccm-psk-tls1_2.h': Spec(
+        compat=[['-m', 'tls12', '-f', '^TLS-PSK-WITH-AES-...-CCM-8']],
         psa=True,
     ),
     'config-ccm-psk-dtls1_2.h': Spec(
+        compat=[['-m', 'dtls12', '-f', '^TLS-PSK-WITH-AES-...-CCM-8']],
         psa=True,
     ),
     'config-suite-b.h': Spec(
+        compat=[['-m', 'tls12', '-f', 'ECDHE-ECDSA.*AES.*GCM', '-p', 'mbedTLS']],
         psa=True,
     ),
     'config-symmetric-only.h': Spec(
         psa=False, # Uses PSA by default, no need to test it twice
     ),
     'config-thread.h': Spec(
+        opt=[['-f', 'ECJPAKE.*nolog']],
         psa=True,
     ),
 }
@@ -72,6 +80,7 @@ def tweak_config(symbols_to_set: Iterable[str]) -> None:
 
 def test_configuration_variant(config_name: str,
                                config_file: str,
+                               spec: Spec = Spec(),
                                psa: bool = False) -> None:
     """Test the specified configuration variant.
 
@@ -91,10 +100,19 @@ def test_configuration_variant(config_name: str,
     if psa:
         tweak_config(['MBEDTLS_PSA_CRYPTO_C', 'MBEDTLS_USE_PSA_CRYPTO'])
     # 2. Build and run unit tests
-    subprocess.check_call(['echo', 'make'],
+    subprocess.check_call(['make'],
                           env=env)
-    subprocess.check_call(['echo', 'make', 'test'],
+    subprocess.check_call(['make', 'test'],
                           env=env)
+    # 3. Run TLS tests
+    for args in spec.compat:
+        print("\nRunning compat.sh", *args)
+        subprocess.check_call(['tests/compat.sh'] + args,
+                              env=env)
+    for args in spec.opt:
+        print("\nRunning ssl-opt.sh", *args)
+        subprocess.check_call(['tests/ssl-opt.sh'] + args,
+                              env=env)
 
 def all_configurations() -> List[str]:
     """List the available configurations."""
@@ -113,9 +131,10 @@ def test_configuration(config: str) -> None:
         config_file = os.path.join(CONFIGS_DIR, config)
         config_name = config
     spec = CONFIGS.get(config_name, Spec())
-    test_configuration_variant(config_name, config_file)
+    test_configuration_variant(config_name, config_file, spec)
     if spec.psa:
-        test_configuration_variant(config_name + '+PSA', config_file, psa=True)
+        test_configuration_variant(config_name + '+PSA', config_file, spec,
+                                   psa=True)
 
 def test_configurations(options) -> None:
     """Test the specified configurations."""
