@@ -27,12 +27,13 @@ import glob
 import os
 import shutil
 import subprocess
+from typing import List
 
 CONFIGS_DIR = 'configs'
 LIVE_CONFIG = 'include/mbedtls/mbedtls_config.h'
 BACKUP_CONFIG = LIVE_CONFIG + '.bak'
 
-def test_configuration(config):
+def test_configuration(config: str) -> None:
     """Test the given configuration.
 
     Assume that `prepare_for_testing` has run.
@@ -55,26 +56,26 @@ def test_configuration(config):
     subprocess.check_call(['make', 'test'],
                           env=env)
 
-def all_configurations():
+def all_configurations() -> List[str]:
     """List the available configurations."""
     return [os.path.basename(path)
             for path in glob.glob(os.path.join(CONFIGS_DIR, '*.h'))]
 
-def test_configurations(options):
+def test_configurations(options) -> None:
     """Test the specified configurations."""
     for config in options.configs:
         test_configuration(config)
 
-def prepare_for_testing():
+def prepare_for_testing() -> None:
     """Initial setup before running any tests."""
     shutil.copy(LIVE_CONFIG, BACKUP_CONFIG)
 
-def final_cleanup():
+def final_cleanup() -> None:
     """Final cleanup after running all the tests."""
     shutil.move(BACKUP_CONFIG, LIVE_CONFIG)
     subprocess.check_call(['make', 'clean'])
 
-def run_tests(options):
+def run_tests(options) -> None:
     """Test the specified configurations, then clean up."""
     prepare_for_testing()
     try:
@@ -82,7 +83,7 @@ def run_tests(options):
     finally:
         final_cleanup()
 
-def main():
+def main() -> None:
     """Command line entry point."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('configs', nargs='*', metavar='CONFIGS',
