@@ -1,0 +1,137 @@
+Notes regarding the PostQuantum/ Hybrid key modification made to the code: 
+
+Genenal notes: 
+- The Mbedtls modifications in this branch are based on the 3.0.0. 
+- The PSA code was not enabled in the 3.0.0 branch, so the modification are based on the pre-PSA implementation. 
+- The modifications were part of a Proof of Concept. in which the goal was to find out how difficult/easy it is to add PostQuantum/ Hybrid key support to Mbedtls. 
+- Because this was a POC, no attempt has been made to keep comments, style and variable names consistent with the Mbedtls conventions. 
+!!! However if Mbedtls is interested in using this code, it can relatively easily be reformatted/renamed/restyled to be consistent with Mbedtls conventions 
+
+- The proof of concept was limited to a Linux built, Other builds have not been tested. 
+- The current version supports Hybrid pulbic keys based on the RSA/EC/Kyber/Dilithium algorithms. 
+- The TLS connections tested, use ephemeral keys based on the supported key algorithms foir the key exchange. (DH(E), PSK and non-ephemeral keys have not been tested.) 
+!!! Adding support for DH, DHE and PSK should be relatively easy within the new public key frame work. 
+
+
+
+
+Code changes: 
+----------------
+- library: 	
+----------------
+	- The Makefiles and directory structure have been changed to split the library code in the following subdirectories 
+		- crypto (crypto library)
+			- skey 	(symmetric key algos) 
+			- pkey 	(public key algos) 
+				- ec 		Ellipcal curve algorithm implementation 
+				- rsa 		RSA algorithm implementation 
+				- kyber 	CRYSTALS Kyber algorithm implmentation 
+				- dilithium 	CRYSTALS Dilithium algorithm implementation 		
+			- rng  	(randomm number generator logic) 
+			- hash 	(hash algos)
+			- kdf  	(Key derivation functions) 
+			- psa 	(PSA specific code)
+		- x509 	(x509 library) 
+		- tls 	(ssl library) 
+
+		
+- crypto library code changes 
+	- The main changes for the crypto library are in the pkey code
+	
+	- The pkey code is seperated in two layers (note the 'pq' name extensions refer to Post Quantum. The functionality in the files is similar to the original without the PQ extension)   
+		1) Algorithm independent public key code which is mainly implemented in pkpq.c, pkpq_parse.c, pkpq_write.c and pkpq_wrap.c 
+			- There is no algorithm dependent logic in these files, so only one main compile time switch is needed in these files 
+		2) The implementation of the algorithms. 
+			- The implmentation of the algorithms are changed as little as possible. 
+			- The different algorithms are connected to the generic pkey code with the <algo>_mbed_wrap.c files (e.g ec_mbed_wrap.c, rsa_mbed_wrap.c) 
+			
+	- The public key structure has changed to support hybrid key. The public key structure is broken into three levels 
+	
+		level 1: 'pktop' top level context 	Clients of the pkey code (e.g. x509 and tls) get an opaque pointer to this context 
+							A top level key can contain multiple (up to 3) individual keys 
+							
+		level 2: 'pkfull' key context  		This is an individual key context and is equivalent to the 3.0.0 'mbedtls_pk_context' struct 
+							The 'full' context contains references to the level 3 'pkctx' and 'pkinfo' (See below) 
+							
+		level 3: 'pkctx' struct			This is an opaque pointer to the pkey algorithm implementation. 
+			 'pkinfo' struct 		This is equivalent to the 3.0.0 'mbedtls_pk_info_t' struct and contains generic function pointers to the pkey algorithm implementation 
+							The function pointers supported are:
+							- get_keyparams(): 	Get pkey information like name, signature/ciphertext/shared secret size, security level etc 
+							- vrfy/sign_func():	verify and sign operations 
+							- encap/decap_func():	Encapsulate and decapsulate functions (similar to RSA encrypt/decrypt) 
+							- dh_func()		Diffie-Hellman shared secret function 
+							- keygen_func():	Generate a key 
+							- check_pair_func(): 	Check if a public key matches a private key 
+							- alloc/free_func():	Allocate/Free memory for the level 3 (algorithm) key context ('pkctx') 
+							- import/export_func(): Import or export a DER (or text) formatted key 
+							
+							
+	- The mbedtls 3.0.0 'mbedtls_pk_type_t' is split into two enums: 
+		- mbed_hybpk_t : Combination type of the individual keys (Note: A hybrid key can consist of multiple individual keys). 
+		- mbed_pkype_t : Type of the individual key. (This type is ony availabe internally and is not exposed to the API user) 
+	
+	- An important set of APIs that is added are the mbed_pk_kem_gen(), mbed_pk_kem_extract() APIs. 
+		These two APIs implement generate and extract the key exchange message.
+		These APIs use the 'encap/decap' and/or 'dh' functions of the individual keys to generate/extract the key exchange message 
+	
+	- The random number generator function and context ('f_rng()' and 'p_rng') are added to the top level key context. 
+		The function pkey_get_rng_info(), extracts the rng callback function and context from the top level 'pktop' key context. 
+		
+	- Some pkey API function names have changed from mbedtls_xxx() to mbed_xxx(). 
+		This was only done to mark which functions had been touched, and can easily be undone if needed.
+	
+	- A lot of crypto calls require a buffer, the length of the buffer and returns the number of bytes written/consumed. 
+	  To simplify some internal interface calls I introduced the struct pk_buf_t which handles these variables and keeps track of the start position of the buffer. 
+		
+	
+
+- x509 changes: 
+	The main changes are related to the use of a hybrid key instead of a individual key and the associated size changes to support PQ/hybrid keys. 
+
+- SSL changes:
+	The most significant chnages are flagged with the KEM_REWORK switch that implements key exchange with hybrid/PQ keys 
+	The other changes are related to the use of a hybrid keys for authentication or the PQ/hybrid key associated size changes to support PQ/hybrid keys. 
+		
+- Compile time switches: 
+	- MBEDTLS_PQ_C is used (inconsistently) for PQ/Hybrid key related changes 
+	- KEM_REWORK is used to mark changes in the SSL code to support key exchange with hybrid/PQ keys. 
+
+
+----------------
+- Programs:
+----------------
+	The following programs have been changed or added to support hybrid/PQ keys:
+	- key_gen		Generate keys (Use 'addkey' parameter to generate hybrid keys) 
+	- key_conversion 	Convert keys from  private -> public, DER <-> PEM, or extract an individual key from a hybrid key. 
+	- key_info 	 	Dump the key information   
+	- key_comb 		Combine two keys  
+	- pk_sign/verify 	sign/verify a message with a hybrid key 
+	- pk_kemgen/extract 	generate/extract a key exchange message with a hybrid key 
+	- pk_encap/decap 	encapsulate/decapsulate a key/message (Does NOT work on hybrid keys consisting of multiple keys) 
+	- pk_dh 		generate a Diffie-Hellman shared secret(Does NOT work on hybrid keys consisting of multiple keys)
+		
+	
+	
+	
+							
+							
+							
+							
+					
+		
+		
+	
+			
+	
+		
+		
+
+		
+-
+
+
+
+
+
+
+
