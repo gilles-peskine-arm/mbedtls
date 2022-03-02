@@ -80,8 +80,8 @@ Code changes:
 	- Some pkey API function names have changed from mbedtls_xxx() to mbed_xxx(). 
 		This was only done to mark which functions had been touched, and can easily be undone if needed.
 	
-	- A lot of crypto calls require a buffer, the length of the buffer and returns the number of bytes written/consumed. 
-	  To simplify some internal interface calls I introduced the struct pk_buf_t which handles these variables and keeps track of the start position of the buffer. 
+	- A lot of crypto calls require; a buffer, the length of the buffer and returns the number of bytes written/consumed. 
+	  To simplify some internal interface calls I introduced the struct pkbuf_t which handles these variables and keeps track of the start position of the buffer. 
 		
 	
 
