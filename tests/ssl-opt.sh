@@ -298,6 +298,12 @@ maybe_requires_ciphersuite_enabled() {
     unset ciphersuite
 }
 
+requires_certificate_authentication () {
+    if [ "$PSK_ONLY" = "YES" ]; then
+        SKIP_NEXT="YES"
+    fi
+}
+
 adapt_cmd_for_psk () {
     case "$2" in
         *openssl*) s='-psk abc123 -nocert';;
@@ -9886,6 +9892,7 @@ run_test    "DTLS proxy: delay ChangeCipherSpec" \
 
 # Tests for reordering support with DTLS
 
+requires_certificate_authentication
 run_test    "DTLS reordering: Buffer out-of-order handshake message on client" \
             -p "$P_PXY delay_srv=ServerHello" \
             "$P_SRV dgram_packing=0 cookies=0 dtls=1 debug_level=2 \
@@ -9902,6 +9909,7 @@ run_test    "DTLS reordering: Buffer out-of-order handshake message on client" \
             -S "Injecting buffered CCS message" \
             -S "Remember CCS message"
 
+requires_certificate_authentication
 run_test    "DTLS reordering: Buffer out-of-order handshake message fragment on client" \
             -p "$P_PXY delay_srv=ServerHello" \
             "$P_SRV mtu=512 dgram_packing=0 cookies=0 dtls=1 debug_level=2 \
@@ -9924,6 +9932,7 @@ run_test    "DTLS reordering: Buffer out-of-order handshake message fragment on 
 # Certificate message; at the time of writing, together these are aroudn 1200b
 # in size, so that the bound below ensures that the certificate can be reassembled
 # while keeping the ServerKeyExchange.
+requires_certificate_authentication
 requires_config_value_at_least "MBEDTLS_SSL_DTLS_MAX_BUFFERING" 1300
 run_test    "DTLS reordering: Buffer out-of-order hs msg before reassembling next" \
             -p "$P_PXY delay_srv=Certificate delay_srv=Certificate" \
@@ -9945,6 +9954,7 @@ run_test    "DTLS reordering: Buffer out-of-order hs msg before reassembling nex
 # The size constraints ensure that the delayed certificate message can't
 # be reassembled while keeping the ServerKeyExchange message, but it can
 # when dropping it first.
+requires_certificate_authentication
 requires_config_value_at_least "MBEDTLS_SSL_DTLS_MAX_BUFFERING" 900
 requires_config_value_at_most "MBEDTLS_SSL_DTLS_MAX_BUFFERING" 1299
 run_test    "DTLS reordering: Buffer out-of-order hs msg before reassembling next, free buffered msg" \
@@ -9964,6 +9974,7 @@ run_test    "DTLS reordering: Buffer out-of-order hs msg before reassembling nex
             -S "Injecting buffered CCS message" \
             -S "Remember CCS message"
 
+requires_certificate_authentication
 run_test    "DTLS reordering: Buffer out-of-order handshake message on server" \
             -p "$P_PXY delay_cli=Certificate" \
             "$P_SRV dgram_packing=0 auth_mode=required cookies=0 dtls=1 debug_level=2 \
@@ -9980,6 +9991,7 @@ run_test    "DTLS reordering: Buffer out-of-order handshake message on server" \
             -S "Injecting buffered CCS message" \
             -S "Remember CCS message"
 
+requires_certificate_authentication
 run_test    "DTLS reordering: Buffer out-of-order CCS message on client"\
             -p "$P_PXY delay_srv=NewSessionTicket" \
             "$P_SRV dgram_packing=0 cookies=0 dtls=1 debug_level=2 \
@@ -9996,6 +10008,7 @@ run_test    "DTLS reordering: Buffer out-of-order CCS message on client"\
             -S "Injecting buffered CCS message" \
             -S "Remember CCS message"
 
+requires_certificate_authentication
 run_test    "DTLS reordering: Buffer out-of-order CCS message on server"\
             -p "$P_PXY delay_cli=ClientKeyExchange" \
             "$P_SRV dgram_packing=0 cookies=0 dtls=1 debug_level=2 \
