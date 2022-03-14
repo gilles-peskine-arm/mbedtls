@@ -20,6 +20,7 @@
 use warnings;
 use strict;
 use Getopt::Std;
+use POSIX qw(SIGINT);
 
 my %configs = (
     'config-ccm-psk-tls1_2.h' => {
@@ -59,6 +60,7 @@ configuration, run the test suites and, for some configurations, TLS tests.
 If given one or more config name, only test these configurations.
 
 Options:
+  -k            Keep going after errors
   --help        Print this help and exit
 
 Config names:
@@ -70,7 +72,7 @@ sub VERSION_MESSAGE {
 
 my %opts;
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-getopts('', \%opts);
+getopts('k', \%opts);
 
 # If no config-name is provided, use all known configs.
 # Otherwise, use the provided names only.
@@ -89,12 +91,35 @@ if ($#ARGV >= 0) {
 my $config_h = 'include/mbedtls/mbedtls_config.h';
 
 system( "cp $config_h $config_h.bak" ) and die;
+
+my $failures = 0;
+
 sub abort {
-    system( "mv $config_h.bak $config_h" ) and warn "$config_h not restored\n";
-    # use an exit code between 1 and 124 for git bisect (die returns 255)
     warn $_[0];
-    exit 1;
+    my $sig = $? & 127;
+    system( "mv $config_h.bak $config_h" ) and warn "$config_h not restored\n";
+    if ( $sig == POSIX::SIGINT )
+    {
+        warn "\nInterrupted during build\n";
+        $SIG{'INT'} = 'DEFAULT';
+        kill( $sig, $$ );
+    }
+    elsif ( $opts{k} )
+    {
+        die "failure";
+    }
+    else
+    {
+        # use an exit code between 1 and 124 for git bisect (die returns 255)
+        exit 1;
+    }
 }
+
+sub interrupt {
+    warn "\nInterrupted during perl\n";
+    die "interrupt";
+}
+$SIG{INT} = \&interrupt;
 
 # Create a seedfile for configurations that enable MBEDTLS_ENTROPY_NV_SEED.
 # For test purposes, this doesn't have to be cryptographically random.
@@ -107,23 +132,25 @@ if (!-e "tests/seedfile" || -s "tests/seedfile" < 64) {
 
 sub perform_test {
     my $conf = $_[0];
+    my $conf_file = "configs/$conf";
     my $data = $_[1];
     my $test_with_psa = $_[2];
 
-    system( "cp $config_h.bak $config_h" ) and die;
-    system( "make clean" ) and die;
+    if ( $test_with_psa )
+    {
+        $conf .= '+USE_PSA_CRYPTO';
+    }
+
+    system( "cp $config_h.bak $config_h" ) and die "fatal";
+    system( "make clean" ) and die "fatal";
 
     print "\n******************************************\n";
     print "* Testing configuration: $conf\n";
-    if ( $test_with_psa )
-    {
-        print "* ENABLING MBEDTLS_PSA_CRYPTO_C and MBEDTLS_USE_PSA_CRYPTO \n";
-    }
     print "******************************************\n";
 
     $ENV{MBEDTLS_TEST_CONFIGURATION} = $conf;
 
-    system( "cp configs/$conf $config_h" )
+    system( "cp $conf_file $config_h" )
         and abort "Failed to activate $conf\n";
 
     if ( $test_with_psa )
@@ -156,7 +183,7 @@ sub perform_test {
             system( "make clean" );
             system( "scripts/config.py set MBEDTLS_DEBUG_C" );
             system( "scripts/config.py set MBEDTLS_ERROR_C" );
-            system( "CFLAGS='-Os -Werror -Wall -Wextra' make" ) and abort "Failed to build: $conf +debug\n";
+            system( "CFLAGS='-Os -Werror -Wall -Wextra' make" ) and abort "Failed to build: $conf+DEBUG\n";
         }
 
         print "\nrunning ssl-opt.sh $opt\n";
@@ -169,15 +196,27 @@ sub perform_test {
     }
 }
 
+sub wrap_test {
+    eval {
+        perform_test( @_ )
+    };
+    warn "\$\@ = \"$@\"\n";
+    if ( $@ eq "failure" ) {
+        ++$failures;
+    } else {
+        die $@;
+    }
+}
+
 foreach my $conf ( @configs_to_test ) {
     my $test_with_psa = $configs{$conf}{'test_again_with_use_psa'};
     if ( $test_with_psa )
     {
-        perform_test( $conf, $configs{$conf}, $test_with_psa );
+        wrap_test( $conf, $configs{$conf}, $test_with_psa );
     }
-    perform_test( $conf, $configs{$conf}, 0 );
+    wrap_test( $conf, $configs{$conf}, 0 );
 }
 
 system( "mv $config_h.bak $config_h" ) and warn "$config_h not restored\n";
 system( "make clean" );
-exit 0;
+exit !$failures;
