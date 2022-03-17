@@ -822,8 +822,10 @@ class StorageFormatV0(StorageFormat):
                 for key_type in sorted(alg_with_keys[alg]):
                     # The key types must be filtered to fit the specific usage flag.
                     kt = crypto_knowledge.KeyType(key_type)
-                    if kt.is_valid_for_signature(usage):
-                        yield self.keys_for_implicit_usage(usage, alg, kt)
+                    if kt.is_public() and '_SIGN_' in usage:
+                        # Can't sign with a public key
+                        continue
+                    yield self.keys_for_implicit_usage(usage, alg, kt)
 
     def generate_all_keys(self) -> Iterator[StorageTestData]:
         yield from super().generate_all_keys()
