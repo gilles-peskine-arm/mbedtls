@@ -160,33 +160,35 @@ class PSAMacroEnumerator:
     def _argument_split(cls, arguments: str) -> List[str]:
         return re.split(cls._argument_split_re, arguments)
 
+    def _generate_all_combinations(
+            self, name: str,
+            argument_lists: List[List[str]],
+            arguments: List[str]
+    ) -> Iterator[str]:
+        """Generate all argument combinations for `distribute_arguments`."""
+        if argument_lists:
+            for arg in argument_lists[0]:
+                yield from self._generate_all_combinations(name,
+                                                           argument_lists[1:],
+                                                           arguments + [arg])
+        else:
+            yield self._format_arguments(name, arguments)
+
     def distribute_arguments(self, name: str) -> Iterator[str]:
         """Generate macro calls with each tested argument set.
 
         If name is a macro without arguments, just yield "name".
         If name is a macro with arguments, yield a series of
         "name(arg1,...,argN)" where each argument takes each possible
-        value at least once.
+        value.
         """
         try:
             if name not in self.argspecs:
                 yield name
                 return
             argspec = self.argspecs[name]
-            if argspec == []:
-                yield name + '()'
-                return
             argument_lists = [self.arguments_for[arg] for arg in argspec]
-            arguments = [values[0] for values in argument_lists]
-            yield self._format_arguments(name, arguments)
-            # Dear Pylint, enumerate won't work here since we're modifying
-            # the array.
-            # pylint: disable=consider-using-enumerate
-            for i in range(len(arguments)):
-                for value in argument_lists[i][1:]:
-                    arguments[i] = value
-                    yield self._format_arguments(name, arguments)
-                arguments[i] = argument_lists[0][0]
+            yield from self._generate_all_combinations(name, argument_lists, [])
         except BaseException as e:
             raise Exception('distribute_arguments({})'.format(name)) from e
 
