@@ -60,6 +60,67 @@ static int can_export( const psa_key_attributes_t *attributes )
         return( 0 );
 }
 
+#if defined(MBEDTLS_TEST_LIBTESTDRIVER1)
+static int hash_alg_is_not_in_libtestdriver1( psa_algorithm_t alg )
+{
+    return( alg == PSA_ALG_MD5 ||
+            alg == PSA_ALG_RIPEMD160 ||
+            alg == PSA_ALG_SHA_1 );
+}
+#endif
+
+/* Mbed TLS doesn't support certain combinations of key type and algorithm
+ * in certain configurations. */
+static int can_exercise( const psa_key_attributes_t *attributes )
+{
+    psa_key_type_t key_type = psa_get_key_type( attributes );
+    psa_algorithm_t alg = psa_get_key_algorithm( attributes );
+    psa_key_usage_t usage = psa_get_key_usage_flags( attributes );
+
+#if defined(MBEDTLS_TEST_LIBTESTDRIVER1)
+    /* We test some configurations using drivers where the driver doesn't
+     * support certain hash algorithms, but declares that it supports
+     * compound algorithms that use those hashes. Until this is fixed,
+     * in those configurations, don't try to actually perform operations. */
+    if( ( usage & ( PSA_KEY_USAGE_SIGN_MESSAGE |
+                    PSA_KEY_USAGE_VERIFY_MESSAGE ) ) &&
+        PSA_ALG_IS_SIGN_HASH( alg ) &&
+        hash_alg_is_not_in_libtestdriver1( PSA_ALG_SIGN_GET_HASH( alg ) ) )
+    {
+        /* Hash-and-sign algorithms where the asymmetric part doesn't use
+         * a hash operation are ok. So randomized ECDSA signature is fine,
+         * ECDSA verification is fine, but deterministic ECDSA signature is
+         * affected. All RSA signatures are affected except raw PKCS#1v1.5. */
+#if defined(MBEDTLS_PSA_ACCEL_ALG_DETERMINISTIC_ECDSA)
+        if( PSA_ALG_IS_DETERMINISTIC_ECDSA( alg ) &&
+            ( usage & PSA_KEY_USAGE_SIGN_MESSAGE ) )
+            return( 0 );
+#endif
+#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_PKCS1V15_SIGN)
+        if( PSA_ALG_IS_RSA_PKCS1V15_SIGN( alg ) )
+            return( 0 );
+#endif
+#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_PSS)
+        if( PSA_ALG_IS_RSA_PSS( alg ) )
+            return( 0 );
+#endif
+    }
+#if defined(MBEDTLS_PSA_ACCEL_ALG_RSA_OAEP)
+    if( ( usage & ( PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT ) ) &&
+        PSA_ALG_IS_RSA_OAEP( alg ) &&
+        hash_alg_is_not_in_libtestdriver1( PSA_ALG_RSA_OAEP_GET_HASH( alg ) ) )
+    {
+            return( 0 );
+    }
+#endif
+#endif /* MBEDTLS_TEST_LIBTESTDRIVER1 */
+
+    (void) key_type;
+    (void) alg;
+    (void) usage;
+    return( 1 );
+}
+
 /** Write a key with the given representation to storage, then check
  * that it has the given attributes and (if exportable) key material.
  *
@@ -108,7 +169,7 @@ static int test_read_key( const psa_key_attributes_t *expected_attributes,
                         exported_material, length );
     }
 
-    if( flags & TEST_FLAG_EXERCISE )
+    if( ( flags & TEST_FLAG_EXERCISE ) && can_exercise( &actual_attributes ) )
     {
         TEST_ASSERT( mbedtls_test_psa_exercise_key(
                          key_id,
