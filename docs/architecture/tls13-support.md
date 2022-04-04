@@ -324,7 +324,7 @@ TLS 1.3 specific coding rules:
     ```
 
   - To mitigate what happened here
-    (https://github.com/ARMmbed/mbedtls/pull/4882#discussion_r701704527) from
+    (https://github.com/Mbed-TLS/mbedtls/pull/4882#discussion_r701704527) from
     happening again, use always a local variable named `p` for the reading
     pointer in functions parsing TLS 1.3 data, and for the writing pointer in
     functions writing data into an output buffer and only that variable. The
@@ -388,10 +388,10 @@ General coding rules:
 
     Example:
     ```
-    int mbedtls_ssl_tls13_start_handshake_msg( mbedtls_ssl_context *ssl,
-                                               unsigned hs_type,
-                                               unsigned char **buf,
-                                               size_t *buf_len );
+    int mbedtls_ssl_start_handshake_msg( mbedtls_ssl_context *ssl,
+                                         unsigned hs_type,
+                                         unsigned char **buf,
+                                         size_t *buf_len );
     ```
 
   - When a function's parameters span several lines, group related parameters
@@ -400,12 +400,12 @@ General coding rules:
     For example, prefer:
 
     ```
-    mbedtls_ssl_tls13_start_handshake_msg( ssl, hs_type,
-                                           buf, buf_len );
+    mbedtls_ssl_start_handshake_msg( ssl, hs_type,
+                                     buf, buf_len );
     ```
     over
     ```
-    mbedtls_ssl_tls13_start_handshake_msg( ssl, hs_type, buf,
-                                           buf_len );
+    mbedtls_ssl_start_handshake_msg( ssl, hs_type, buf,
+                                     buf_len );
     ```
     even if it fits.

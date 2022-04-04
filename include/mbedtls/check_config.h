@@ -181,9 +181,30 @@
 #endif
 #undef MBEDTLS_HAS_MEMSAN
 
+#if defined(MBEDTLS_CCM_C) && (                                        \
+    !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_CAMELLIA_C) && !defined(MBEDTLS_ARIA_C) )
+#error "MBEDTLS_CCM_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_CCM_C) && !defined(MBEDTLS_CIPHER_C)
+#error "MBEDTLS_CCM_C defined, but not all prerequisites"
+#endif
+
 #if defined(MBEDTLS_GCM_C) && (                                        \
-        !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_CAMELLIA_C) && !defined(MBEDTLS_ARIA_C) )
+    !defined(MBEDTLS_AES_C) && !defined(MBEDTLS_CAMELLIA_C) && !defined(MBEDTLS_ARIA_C) )
 #error "MBEDTLS_GCM_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_GCM_C) && !defined(MBEDTLS_CIPHER_C)
+#error "MBEDTLS_GCM_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_CHACHA20_C)
+#error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_CHACHAPOLY_C) && !defined(MBEDTLS_POLY1305_C)
+#error "MBEDTLS_CHACHAPOLY_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ECP_RANDOMIZE_JAC_ALT) && !defined(MBEDTLS_ECP_INTERNAL_ALT)
@@ -584,12 +605,90 @@
 #error "MBEDTLS_SHA384_C defined without MBEDTLS_SHA512_C"
 #endif
 
+#if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) && \
+    defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
+#error "Must only define one of MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#endif
+
+#if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT) || \
+    defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY)
+#if !defined(MBEDTLS_SHA512_C)
+#error "MBEDTLS_SHA512_USE_A64_CRYPTO_* defined without MBEDTLS_SHA512_C"
+#endif
+#if defined(MBEDTLS_SHA512_ALT) || defined(MBEDTLS_SHA512_PROCESS_ALT)
+#error "MBEDTLS_SHA512_*ALT can't be used with MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#endif
+/*
+ * Best performance comes from most recent compilers, with intrinsics and -O3.
+ * Must compile with -march=armv8.2-a+sha3, but we can't detect armv8.2-a, and
+ * can't always detect __ARM_FEATURE_SHA512 (notably clang 7-12).
+ *
+ * GCC < 8 won't work at all (lacks the sha512 instructions)
+ * GCC >= 8 uses intrinsics, sets __ARM_FEATURE_SHA512
+ *
+ * Clang < 7 won't work at all (lacks the sha512 instructions)
+ * Clang 7-12 don't have intrinsics (but we work around that with inline
+ *            assembler) or __ARM_FEATURE_SHA512
+ * Clang == 13.0.0 same as clang 12 (only seen on macOS)
+ * Clang >= 13.0.1 has __ARM_FEATURE_SHA512 and intrinsics
+ */
+#if defined(__aarch64__) && !defined(__ARM_FEATURE_SHA512)
+   /* Test Clang first, as it defines __GNUC__ */
+#  if defined(__clang__)
+#    if __clang_major__ < 7
+#      error "A more recent Clang is required for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#    elif __clang_major__ < 13 || \
+         (__clang_major__ == 13 && __clang_minor__ == 0 && __clang_patchlevel__ == 0)
+       /* We implement the intrinsics with inline assembler, so don't error */
+#    else
+#      error "Must use minimum -march=armv8.2-a+sha3 for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#    endif
+#  elif defined(__GNUC__)
+#    if __GNUC__ < 8
+#      error "A more recent GCC is required for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#    else
+#      error "Must use minimum -march=armv8.2-a+sha3 for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#    endif
+#  else
+#    error "Only GCC and Clang supported for MBEDTLS_SHA512_USE_A64_CRYPTO_*"
+#  endif
+#endif
+
+#endif /* MBEDTLS_SHA512_USE_A64_CRYPTO_IF_PRESENT || MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY */
+
+#if defined(MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY) && !defined(__aarch64__)
+#error "MBEDTLS_SHA512_USE_A64_CRYPTO_ONLY defined on non-Aarch64 system"
+#endif
+
 #if defined(MBEDTLS_SHA224_C) && !defined(MBEDTLS_SHA256_C)
 #error "MBEDTLS_SHA224_C defined without MBEDTLS_SHA256_C"
 #endif
 
 #if defined(MBEDTLS_SHA256_C) && !defined(MBEDTLS_SHA224_C)
 #error "MBEDTLS_SHA256_C defined without MBEDTLS_SHA224_C"
+#endif
+
+#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT) && \
+    defined(MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY)
+#error "Must only define one of MBEDTLS_SHA256_USE_A64_CRYPTO_*"
+#endif
+
+#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_IF_PRESENT) || \
+    defined(MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY)
+#if !defined(MBEDTLS_SHA256_C)
+#error "MBEDTLS_SHA256_USE_A64_CRYPTO_* defined without MBEDTLS_SHA256_C"
+#endif
+#if defined(MBEDTLS_SHA256_ALT) || defined(MBEDTLS_SHA256_PROCESS_ALT)
+#error "MBEDTLS_SHA256_*ALT can't be used with MBEDTLS_SHA256_USE_A64_CRYPTO_*"
+#endif
+#if defined(__aarch64__) && !defined(__ARM_FEATURE_CRYPTO)
+#error "Must use minimum -march=armv8-a+crypto for MBEDTLS_SHA256_USE_A64_CRYPTO_*"
+#endif
+#endif
+
+#if defined(MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY) && \
+    !defined(__aarch64__) && !defined(_M_ARM64)
+#error "MBEDTLS_SHA256_USE_A64_CRYPTO_ONLY defined on non-Aarch64 system"
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2) && ( !defined(MBEDTLS_SHA1_C) &&     \
@@ -780,23 +879,23 @@
  * cause a build to succeed but with features removed. */
 
 #if defined(MBEDTLS_HAVEGE_C) //no-check-names
-#error "MBEDTLS_HAVEGE_C was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/2599"
+#error "MBEDTLS_HAVEGE_C was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/2599"
 #endif
 
 #if defined(MBEDTLS_SSL_HW_RECORD_ACCEL) //no-check-names
-#error "MBEDTLS_SSL_HW_RECORD_ACCEL was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4031"
+#error "MBEDTLS_SSL_HW_RECORD_ACCEL was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4031"
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) //no-check-names
-#error "MBEDTLS_SSL_PROTO_SSL3 (SSL v3.0 support) was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4031"
+#error "MBEDTLS_SSL_PROTO_SSL3 (SSL v3.0 support) was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4031"
 #endif
 
 #if defined(MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO) //no-check-names
-#error "MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO (SSL v2 ClientHello support) was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4031"
+#error "MBEDTLS_SSL_SRV_SUPPORT_SSLV2_CLIENT_HELLO (SSL v2 ClientHello support) was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4031"
 #endif
 
 #if defined(MBEDTLS_SSL_TRUNCATED_HMAC_COMPAT) //no-check-names
-#error "MBEDTLS_SSL_TRUNCATED_HMAC_COMPAT (compatibility with the buggy implementation of truncated HMAC in Mbed TLS up to 2.7) was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4031"
+#error "MBEDTLS_SSL_TRUNCATED_HMAC_COMPAT (compatibility with the buggy implementation of truncated HMAC in Mbed TLS up to 2.7) was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4031"
 #endif
 
 #if defined(MBEDTLS_TLS_DEFAULT_ALLOW_SHA1_IN_CERTIFICATES) //no-check-names
@@ -804,23 +903,23 @@
 #endif
 
 #if defined(MBEDTLS_ZLIB_SUPPORT) //no-check-names
-#error "MBEDTLS_ZLIB_SUPPORT was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4031"
+#error "MBEDTLS_ZLIB_SUPPORT was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4031"
 #endif
 
 #if defined(MBEDTLS_CHECK_PARAMS) //no-check-names
-#error "MBEDTLS_CHECK_PARAMS was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4313"
+#error "MBEDTLS_CHECK_PARAMS was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4313"
 #endif
 
 #if defined(MBEDTLS_SSL_CID_PADDING_GRANULARITY) //no-check-names
-#error "MBEDTLS_SSL_CID_PADDING_GRANULARITY was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4335"
+#error "MBEDTLS_SSL_CID_PADDING_GRANULARITY was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4335"
 #endif
 
 #if defined(MBEDTLS_SSL_TLS1_3_PADDING_GRANULARITY) //no-check-names
-#error "MBEDTLS_SSL_TLS1_3_PADDING_GRANULARITY was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4335"
+#error "MBEDTLS_SSL_TLS1_3_PADDING_GRANULARITY was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4335"
 #endif
 
 #if defined(MBEDTLS_SSL_TRUNCATED_HMAC) //no-check-names
-#error "MBEDTLS_SSL_TRUNCATED_HMAC was removed in Mbed TLS 3.0. See https://github.com/ARMmbed/mbedtls/issues/4341"
+#error "MBEDTLS_SSL_TRUNCATED_HMAC was removed in Mbed TLS 3.0. See https://github.com/Mbed-TLS/mbedtls/issues/4341"
 #endif
 
 /*

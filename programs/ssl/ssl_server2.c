@@ -317,10 +317,16 @@ int main( void )
 
 #if defined(MBEDTLS_SSL_CACHE_C)
 #define USAGE_CACHE                                             \
-    "    cache_max=%%d        default: cache default (50)\n"    \
+    "    cache_max=%%d        default: cache default (50)\n"
+#if defined(MBEDTLS_HAVE_TIME)
+#define USAGE_CACHE_TIME \
     "    cache_timeout=%%d    default: cache default (1d)\n"
 #else
+#define USAGE_CACHE_TIME ""
+#endif
+#else
 #define USAGE_CACHE ""
+#define USAGE_CACHE_TIME ""
 #endif /* MBEDTLS_SSL_CACHE_C */
 
 #if defined(SNI_OPTION)
@@ -509,6 +515,7 @@ int main( void )
     USAGE_NSS_KEYLOG                                        \
     USAGE_NSS_KEYLOG_FILE                                   \
     USAGE_CACHE                                             \
+    USAGE_CACHE_TIME                                        \
     USAGE_MAX_FRAG_LEN                                      \
     USAGE_ALPN                                              \
     USAGE_EMS                                               \
@@ -619,7 +626,9 @@ struct options
     int ticket_timeout;         /* session ticket lifetime                  */
     int ticket_aead;            /* session ticket protection                */
     int cache_max;              /* max number of session cache entries      */
-    int cache_timeout;          /* expiration delay of session cache entries */
+#if defined(MBEDTLS_HAVE_TIME)
+    int cache_timeout;          /* expiration delay of session cache entries*/
+#endif
     char *sni;                  /* string describing sni information        */
     const char *curves;         /* list of supported elliptic curves        */
     const char *sig_algs;       /* supported TLS 1.3 signature algorithms   */
@@ -823,24 +832,56 @@ int sni_callback( void *p_info, mbedtls_ssl_context *ssl,
 {
     const sni_entry *cur = (const sni_entry *) p_info;
 
+    /* preserve behavior which checks for SNI match in sni_callback() for
+     * the benefits of tests using sni_callback(), even though the actual
+     * certificate assignment has moved to certificate selection callback
+     * in this application.  This exercises sni_callback and cert_callback
+     * even though real applications might choose to do this differently.
+     * Application might choose to save name and name_len in user_data for
+     * later use in certificate selection callback.
+     */
     while( cur != NULL )
     {
         if( name_len == strlen( cur->name ) &&
             memcmp( name, cur->name, name_len ) == 0 )
         {
-            if( cur->ca != NULL )
-                mbedtls_ssl_set_hs_ca_chain( ssl, cur->ca, cur->crl );
-
-            if( cur->authmode != DFL_AUTH_MODE )
-                mbedtls_ssl_set_hs_authmode( ssl, cur->authmode );
-
-            return( mbedtls_ssl_set_hs_own_cert( ssl, cur->cert, cur->key ) );
+            void *p;
+            *(const void **)&p = cur;
+            mbedtls_ssl_set_user_data_p( ssl, p );
+            return( 0 );
         }
 
         cur = cur->next;
     }
 
     return( -1 );
+}
+
+/*
+ * server certificate selection callback.
+ */
+int cert_callback( mbedtls_ssl_context *ssl )
+{
+    const sni_entry *cur = (sni_entry *) mbedtls_ssl_get_user_data_p( ssl );
+    if( cur != NULL )
+    {
+        /*(exercise mbedtls_ssl_get_hs_sni(); not otherwise used here)*/
+        size_t name_len;
+        const unsigned char *name = mbedtls_ssl_get_hs_sni( ssl, &name_len );
+        if( strlen( cur->name ) != name_len ||
+            memcmp( cur->name, name, name_len ) != 0 )
+            return( MBEDTLS_ERR_SSL_DECODE_ERROR );
+
+        if( cur->ca != NULL )
+            mbedtls_ssl_set_hs_ca_chain( ssl, cur->ca, cur->crl );
+
+        if( cur->authmode != DFL_AUTH_MODE )
+            mbedtls_ssl_set_hs_authmode( ssl, cur->authmode );
+
+        return( mbedtls_ssl_set_hs_own_cert( ssl, cur->cert, cur->key ) );
+    }
+
+    return( 0 );
 }
 
 #endif /* SNI_OPTION */
@@ -1549,7 +1590,9 @@ int main( int argc, char *argv[] )
     opt.ticket_timeout      = DFL_TICKET_TIMEOUT;
     opt.ticket_aead         = DFL_TICKET_AEAD;
     opt.cache_max           = DFL_CACHE_MAX;
+#if defined(MBEDTLS_HAVE_TIME)
     opt.cache_timeout       = DFL_CACHE_TIMEOUT;
+#endif
     opt.sni                 = DFL_SNI;
     opt.alpn_string         = DFL_ALPN_STRING;
     opt.curves              = DFL_CURVES;
@@ -1945,12 +1988,14 @@ int main( int argc, char *argv[] )
             if( opt.cache_max < 0 )
                 goto usage;
         }
+#if defined(MBEDTLS_HAVE_TIME)
         else if( strcmp( p, "cache_timeout" ) == 0 )
         {
             opt.cache_timeout = atoi( q );
             if( opt.cache_timeout < 0 )
                 goto usage;
         }
+#endif
         else if( strcmp( p, "cookies" ) == 0 )
         {
             opt.cookies = atoi( q );
@@ -2723,8 +2768,10 @@ int main( int argc, char *argv[] )
     if( opt.cache_max != -1 )
         mbedtls_ssl_cache_set_max_entries( &cache, opt.cache_max );
 
+#if defined(MBEDTLS_HAVE_TIME)
     if( opt.cache_timeout != -1 )
         mbedtls_ssl_cache_set_timeout( &cache, opt.cache_timeout );
+#endif
 
     mbedtls_ssl_conf_session_cache( &conf, &cache,
                                    mbedtls_ssl_cache_get,
@@ -2923,6 +2970,7 @@ int main( int argc, char *argv[] )
     if( opt.sni != NULL )
     {
         mbedtls_ssl_conf_sni( &conf, sni_callback, sni_info );
+        mbedtls_ssl_conf_cert_cb( &conf, cert_callback );
 #if defined(MBEDTLS_SSL_ASYNC_PRIVATE)
         if( opt.async_private_delay2 >= 0 )
         {

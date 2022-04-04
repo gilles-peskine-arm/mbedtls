@@ -45,15 +45,15 @@ struct _hr_time
 
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/time.h>
 #include <signal.h>
+#if defined(MBEDTLS_HAVE_TIME)
 #include <time.h>
-
+#include <sys/time.h>
 struct _hr_time
 {
     struct timeval start;
 };
-
+#endif
 #endif /* _WIN32 && !EFIX64 && !EFI32 */
 
 /**
@@ -75,6 +75,7 @@ struct _hr_time
  *                 get_timer(0) }` the value time1+time2 is only approximately
  *                 the delay since the first reset.
  */
+#if defined(MBEDTLS_HAVE_TIME)
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
 
 unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )
@@ -158,5 +159,41 @@ int mbedtls_timing_get_delay( void *data )
     return( 0 );
 }
 
+/*
+ * Get the final delay.
+ */
+uint32_t mbedtls_timing_get_final_delay(
+                                      const mbedtls_timing_delay_context *data )
+{
+    return( data->fin_ms );
+}
+#else /* MBEDTLS_HAVE_TIME */
+uint32_t mbedtls_timing_get_final_delay(
+                                      const mbedtls_timing_delay_context *data )
+{
+    (void) data;
+    return( 0 );
+}
+
+int mbedtls_timing_get_delay( void *data )
+{
+    (void) data;
+    return( 0 );
+}
+void mbedtls_timing_set_delay( void *data, uint32_t int_ms, uint32_t fin_ms )
+{
+    (void) data;
+    (void) int_ms;
+    (void) fin_ms;
+}
+
+unsigned long mbedtls_timing_get_timer( struct mbedtls_timing_hr_time *val, int reset )
+{
+    (void) val;
+    (void) reset;
+    return( 0 );
+}
+
+#endif /* MBEDTLS_HAVE_TIME */
 #endif /* !MBEDTLS_TIMING_ALT */
 #endif /* MBEDTLS_TIMING_C */
