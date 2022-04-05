@@ -80,6 +80,16 @@ int main( void )
 #include <unistd.h>
 #endif /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
 
+/* The pack= option requires a functional timer provided by the timing module.
+ * It won't build if mbedtls_timing_get_timer() isn't available and won't work
+ * if that function doesn't behave as advertised. */
+#if defined(MBEDTLS_TIMING_C) &&                                \
+    ( defined(MBEDTLS_HAVE_TIME) || defined(MBEDTLS_TIMING_ALT) )
+#define HAVE_FUNCTIONAL_TIMER 1
+#else
+#define HAVE_FUNCTIONAL_TIMER 0
+#endif
+
 #define MAX_MSG_SIZE            16384 + 2048 /* max record/datagram size */
 
 #define DFL_SERVER_ADDR         "localhost"
@@ -280,10 +290,10 @@ static void get_options( int argc, char *argv[] )
         }
         else if( strcmp( p, "pack" ) == 0 )
         {
-#if defined(MBEDTLS_TIMING_C)
+#if HAVE_FUNCTIONAL_TIMER
             opt.pack = (unsigned) atoi( q );
 #else
-            mbedtls_printf( " option pack only defined if MBEDTLS_TIMING_C is enabled\n" );
+            mbedtls_printf( " option pack only defined if MBEDTLS_TIMING_C and MBEDTLS_HAVE_TIME are enabled\n" );
             exit( 1 );
 #endif
         }
@@ -391,6 +401,7 @@ static unsigned ellapsed_time( void )
     return( mbedtls_timing_get_timer( &hires, 0 ) );
 }
 
+#if HAVE_FUNCTIONAL_TIMER
 typedef struct
 {
     mbedtls_net_context *ctx;
@@ -470,6 +481,7 @@ static int ctx_buffer_append( ctx_buffer *buf,
 
     return( (int) len );
 }
+#endif /* HAVE_FUNCTIONAL_TIMER */
 #endif /* MBEDTLS_TIMING_C */
 
 static int dispatch_data( mbedtls_net_context *ctx,
@@ -477,7 +489,7 @@ static int dispatch_data( mbedtls_net_context *ctx,
                           size_t len )
 {
     int ret;
-#if defined(MBEDTLS_TIMING_C)
+#if HAVE_FUNCTIONAL_TIMER
     ctx_buffer *buf = NULL;
     if( opt.pack > 0 )
     {
@@ -491,7 +503,7 @@ static int dispatch_data( mbedtls_net_context *ctx,
 
         return( ctx_buffer_append( buf, data, len ) );
     }
-#endif /* MBEDTLS_TIMING_C */
+#endif /* HAVE_FUNCTIONAL_TIMER */
 
     ret = mbedtls_net_send( ctx, data, len );
     if( ret < 0 )
@@ -810,7 +822,7 @@ int main( int argc, char *argv[] )
 
     mbedtls_net_context listen_fd, client_fd, server_fd;
 
-#if defined( MBEDTLS_TIMING_C )
+#if HAVE_FUNCTIONAL_TIMER
     struct timeval tm;
 #endif
 
@@ -908,7 +920,7 @@ accept:
         nb_fds = listen_fd.fd;
     ++nb_fds;
 
-#if defined(MBEDTLS_TIMING_C)
+#if HAVE_FUNCTIONAL_TIMER
     if( opt.pack > 0 )
     {
         outbuf[0].ctx = &server_fd;
@@ -921,11 +933,11 @@ accept:
         outbuf[1].num_datagrams = 0;
         outbuf[1].len = 0;
     }
-#endif /* MBEDTLS_TIMING_C */
+#endif /* HAVE_FUNCTIONAL_TIMER */
 
     while( 1 )
     {
-#if defined(MBEDTLS_TIMING_C)
+#if HAVE_FUNCTIONAL_TIMER
         if( opt.pack > 0 )
         {
             unsigned max_wait_server, max_wait_client, max_wait;
@@ -959,7 +971,7 @@ accept:
                 tm_ptr = NULL;
             }
         }
-#endif /* MBEDTLS_TIMING_C */
+#endif /* HAVE_FUNCTIONAL_TIMER */
 
         FD_ZERO( &read_fds );
         FD_SET( server_fd.fd, &read_fds );
