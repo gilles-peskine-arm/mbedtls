@@ -1263,6 +1263,13 @@ run_test() {
             requires_config_enabled MBEDTLS_SSL_ALPN;;
     esac
 
+    # Check proxy capabilities
+    case "$PXY_CMD" in
+        *[\ ]pack=*)
+            requires_config_enabled MBEDTLS_HAVE_TIME
+            requires_config_enabled MBEDTLS_TIMING_C;;
+    esac
+
     # If the client or serve requires a ciphersuite, check that it's enabled.
     maybe_requires_ciphersuite_enabled "$SRV_CMD" "$@"
     maybe_requires_ciphersuite_enabled "$CLI_CMD" "$@"
@@ -9229,8 +9236,8 @@ run_test    "DTLS proxy: duplicate every packet, server anti-replay off" \
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 run_test    "DTLS proxy: multiple records in same datagram" \
             -p "$P_PXY pack=50" \
-            "$P_SRV dtls=1 dgram_packing=0 debug_level=2" \
-            "$P_CLI dtls=1 dgram_packing=0 debug_level=2" \
+            "$P_SRV dtls=1 dgram_packing=0 debug_level=3" \
+            "$P_CLI dtls=1 dgram_packing=0 debug_level=3" \
             0 \
             -c "next record in same datagram" \
             -s "next record in same datagram"
