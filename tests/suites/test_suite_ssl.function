@@ -5665,9 +5665,6 @@ exit:
     mbedtls_endpoint_free( &client, &client_context );
     mbedtls_endpoint_free( &server, &server_context );
 
-    mbedtls_psa_get_stats( &stats );
-    TEST_ASSERT( stats.empty_slots == MBEDTLS_PSA_KEY_SLOT_COUNT );
-
     USE_PSA_DONE( );
 }
 /* END_CASE */
