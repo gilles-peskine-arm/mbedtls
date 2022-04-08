@@ -6685,7 +6685,6 @@ run_test    "Small client packet TLS 1.2 AEAD shorter tag" \
 
 # Tests for small client packets in DTLS
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small client packet DTLS 1.0" \
             "$P_SRV dtls=1 force_version=dtls1" \
             "$P_CLI dtls=1 request_size=1 \
@@ -6693,7 +6692,6 @@ run_test    "Small client packet DTLS 1.0" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small client packet DTLS 1.0, without EtM" \
             "$P_SRV dtls=1 force_version=dtls1 etm=0" \
             "$P_CLI dtls=1 request_size=1 \
@@ -6701,7 +6699,6 @@ run_test    "Small client packet DTLS 1.0, without EtM" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small client packet DTLS 1.0, truncated hmac" \
             "$P_SRV dtls=1 force_version=dtls1 trunc_hmac=1" \
@@ -6710,7 +6707,6 @@ run_test    "Small client packet DTLS 1.0, truncated hmac" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small client packet DTLS 1.0, without EtM, truncated MAC" \
             "$P_SRV dtls=1 force_version=dtls1 trunc_hmac=1 etm=0" \
@@ -6719,7 +6715,6 @@ run_test    "Small client packet DTLS 1.0, without EtM, truncated MAC" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small client packet DTLS 1.2" \
             "$P_SRV dtls=1 force_version=dtls12" \
             "$P_CLI dtls=1 request_size=1 \
@@ -6727,7 +6722,6 @@ run_test    "Small client packet DTLS 1.2" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small client packet DTLS 1.2, without EtM" \
             "$P_SRV dtls=1 force_version=dtls12 etm=0" \
             "$P_CLI dtls=1 request_size=1 \
@@ -6735,7 +6729,6 @@ run_test    "Small client packet DTLS 1.2, without EtM" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small client packet DTLS 1.2, truncated hmac" \
             "$P_SRV dtls=1 force_version=dtls12 trunc_hmac=1" \
@@ -6744,7 +6737,6 @@ run_test    "Small client packet DTLS 1.2, truncated hmac" \
             0 \
             -s "Read from client: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small client packet DTLS 1.2, without EtM, truncated MAC" \
             "$P_SRV dtls=1 force_version=dtls12 trunc_hmac=1 etm=0" \
@@ -6972,7 +6964,6 @@ run_test    "Small server packet TLS 1.2 AEAD shorter tag" \
 
 # Tests for small server packets in DTLS
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small server packet DTLS 1.0" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls1" \
             "$P_CLI dtls=1 \
@@ -6980,7 +6971,6 @@ run_test    "Small server packet DTLS 1.0" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small server packet DTLS 1.0, without EtM" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls1 etm=0" \
             "$P_CLI dtls=1 \
@@ -6988,7 +6978,6 @@ run_test    "Small server packet DTLS 1.0, without EtM" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small server packet DTLS 1.0, truncated hmac" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls1 trunc_hmac=1" \
@@ -6997,7 +6986,6 @@ run_test    "Small server packet DTLS 1.0, truncated hmac" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small server packet DTLS 1.0, without EtM, truncated MAC" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls1 trunc_hmac=1 etm=0" \
@@ -7006,7 +6994,6 @@ run_test    "Small server packet DTLS 1.0, without EtM, truncated MAC" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small server packet DTLS 1.2" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls12" \
             "$P_CLI dtls=1 \
@@ -7014,7 +7001,6 @@ run_test    "Small server packet DTLS 1.2" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 run_test    "Small server packet DTLS 1.2, without EtM" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls12 etm=0" \
             "$P_CLI dtls=1 \
@@ -7022,7 +7008,6 @@ run_test    "Small server packet DTLS 1.2, without EtM" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small server packet DTLS 1.2, truncated hmac" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls12 trunc_hmac=1" \
@@ -7031,7 +7016,6 @@ run_test    "Small server packet DTLS 1.2, truncated hmac" \
             0 \
             -c "Read from server: 1 bytes read"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Small server packet DTLS 1.2, without EtM, truncated MAC" \
             "$P_SRV dtls=1 response_size=1 force_version=dtls12 trunc_hmac=1 etm=0" \
@@ -8303,7 +8287,6 @@ run_test    "DTLS reassembly: fragmentation, nbio (openssl server)" \
 # - all others below 512B
 # All those tests assume MAX_CONTENT_LEN is at least 2048
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8324,7 +8307,6 @@ run_test    "DTLS fragmenting: none (for reference)" \
             -C "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8349,7 +8331,6 @@ run_test    "DTLS fragmenting: server only (max_frag_len)" \
 # the client to not exceed a certain MTU; hence, the following
 # test can't be replicated with an MTU proxy such as the one
 # `client-initiated, server only (max_frag_len)` below.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8370,7 +8351,6 @@ run_test    "DTLS fragmenting: server only (more) (max_frag_len)" \
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8398,7 +8378,6 @@ run_test    "DTLS fragmenting: client-initiated, server only (max_frag_len)" \
 # to the peer.
 # The next test checks that no datagrams significantly larger than the
 # negotiated MFL are sent.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8420,7 +8399,6 @@ run_test    "DTLS fragmenting: client-initiated, server only (max_frag_len), pro
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8448,7 +8426,6 @@ run_test    "DTLS fragmenting: client-initiated, both (max_frag_len)" \
 # to the peer.
 # The next test checks that no datagrams significantly larger than the
 # negotiated MFL are sent.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
@@ -8470,7 +8447,6 @@ run_test    "DTLS fragmenting: client-initiated, both (max_frag_len), proxy MTU"
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 4096
@@ -8490,7 +8466,6 @@ run_test    "DTLS fragmenting: none (for reference) (MTU)" \
             -C "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 4096
@@ -8510,7 +8485,6 @@ run_test    "DTLS fragmenting: client (MTU)" \
             -C "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -8530,7 +8504,6 @@ run_test    "DTLS fragmenting: server (MTU)" \
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -8552,7 +8525,6 @@ run_test    "DTLS fragmenting: both (MTU=1024)" \
             -C "error"
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
@@ -8585,7 +8557,6 @@ run_test    "DTLS fragmenting: both (MTU=512)" \
 # fragmentation and auto-reduction) an extra retransmission might occur,
 # hence the ratio of 8.
 not_with_valgrind
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8610,7 +8581,6 @@ run_test    "DTLS fragmenting: proxy MTU: auto-reduction (not valgrind)" \
 
 # Forcing ciphersuite for this test to fit the MTU of 508 with full config.
 only_with_valgrind
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8637,7 +8607,6 @@ run_test    "DTLS fragmenting: proxy MTU: auto-reduction (with valgrind)" \
 # OTOH the client might resend if the server is to slow to reset after sending
 # a HelloVerifyRequest, so only check for no retransmission server-side
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -8664,7 +8633,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake (MTU=1024)" \
 # OTOH the client might resend if the server is to slow to reset after sending
 # a HelloVerifyRequest, so only check for no retransmission server-side
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8691,7 +8659,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake (MTU=512)" \
             -C "error"
 
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -8715,7 +8682,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake, nbio (MTU=1024)" \
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8752,7 +8718,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake, nbio (MTU=512)" \
 # reco_delay avoids races where the client reconnects before the server has
 # resumed listening, which would result in a spurious autoreduction.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8781,7 +8746,6 @@ run_test    "DTLS fragmenting: proxy MTU, resumed handshake" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
@@ -8813,7 +8777,6 @@ run_test    "DTLS fragmenting: proxy MTU, ChachaPoly renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
@@ -8846,7 +8809,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-GCM renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
@@ -8879,7 +8841,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-CCM renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
@@ -8913,7 +8874,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-CBC EtM renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
@@ -8944,7 +8904,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-CBC non-EtM renego" \
             -C "error"
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8969,7 +8928,6 @@ run_test    "DTLS fragmenting: proxy MTU + 3d" \
             -C "error"
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -8997,7 +8955,6 @@ run_test    "DTLS fragmenting: proxy MTU + 3d, nbio" \
 #
 # here and below we just want to test that the we fragment in a way that
 # pleases other implementations, so we don't need the peer to fragment
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
@@ -9012,7 +8969,6 @@ run_test    "DTLS fragmenting: gnutls server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
@@ -9034,7 +8990,6 @@ run_test    "DTLS fragmenting: gnutls server, DTLS 1.0" \
 # as the server name in the certificate. This will make the
 # certifiate validation fail, but passing --insecure makes
 # GnuTLS continue the connection nonetheless.
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
@@ -9050,7 +9005,6 @@ run_test    "DTLS fragmenting: gnutls client, DTLS 1.2" \
             -s "fragmenting handshake message"
 
 # See previous test for the reason to use --insecure
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
@@ -9065,7 +9019,6 @@ run_test    "DTLS fragmenting: gnutls client, DTLS 1.0" \
             0 \
             -s "fragmenting handshake message"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -9079,7 +9032,6 @@ run_test    "DTLS fragmenting: openssl server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -9093,7 +9045,6 @@ run_test    "DTLS fragmenting: openssl server, DTLS 1.0" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -9106,7 +9057,6 @@ run_test    "DTLS fragmenting: openssl client, DTLS 1.2" \
             0 \
             -s "fragmenting handshake message"
 
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
@@ -9124,7 +9074,6 @@ run_test    "DTLS fragmenting: openssl client, DTLS 1.0" \
 # again we just want to test that the we fragment in a way that
 # pleases other implementations, so we don't need the peer to fragment
 requires_gnutls_next
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9141,7 +9090,6 @@ run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.2" \
             -C "error"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9158,7 +9106,6 @@ run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.0" \
             -C "error"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9174,7 +9121,6 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.2" \
             -s "fragmenting handshake message"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9195,7 +9141,6 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.0" \
 ## They should be re-enabled once a fixed version of OpenSSL is available
 ## (this should happen in some 1.1.1_ release according to the ticket).
 skip_next_test
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9212,7 +9157,6 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.2" \
             -C "error"
 
 skip_next_test
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9229,7 +9173,6 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.0" \
             -C "error"
 
 skip_next_test
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
@@ -9247,7 +9190,6 @@ run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.2" \
 # -nbio is added to prevent s_client from blocking in case of duplicated
 # messages at the end of the handshake
 skip_next_test
-requires_config_enabled MBEDTLS_SSL_PROTO_DTLS
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
