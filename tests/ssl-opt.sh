@@ -62,16 +62,16 @@ guess_config_name() {
 : ${MBEDTLS_TEST_CONFIGURATION:="$(guess_config_name)"}
 : ${MBEDTLS_TEST_PLATFORM:="$(uname -s | tr -c \\n0-9A-Za-z _)-$(uname -m | tr -c \\n0-9A-Za-z _)"}
 
-O_SRV="$OPENSSL_CMD s_server -www -cert data_files/server5.crt -key data_files/server5.key"
+O_SRV="$OPENSSL_CMD s_server -www"
 O_CLI="echo 'GET / HTTP/1.0' | $OPENSSL_CMD s_client"
-G_SRV="$GNUTLS_SERV --x509certfile data_files/server5.crt --x509keyfile data_files/server5.key"
+G_SRV="$GNUTLS_SERV"
 G_CLI="echo 'GET / HTTP/1.0' | $GNUTLS_CLI --x509cafile data_files/test-ca_cat12.crt"
 TCP_CLIENT="$PERL scripts/tcp_client.pl"
 
 # alternative versions of OpenSSL and GnuTLS (no default path)
 
 if [ -n "${OPENSSL_LEGACY:-}" ]; then
-    O_LEGACY_SRV="$OPENSSL_LEGACY s_server -www -cert data_files/server5.crt -key data_files/server5.key"
+    O_LEGACY_SRV="$OPENSSL_LEGACY s_server -www"
     O_LEGACY_CLI="echo 'GET / HTTP/1.0' | $OPENSSL_LEGACY s_client"
 else
     O_LEGACY_SRV=false
@@ -79,7 +79,7 @@ else
 fi
 
 if [ -n "${OPENSSL_NEXT:-}" ]; then
-    O_NEXT_SRV="$OPENSSL_NEXT s_server -www -cert data_files/server5.crt -key data_files/server5.key"
+    O_NEXT_SRV="$OPENSSL_NEXT s_server -www"
     O_NEXT_CLI="echo 'GET / HTTP/1.0' | $OPENSSL_NEXT s_client"
 else
     O_NEXT_SRV=false
@@ -87,7 +87,7 @@ else
 fi
 
 if [ -n "${GNUTLS_NEXT_SERV:-}" ]; then
-    G_NEXT_SRV="$GNUTLS_NEXT_SERV --x509certfile data_files/server5.crt --x509keyfile data_files/server5.key"
+    G_NEXT_SRV="$GNUTLS_NEXT_SERV"
 else
     G_NEXT_SRV=false
 fi
@@ -1449,6 +1449,28 @@ fi
 # see client_need_more_time() and server_needs_more_time()
 CLI_DELAY_FACTOR=1
 SRV_DELAY_SECONDS=0
+
+# When testing against a foreign server, we always use a specific key and
+# certificate. Pick ECDSA if possible, both because it's faster than RSA
+# and because it was the original choice and some test cases might not work
+# with RSA. But do fall back to RSA so we can test in a configuration without
+# ECC. These parameters are ignored when using a pre-shared key.
+case $CONFIGS_ENABLED in
+    *\ MBEDTLS_ECDSA_C\ *)
+        O_SRV="$O_SRV -cert data_files/server5.crt -key data_files/server5.key"
+        O_LEGACY_SRV="$O_LEGACY_SRV -cert data_files/server5.crt -key data_files/server5.key"
+        O_NEXT_SRV="$O_NEXT_SRV -cert data_files/server5.crt -key data_files/server5.key"
+        G_SRV="$G_SRV --x509certfile data_files/server5.crt --x509keyfile data_files/server5.key"
+        G_NEXT_SRV="$G_NEXT_SRV --x509certfile data_files/server5.crt --x509keyfile data_files/server5.key"
+        ;;
+    *\ MBEDTLS_RSA_C\ *)
+        O_SRV="$O_SRV -cert data_files/server2.crt -key data_files/server2.key"
+        O_LEGACY_SRV="$O_LEGACY_SRV -cert data_files/server2.crt -key data_files/server2.key"
+        O_NEXT_SRV="$O_NEXT_SRV -cert data_files/server2.crt -key data_files/server2.key"
+        G_SRV="$G_SRV --x509certfile data_files/server2.crt --x509keyfile data_files/server2.key"
+        G_NEXT_SRV="$G_NEXT_SRV --x509certfile data_files/server2.crt --x509keyfile data_files/server2.key"
+        ;;
+esac
 
 # fix commands to use this port, force IPv4 while at it
 # +SRV_PORT will be replaced by either $SRV_PORT or $PXY_PORT later
