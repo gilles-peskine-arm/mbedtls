@@ -286,6 +286,33 @@ requires_ciphersuite_enabled() {
     esac
 }
 
+# maybe_requires_crypto_enabled_for_key_file KEY_FILE
+# If KEY_FILE is known, arrange to only run the following test if the
+# compile-time configuration includes support for this key.
+# This function is an approximation. In particular, it assumes that ECC
+# keys are used for ECDSA, ignoring the role of ECDH.
+maybe_requires_crypto_enabled_for_key_file() {
+    if [ "$PSK_ONLY" = "YES" ]; then
+        return
+    fi
+
+    # This function only implements enough knowledge to pass the CI at
+    # this time. Please add to it as necessary.
+    case "${1%.enc}" in
+        data_files/server[28].key)
+            requires_config_enabled MBEDTLS_RSA_C
+            ;;
+        data_files/server[567].key)
+            requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
+            requires_config_enabled MBEDTLS_ECDSA_C
+            ;;
+        data_files/dir-maxpath/??.key)
+            requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
+            requires_config_enabled MBEDTLS_ECDSA_C
+            ;;
+    esac
+}
+
 # detect_required_features CMD [RUN_TEST_OPTION...]
 # If CMD (call to a TLS client or server program) requires certain features,
 # arrange to only run the following test case if those features are enabled.
@@ -308,6 +335,19 @@ detect_required_features() {
                     :;;
                 *) requires_ciphersuite_enabled "$tmp";;
             esac;;
+    esac
+
+    case "$1" in
+        *\ key_file=*)
+            tmp="${1##*\ key_file=} "
+            tmp="${tmp%% *}"
+            maybe_requires_crypto_enabled_for_key_file "$tmp";;
+    esac
+    case "$1" in
+        *\ key_file2=*)
+            tmp="${1##*\ key_file2=} "
+            tmp="${tmp%% *}"
+            maybe_requires_crypto_enabled_for_key_file "$tmp";;
     esac
 
     case " $1 " in
@@ -1565,7 +1605,6 @@ run_test    "TLS client auth: required" \
             -s "Verifying peer X.509 certificate... ok"
 
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
 run_test    "TLS: password protected client key" \
             "$P_SRV auth_mode=required" \
@@ -1573,7 +1612,6 @@ run_test    "TLS: password protected client key" \
             0
 
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
 run_test    "TLS: password protected server key" \
             "$P_SRV crt_file=data_files/server5.crt key_file=data_files/server5.key.enc key_pwd=PolarSSLTest" \
@@ -1581,8 +1619,6 @@ run_test    "TLS: password protected server key" \
             0
 
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
-requires_config_enabled MBEDTLS_ECDSA_C
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_SHA256_C
 run_test    "TLS: password protected server key, two certificates" \
             "$P_SRV \
@@ -1614,7 +1650,6 @@ run_test    "CA callback on client" \
 
 requires_config_enabled MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
 run_test    "CA callback on server" \
             "$P_SRV auth_mode=required" \
@@ -1629,7 +1664,6 @@ run_test    "CA callback on server" \
 # Test using an opaque private key for client authentication
 requires_config_enabled MBEDTLS_USE_PSA_CRYPTO
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
 run_test    "Opaque key for client authentication" \
             "$P_SRV auth_mode=required" \
@@ -4420,7 +4454,6 @@ run_test    "Authentication: server goodcert, client required, no trusted CA" \
 # occasion (to be fixed). If that bug's fixed, the test needs to be altered to use a
 # different means to have the server ignoring the client's supported curve list.
 
-requires_config_enabled MBEDTLS_ECP_C
 run_test    "Authentication: server ECDH p256v1, client required, p256v1 unsupported" \
             "$P_SRV debug_level=1 key_file=data_files/server5.key \
              crt_file=data_files/server5.ku-ka.crt" \
@@ -4430,7 +4463,6 @@ run_test    "Authentication: server ECDH p256v1, client required, p256v1 unsuppo
             -c "! Certificate verification flags"\
             -C "bad server certificate (ECDH curve)" # Expect failure at earlier verification stage
 
-requires_config_enabled MBEDTLS_ECP_C
 run_test    "Authentication: server ECDH p256v1, client optional, p256v1 unsupported" \
             "$P_SRV debug_level=1 key_file=data_files/server5.key \
              crt_file=data_files/server5.ku-ka.crt" \
@@ -4796,7 +4828,6 @@ run_test    "Authentication, CA callback: server badcert, client optional" \
 # occasion (to be fixed). If that bug's fixed, the test needs to be altered to use a
 # different means to have the server ignoring the client's supported curve list.
 
-requires_config_enabled MBEDTLS_ECP_C
 requires_config_enabled MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
 run_test    "Authentication, CA callback: server ECDH p256v1, client required, p256v1 unsupported" \
             "$P_SRV debug_level=1 key_file=data_files/server5.key \
@@ -4808,7 +4839,6 @@ run_test    "Authentication, CA callback: server ECDH p256v1, client required, p
             -c "! Certificate verification flags" \
             -C "bad server certificate (ECDH curve)" # Expect failure at earlier verification stage
 
-requires_config_enabled MBEDTLS_ECP_C
 requires_config_enabled MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
 run_test    "Authentication, CA callback: server ECDH p256v1, client optional, p256v1 unsupported" \
             "$P_SRV debug_level=1 key_file=data_files/server5.key \
@@ -8263,8 +8293,6 @@ run_test    "DTLS reassembly: fragmentation, nbio (openssl server)" \
 # - all others below 512B
 # All those tests assume MAX_CONTENT_LEN is at least 2048
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 4096
 run_test    "DTLS fragmenting: none (for reference)" \
@@ -8283,8 +8311,6 @@ run_test    "DTLS fragmenting: none (for reference)" \
             -C "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: server only (max_frag_len)" \
@@ -8307,8 +8333,6 @@ run_test    "DTLS fragmenting: server only (max_frag_len)" \
 # the client to not exceed a certain MTU; hence, the following
 # test can't be replicated with an MTU proxy such as the one
 # `client-initiated, server only (max_frag_len)` below.
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 4096
 run_test    "DTLS fragmenting: server only (more) (max_frag_len)" \
@@ -8327,8 +8351,6 @@ run_test    "DTLS fragmenting: server only (more) (max_frag_len)" \
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: client-initiated, server only (max_frag_len)" \
@@ -8354,8 +8376,6 @@ run_test    "DTLS fragmenting: client-initiated, server only (max_frag_len)" \
 # to the peer.
 # The next test checks that no datagrams significantly larger than the
 # negotiated MFL are sent.
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: client-initiated, server only (max_frag_len), proxy MTU" \
@@ -8375,8 +8395,6 @@ run_test    "DTLS fragmenting: client-initiated, server only (max_frag_len), pro
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: client-initiated, both (max_frag_len)" \
@@ -8402,8 +8420,6 @@ run_test    "DTLS fragmenting: client-initiated, both (max_frag_len)" \
 # to the peer.
 # The next test checks that no datagrams significantly larger than the
 # negotiated MFL are sent.
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: client-initiated, both (max_frag_len), proxy MTU" \
@@ -8423,8 +8439,6 @@ run_test    "DTLS fragmenting: client-initiated, both (max_frag_len), proxy MTU"
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 4096
 run_test    "DTLS fragmenting: none (for reference) (MTU)" \
             "$P_SRV dtls=1 debug_level=2 auth_mode=required \
@@ -8442,8 +8456,6 @@ run_test    "DTLS fragmenting: none (for reference) (MTU)" \
             -C "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 4096
 run_test    "DTLS fragmenting: client (MTU)" \
             "$P_SRV dtls=1 debug_level=2 auth_mode=required \
@@ -8461,8 +8473,6 @@ run_test    "DTLS fragmenting: client (MTU)" \
             -C "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: server (MTU)" \
             "$P_SRV dtls=1 debug_level=2 auth_mode=required \
@@ -8480,8 +8490,6 @@ run_test    "DTLS fragmenting: server (MTU)" \
             -c "found fragmented DTLS handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: both (MTU=1024)" \
             -p "$P_PXY mtu=1024" \
@@ -8501,7 +8509,6 @@ run_test    "DTLS fragmenting: both (MTU=1024)" \
             -C "error"
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: both (MTU=512)" \
             -p "$P_PXY mtu=512" \
@@ -8528,7 +8535,6 @@ run_test    "DTLS fragmenting: both (MTU=512)" \
 # fragmentation and auto-reduction) an extra retransmission might occur,
 # hence the ratio of 8.
 not_with_valgrind
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU: auto-reduction (not valgrind)" \
             -p "$P_PXY mtu=508" \
@@ -8548,7 +8554,6 @@ run_test    "DTLS fragmenting: proxy MTU: auto-reduction (not valgrind)" \
 
 # Forcing ciphersuite for this test to fit the MTU of 508 with full config.
 only_with_valgrind
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU: auto-reduction (with valgrind)" \
             -p "$P_PXY mtu=508" \
@@ -8570,8 +8575,6 @@ run_test    "DTLS fragmenting: proxy MTU: auto-reduction (with valgrind)" \
 # OTOH the client might resend if the server is to slow to reset after sending
 # a HelloVerifyRequest, so only check for no retransmission server-side
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, simple handshake (MTU=1024)" \
             -p "$P_PXY mtu=1024" \
@@ -8596,7 +8599,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake (MTU=1024)" \
 # OTOH the client might resend if the server is to slow to reset after sending
 # a HelloVerifyRequest, so only check for no retransmission server-side
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, simple handshake (MTU=512)" \
             -p "$P_PXY mtu=512" \
@@ -8618,8 +8620,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake (MTU=512)" \
             -C "error"
 
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, simple handshake, nbio (MTU=1024)" \
             -p "$P_PXY mtu=1024" \
@@ -8641,7 +8641,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake, nbio (MTU=1024)" \
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, simple handshake, nbio (MTU=512)" \
             -p "$P_PXY mtu=512" \
@@ -8673,7 +8672,6 @@ run_test    "DTLS fragmenting: proxy MTU, simple handshake, nbio (MTU=512)" \
 # reco_delay avoids races where the client reconnects before the server has
 # resumed listening, which would result in a spurious autoreduction.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, resumed handshake" \
             -p "$P_PXY mtu=1450" \
@@ -8697,7 +8695,6 @@ run_test    "DTLS fragmenting: proxy MTU, resumed handshake" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_SSL_RENEGOTIATION
 requires_config_enabled MBEDTLS_CHACHAPOLY_C
 requires_max_content_len 2048
@@ -8725,7 +8722,6 @@ run_test    "DTLS fragmenting: proxy MTU, ChachaPoly renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_SSL_RENEGOTIATION
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, AES-GCM renego" \
@@ -8752,7 +8748,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-GCM renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_SHA256_C
 requires_config_enabled MBEDTLS_SSL_RENEGOTIATION
 requires_max_content_len 2048
@@ -8780,7 +8775,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-CCM renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_SSL_RENEGOTIATION
 requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 requires_max_content_len 2048
@@ -8808,7 +8802,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-CBC EtM renego" \
 # An autoreduction on the client-side might happen if the server is
 # slow to reset, therefore omitting '-C "autoreduction"' below.
 not_with_valgrind # spurious autoreduction due to timeout
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_SSL_RENEGOTIATION
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU, AES-CBC non-EtM renego" \
@@ -8833,7 +8826,6 @@ run_test    "DTLS fragmenting: proxy MTU, AES-CBC non-EtM renego" \
             -C "error"
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
-requires_config_enabled MBEDTLS_RSA_C
 client_needs_more_time 2
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU + 3d" \
@@ -8853,7 +8845,6 @@ run_test    "DTLS fragmenting: proxy MTU + 3d" \
             -C "error"
 
 # Forcing ciphersuite for this test to fit the MTU of 512 with full config.
-requires_config_enabled MBEDTLS_RSA_C
 client_needs_more_time 2
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: proxy MTU + 3d, nbio" \
@@ -8876,7 +8867,6 @@ run_test    "DTLS fragmenting: proxy MTU + 3d, nbio" \
 #
 # here and below we just want to test that the we fragment in a way that
 # pleases other implementations, so we don't need the peer to fragment
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
 requires_max_content_len 2048
@@ -8890,7 +8880,6 @@ run_test    "DTLS fragmenting: gnutls server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
 requires_max_content_len 2048
@@ -8912,7 +8901,6 @@ run_test    "DTLS fragmenting: gnutls server, DTLS 1.0" \
 # certifiate validation fail, but passing --insecure makes
 # GnuTLS continue the connection nonetheless.
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
 requires_not_i686
 requires_max_content_len 2048
@@ -8927,7 +8915,6 @@ run_test    "DTLS fragmenting: gnutls client, DTLS 1.2" \
 
 # See previous test for the reason to use --insecure
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
 requires_not_i686
 requires_max_content_len 2048
@@ -8940,7 +8927,6 @@ run_test    "DTLS fragmenting: gnutls client, DTLS 1.0" \
             0 \
             -s "fragmenting handshake message"
 
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl server, DTLS 1.2" \
@@ -8953,7 +8939,6 @@ run_test    "DTLS fragmenting: openssl server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl server, DTLS 1.0" \
@@ -8967,7 +8952,6 @@ run_test    "DTLS fragmenting: openssl server, DTLS 1.0" \
             -C "error"
 
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl client, DTLS 1.2" \
             "$P_SRV dtls=1 debug_level=2 \
@@ -8979,7 +8963,6 @@ run_test    "DTLS fragmenting: openssl client, DTLS 1.2" \
             -s "fragmenting handshake message"
 
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl client, DTLS 1.0" \
             "$P_SRV dtls=1 debug_level=2 \
@@ -8995,7 +8978,6 @@ run_test    "DTLS fragmenting: openssl client, DTLS 1.0" \
 # again we just want to test that the we fragment in a way that
 # pleases other implementations, so we don't need the peer to fragment
 requires_gnutls_next
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
@@ -9011,7 +8993,6 @@ run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.2" \
             -C "error"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
@@ -9028,7 +9009,6 @@ run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.0" \
 
 requires_gnutls_next
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.2" \
@@ -9043,7 +9023,6 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.2" \
 
 requires_gnutls_next
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.0" \
@@ -9062,7 +9041,6 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.0" \
 ## They should be re-enabled once a fixed version of OpenSSL is available
 ## (this should happen in some 1.1.1_ release according to the ticket).
 skip_next_test
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
@@ -9078,7 +9056,6 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.2" \
             -C "error"
 
 skip_next_test
-requires_config_enabled MBEDTLS_RSA_C
 requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
@@ -9095,7 +9072,6 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.0" \
 
 skip_next_test
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.2" \
@@ -9112,7 +9088,6 @@ run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.2" \
 # messages at the end of the handshake
 skip_next_test
 requires_config_enabled MBEDTLS_RSA_C
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.0" \
