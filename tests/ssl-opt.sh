@@ -2716,6 +2716,7 @@ run_test    "Connection ID: Cli+Srv enabled, variable buffer lengths, MFL=1024" 
 
 # Tests for Encrypt-then-MAC extension
 
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Encrypt then MAC: default" \
             "$P_SRV debug_level=3 \
              force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
@@ -2728,6 +2729,7 @@ run_test    "Encrypt then MAC: default" \
             -c "using encrypt then mac" \
             -s "using encrypt then mac"
 
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Encrypt then MAC: client enabled, server disabled" \
             "$P_SRV debug_level=3 etm=0 \
              force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
@@ -2740,6 +2742,7 @@ run_test    "Encrypt then MAC: client enabled, server disabled" \
             -C "using encrypt then mac" \
             -S "using encrypt then mac"
 
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Encrypt then MAC: client enabled, aead cipher" \
             "$P_SRV debug_level=3 etm=1 \
              force_ciphersuite=TLS-RSA-WITH-AES-128-GCM-SHA256" \
@@ -2752,6 +2755,7 @@ run_test    "Encrypt then MAC: client enabled, aead cipher" \
             -C "using encrypt then mac" \
             -S "using encrypt then mac"
 
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Encrypt then MAC: client enabled, stream cipher" \
             "$P_SRV debug_level=3 etm=1 \
              force_ciphersuite=TLS-RSA-WITH-RC4-128-SHA" \
@@ -2777,6 +2781,7 @@ run_test    "Encrypt then MAC: client disabled, server enabled" \
             -S "using encrypt then mac"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_SSL3
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Encrypt then MAC: client SSLv3, server enabled" \
             "$P_SRV debug_level=3 min_version=ssl3 \
              force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
@@ -2790,6 +2795,7 @@ run_test    "Encrypt then MAC: client SSLv3, server enabled" \
             -S "using encrypt then mac"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_SSL3
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Encrypt then MAC: client enabled, server SSLv3" \
             "$P_SRV debug_level=3 force_version=ssl3 \
              force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
