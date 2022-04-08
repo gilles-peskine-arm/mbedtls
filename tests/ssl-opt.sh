@@ -8867,7 +8867,6 @@ run_test    "DTLS fragmenting: proxy MTU + 3d, nbio" \
 #
 # here and below we just want to test that the we fragment in a way that
 # pleases other implementations, so we don't need the peer to fragment
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: gnutls server, DTLS 1.2" \
@@ -8880,7 +8879,6 @@ run_test    "DTLS fragmenting: gnutls server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_gnutls
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: gnutls server, DTLS 1.0" \
@@ -8900,7 +8898,6 @@ run_test    "DTLS fragmenting: gnutls server, DTLS 1.0" \
 # as the server name in the certificate. This will make the
 # certifiate validation fail, but passing --insecure makes
 # GnuTLS continue the connection nonetheless.
-requires_config_enabled MBEDTLS_RSA_C
 requires_gnutls
 requires_not_i686
 requires_max_content_len 2048
@@ -8914,7 +8911,6 @@ run_test    "DTLS fragmenting: gnutls client, DTLS 1.2" \
             -s "fragmenting handshake message"
 
 # See previous test for the reason to use --insecure
-requires_config_enabled MBEDTLS_RSA_C
 requires_gnutls
 requires_not_i686
 requires_max_content_len 2048
@@ -8927,7 +8923,6 @@ run_test    "DTLS fragmenting: gnutls client, DTLS 1.0" \
             0 \
             -s "fragmenting handshake message"
 
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl server, DTLS 1.2" \
             "$O_SRV -dtls1_2 -verify 10" \
@@ -8939,7 +8934,6 @@ run_test    "DTLS fragmenting: openssl server, DTLS 1.2" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_ECDSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl server, DTLS 1.0" \
             "$O_SRV -dtls1 -verify 10" \
@@ -8951,7 +8945,6 @@ run_test    "DTLS fragmenting: openssl server, DTLS 1.0" \
             -c "fragmenting handshake message" \
             -C "error"
 
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl client, DTLS 1.2" \
             "$P_SRV dtls=1 debug_level=2 \
@@ -8962,7 +8955,6 @@ run_test    "DTLS fragmenting: openssl client, DTLS 1.2" \
             0 \
             -s "fragmenting handshake message"
 
-requires_config_enabled MBEDTLS_RSA_C
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: openssl client, DTLS 1.0" \
             "$P_SRV dtls=1 debug_level=2 \
@@ -8978,7 +8970,6 @@ run_test    "DTLS fragmenting: openssl client, DTLS 1.0" \
 # again we just want to test that the we fragment in a way that
 # pleases other implementations, so we don't need the peer to fragment
 requires_gnutls_next
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.2" \
@@ -8993,7 +8984,6 @@ run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.2" \
             -C "error"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.0" \
@@ -9008,7 +8998,6 @@ run_test    "DTLS fragmenting: 3d, gnutls server, DTLS 1.0" \
             -C "error"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_RSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.2" \
@@ -9022,7 +9011,6 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.2" \
             -s "fragmenting handshake message"
 
 requires_gnutls_next
-requires_config_enabled MBEDTLS_RSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.0" \
@@ -9041,7 +9029,6 @@ run_test    "DTLS fragmenting: 3d, gnutls client, DTLS 1.0" \
 ## They should be re-enabled once a fixed version of OpenSSL is available
 ## (this should happen in some 1.1.1_ release according to the ticket).
 skip_next_test
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.2" \
@@ -9056,7 +9043,6 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.2" \
             -C "error"
 
 skip_next_test
-requires_config_enabled MBEDTLS_ECDSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.0" \
@@ -9071,7 +9057,6 @@ run_test    "DTLS fragmenting: 3d, openssl server, DTLS 1.0" \
             -C "error"
 
 skip_next_test
-requires_config_enabled MBEDTLS_RSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.2" \
@@ -9087,7 +9072,6 @@ run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.2" \
 # -nbio is added to prevent s_client from blocking in case of duplicated
 # messages at the end of the handshake
 skip_next_test
-requires_config_enabled MBEDTLS_RSA_C
 client_needs_more_time 4
 requires_max_content_len 2048
 run_test    "DTLS fragmenting: 3d, openssl client, DTLS 1.0" \
