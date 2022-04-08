@@ -21,7 +21,8 @@
  */
 /*
  * Minimal configuration for TLS 1.1 (RFC 4346), implementing only the
- * required ciphersuite: MBEDTLS_TLS_RSA_WITH_3DES_EDE_CBC_SHA
+ * required ciphersuite MBEDTLS_TLS_RSA_WITH_3DES_EDE_CBC_SHA and its
+ * slightly more modern AES equivalents.
  *
  * See README.txt for usage instructions.
  */
