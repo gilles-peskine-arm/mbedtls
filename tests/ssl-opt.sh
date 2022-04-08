@@ -1864,98 +1864,98 @@ run_test    "DTLS: multiple records in same datagram, neither client nor server"
 # Tests for Truncated HMAC extension
 
 run_test    "Truncated HMAC: client default, server default" \
-            "$P_SRV debug_level=4" \
+            "$P_SRV debug_level=3" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC: client disabled, server default" \
-            "$P_SRV debug_level=4" \
+            "$P_SRV debug_level=3" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=0" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC: client enabled, server default" \
-            "$P_SRV debug_level=4" \
+            "$P_SRV debug_level=3" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=1" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC: client enabled, server disabled" \
-            "$P_SRV debug_level=4 trunc_hmac=0" \
+            "$P_SRV debug_level=3 trunc_hmac=0" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=1" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC: client disabled, server enabled" \
-            "$P_SRV debug_level=4 trunc_hmac=1" \
+            "$P_SRV debug_level=3 trunc_hmac=1" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=0" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC: client enabled, server enabled" \
-            "$P_SRV debug_level=4 trunc_hmac=1" \
+            "$P_SRV debug_level=3 trunc_hmac=1" \
             "$P_CLI force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=1" \
             0 \
-            -S "dumping 'expected mac' (20 bytes)" \
-            -s "dumping 'expected mac' (10 bytes)"
+            -S "maclen: 20" \
+            -s "maclen: 10"
 
 run_test    "Truncated HMAC, DTLS: client default, server default" \
-            "$P_SRV dtls=1 debug_level=4" \
+            "$P_SRV dtls=1 debug_level=3" \
             "$P_CLI dtls=1 force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC, DTLS: client disabled, server default" \
-            "$P_SRV dtls=1 debug_level=4" \
+            "$P_SRV dtls=1 debug_level=3" \
             "$P_CLI dtls=1 force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=0" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC, DTLS: client enabled, server default" \
-            "$P_SRV dtls=1 debug_level=4" \
+            "$P_SRV dtls=1 debug_level=3" \
             "$P_CLI dtls=1 force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=1" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC, DTLS: client enabled, server disabled" \
-            "$P_SRV dtls=1 debug_level=4 trunc_hmac=0" \
+            "$P_SRV dtls=1 debug_level=3 trunc_hmac=0" \
             "$P_CLI dtls=1 force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=1" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC, DTLS: client disabled, server enabled" \
-            "$P_SRV dtls=1 debug_level=4 trunc_hmac=1" \
+            "$P_SRV dtls=1 debug_level=3 trunc_hmac=1" \
             "$P_CLI dtls=1 force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=0" \
             0 \
-            -s "dumping 'expected mac' (20 bytes)" \
-            -S "dumping 'expected mac' (10 bytes)"
+            -s "maclen: 20" \
+            -S "maclen: 10"
 
 requires_config_enabled MBEDTLS_SSL_TRUNCATED_HMAC
 run_test    "Truncated HMAC, DTLS: client enabled, server enabled" \
-            "$P_SRV dtls=1 debug_level=4 trunc_hmac=1" \
+            "$P_SRV dtls=1 debug_level=3 trunc_hmac=1" \
             "$P_CLI dtls=1 force_ciphersuite=TLS-RSA-WITH-AES-128-CBC-SHA trunc_hmac=1" \
             0 \
-            -S "dumping 'expected mac' (20 bytes)" \
-            -s "dumping 'expected mac' (10 bytes)"
+            -S "maclen: 20" \
+            -s "maclen: 10"
 
 # Tests for Context serialization
 
