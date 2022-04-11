@@ -160,10 +160,12 @@ def is_full_section(section):
     """Is this section affected by "config.py full" and friends?"""
     return section.endswith('support') or section.endswith('modules')
 
-def realfull_adapter(_name, active, section):
-    """Activate all symbols found in the system and feature sections."""
-    if not is_full_section(section):
-        return active
+def realfull_adapter(_name, _active, _section):
+    """Activate all symbols.
+
+    This is intended for formatting the documentation, including optional
+    features activated by defining a preprocessor macro.
+    """
     return True
 
 # The goal of the full configuration is to have everything that can be tested
