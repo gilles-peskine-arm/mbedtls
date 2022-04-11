@@ -3106,9 +3106,9 @@
  * `"mbedtls/mbedtls_config.h"`.
  * This header file specifies the compile-time configuration of Mbed TLS.
  *
- * This macro is expanded after an `#include` directive. This is a popular but
+ * This macro is expanded after an <tt>\#include</tt> directive. This is a popular but
  * non-standard feature of the C language, so this feature is only available
- * with compilers that perform macro expansion on an `#include` line.
+ * with compilers that perform macro expansion on an <tt>\#include</tt> line.
  *
  * The value of this symbol is typically a path in double quotes, relative
  * to a directory on the include search pah.
@@ -3121,9 +3121,9 @@
  * If defined, this is a header which will be included after
  * `"mbedtls/mbedtls_config.h"` or #MBEDTLS_CONFIG_FILE.
  *
- * This macro is expanded after an `#include` directive. This is a popular but
+ * This macro is expanded after an <tt>\#include</tt> directive. This is a popular but
  * non-standard feature of the C language, so this feature is only available
- * with compilers that perform macro expansion on an `#include` line.
+ * with compilers that perform macro expansion on an <tt>\#include</tt> line.
  *
  * The value of this symbol is typically a path in double quotes, relative
  * to a directory on the include search pah.
@@ -3139,9 +3139,9 @@
  * through the PSA API when #MBEDTLS_PSA_CRYPTO_CONFIG is enabled, and
  * is not used when #MBEDTLS_PSA_CRYPTO_CONFIG is disabled.
  *
- * This macro is expanded after an `#include` directive. This is a popular but
+ * This macro is expanded after an <tt>\#include</tt> directive. This is a popular but
  * non-standard feature of the C language, so this feature is only available
- * with compilers that perform macro expansion on an `#include` line.
+ * with compilers that perform macro expansion on an <tt>\#include</tt> line.
  *
  * The value of this symbol is typically a path in double quotes, relative
  * to a directory on the include search pah.
@@ -3154,9 +3154,9 @@
  * If defined, this is a header which will be included after
  * `"psa/crypto_config.h"` or #MBEDTLS_PSA_CRYPTO_CONFIG_FILE.
  *
- * This macro is expanded after an `#include` directive. This is a popular but
+ * This macro is expanded after an <tt>\#include</tt> directive. This is a popular but
  * non-standard feature of the C language, so this feature is only available
- * with compilers that perform macro expansion on an `#include` line.
+ * with compilers that perform macro expansion on an <tt>\#include</tt> line.
  *
  * The value of this symbol is typically a path in double quotes, relative
  * to a directory on the include search pah.
