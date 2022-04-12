@@ -5687,14 +5687,26 @@ run_test    "ALPN: both, no common" \
 # Tests for keyUsage in leaf certificates, part 1:
 # server-side certificate/suite selection
 
-run_test    "keyUsage srv: RSA, digitalSignature -> (EC)DHE-RSA" \
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
+requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
+run_test    "keyUsage srv: RSA, digitalSignature -> ECDHE-RSA" \
             "$P_SRV key_file=data_files/server2.key \
              crt_file=data_files/server2.ku-ds.crt" \
             "$P_CLI" \
             0 \
-            -c "Ciphersuite is TLS-[EC]*DHE-RSA-WITH-"
+            -c "Ciphersuite is TLS-ECDHE-RSA-WITH-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
+requires_config_enabled MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
+run_test    "keyUsage srv: RSA, digitalSignature -> DHE-RSA" \
+            "$P_SRV key_file=data_files/server2.key \
+             crt_file=data_files/server2.ku-ds.crt" \
+            "$P_CLI" \
+            0 \
+            -c "Ciphersuite is TLS-DHE-RSA-WITH-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
+requires_config_enabled MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 run_test    "keyUsage srv: RSA, keyEncipherment -> RSA" \
             "$P_SRV key_file=data_files/server2.key \
              crt_file=data_files/server2.ku-ke.crt" \
@@ -5702,6 +5714,7 @@ run_test    "keyUsage srv: RSA, keyEncipherment -> RSA" \
             0 \
             -c "Ciphersuite is TLS-RSA-WITH-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage srv: RSA, keyAgreement -> fail" \
             "$P_SRV key_file=data_files/server2.key \
              crt_file=data_files/server2.ku-ka.crt" \
@@ -5709,6 +5722,8 @@ run_test    "keyUsage srv: RSA, keyAgreement -> fail" \
             1 \
             -C "Ciphersuite is "
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
+requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 run_test    "keyUsage srv: ECDSA, digitalSignature -> ECDHE-ECDSA" \
             "$P_SRV key_file=data_files/server5.key \
              crt_file=data_files/server5.ku-ds.crt" \
@@ -5716,7 +5731,8 @@ run_test    "keyUsage srv: ECDSA, digitalSignature -> ECDHE-ECDSA" \
             0 \
             -c "Ciphersuite is TLS-ECDHE-ECDSA-WITH-"
 
-
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
+requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
 run_test    "keyUsage srv: ECDSA, keyAgreement -> ECDH-" \
             "$P_SRV key_file=data_files/server5.key \
              crt_file=data_files/server5.ku-ka.crt" \
@@ -5724,6 +5740,7 @@ run_test    "keyUsage srv: ECDSA, keyAgreement -> ECDH-" \
             0 \
             -c "Ciphersuite is TLS-ECDH-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage srv: ECDSA, keyEncipherment -> fail" \
             "$P_SRV key_file=data_files/server5.key \
              crt_file=data_files/server5.ku-ke.crt" \
@@ -5774,6 +5791,7 @@ run_test    "keyUsage cli: KeyEncipherment, DHE-RSA: fail" \
             -c "Processing of the Certificate handshake message failed" \
             -C "Ciphersuite is TLS-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage cli: KeyEncipherment, DHE-RSA: fail, soft" \
             "$O_SRV -key data_files/server2.key \
              -cert data_files/server2.ku-ke.crt" \
@@ -5795,6 +5813,7 @@ run_test    "keyUsage cli: DigitalSignature, DHE-RSA: OK" \
             -C "Processing of the Certificate handshake message failed" \
             -c "Ciphersuite is TLS-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage cli: DigitalSignature, RSA: fail" \
             "$O_SRV -key data_files/server2.key \
              -cert data_files/server2.ku-ds.crt" \
@@ -5805,6 +5824,7 @@ run_test    "keyUsage cli: DigitalSignature, RSA: fail" \
             -c "Processing of the Certificate handshake message failed" \
             -C "Ciphersuite is TLS-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage cli: DigitalSignature, RSA: fail, soft" \
             "$O_SRV -key data_files/server2.key \
              -cert data_files/server2.ku-ds.crt" \
@@ -5827,6 +5847,7 @@ run_test    "keyUsage cli-auth: RSA, DigitalSignature: OK" \
             -S "bad certificate (usage extensions)" \
             -S "Processing of the Certificate handshake message failed"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage cli-auth: RSA, KeyEncipherment: fail (soft)" \
             "$P_SRV debug_level=1 auth_mode=optional" \
             "$O_CLI -key data_files/server2.key \
@@ -5835,6 +5856,7 @@ run_test    "keyUsage cli-auth: RSA, KeyEncipherment: fail (soft)" \
             -s "bad certificate (usage extensions)" \
             -S "Processing of the Certificate handshake message failed"
 
+requires_config_enabled MBEDTLS_X509_CHECK_KEY_USAGE
 run_test    "keyUsage cli-auth: RSA, KeyEncipherment: fail (hard)" \
             "$P_SRV debug_level=1 auth_mode=required" \
             "$O_CLI -key data_files/server2.key \
@@ -5843,6 +5865,7 @@ run_test    "keyUsage cli-auth: RSA, KeyEncipherment: fail (hard)" \
             -s "bad certificate (usage extensions)" \
             -s "Processing of the Certificate handshake message failed"
 
+requires_config_enabled MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 run_test    "keyUsage cli-auth: ECDSA, DigitalSignature: OK" \
             "$P_SRV debug_level=1 auth_mode=optional" \
             "$O_CLI -key data_files/server5.key \
@@ -5851,6 +5874,7 @@ run_test    "keyUsage cli-auth: ECDSA, DigitalSignature: OK" \
             -S "bad certificate (usage extensions)" \
             -S "Processing of the Certificate handshake message failed"
 
+requires_config_enabled MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 run_test    "keyUsage cli-auth: ECDSA, KeyAgreement: fail (soft)" \
             "$P_SRV debug_level=1 auth_mode=optional" \
             "$O_CLI -key data_files/server5.key \
@@ -5879,6 +5903,7 @@ run_test    "extKeyUsage srv: codeSign,anyEKU -> OK" \
             "$P_CLI" \
             0
 
+requires_config_enabled MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 run_test    "extKeyUsage srv: codeSign -> fail" \
             "$P_SRV key_file=data_files/server5.key \
              crt_file=data_files/server5.eku-cli.crt" \
@@ -5914,6 +5939,7 @@ run_test    "extKeyUsage cli: codeSign,anyEKU -> OK" \
             -C "Processing of the Certificate handshake message failed" \
             -c "Ciphersuite is TLS-"
 
+requires_config_enabled MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 run_test    "extKeyUsage cli: codeSign -> fail" \
             "$O_SRV -key data_files/server5.key \
              -cert data_files/server5.eku-cs.crt" \
@@ -5949,6 +5975,7 @@ run_test    "extKeyUsage cli-auth: codeSign,anyEKU -> OK" \
             -S "bad certificate (usage extensions)" \
             -S "Processing of the Certificate handshake message failed"
 
+requires_config_enabled MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 run_test    "extKeyUsage cli-auth: codeSign -> fail (soft)" \
             "$P_SRV debug_level=1 auth_mode=optional" \
             "$O_CLI -key data_files/server5.key \
@@ -5957,6 +5984,7 @@ run_test    "extKeyUsage cli-auth: codeSign -> fail (soft)" \
             -s "bad certificate (usage extensions)" \
             -S "Processing of the Certificate handshake message failed"
 
+requires_config_enabled MBEDTLS_X509_CHECK_EXTENDED_KEY_USAGE
 run_test    "extKeyUsage cli-auth: codeSign -> fail (hard)" \
             "$P_SRV debug_level=1 auth_mode=required" \
             "$O_CLI -key data_files/server5.key \
