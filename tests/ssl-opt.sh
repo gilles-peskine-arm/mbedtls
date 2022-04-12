@@ -338,14 +338,26 @@ detect_required_features() {
     esac
 
     case "$1" in
-        *\ key_file=*)
+        *\ key_file=*) # ssl_client2, ssl_server2
             tmp="${1##*\ key_file=} "
             tmp="${tmp%% *}"
             maybe_requires_crypto_enabled_for_key_file "$tmp";;
     esac
     case "$1" in
-        *\ key_file2=*)
+        *\ key_file2=*) # ssl_server2
             tmp="${1##*\ key_file2=} "
+            tmp="${tmp%% *}"
+            maybe_requires_crypto_enabled_for_key_file "$tmp";;
+    esac
+    case "$1" in
+        *\ --x509keyfile[\ =]*) # gnutls-cli, gnutls-serv
+            tmp="${1##*\ --x509keyfile[\ =]} "
+            tmp="${tmp%% *}"
+            maybe_requires_crypto_enabled_for_key_file "$tmp";;
+    esac
+    case "$1" in
+        *\ -key\ *) # openssl
+            tmp="${1##*\ -key\ } "
             tmp="${tmp%% *}"
             maybe_requires_crypto_enabled_for_key_file "$tmp";;
     esac
