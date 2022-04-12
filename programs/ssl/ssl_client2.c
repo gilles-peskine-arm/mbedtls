@@ -18,6 +18,7 @@
  */
 
 #include "ssl_test_lib.h"
+#include "ssl_internal.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "test/psa_crypto_helpers.h"
@@ -1371,16 +1372,21 @@ int main( int argc, char *argv[] )
         const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
         ciphersuite_info =
             mbedtls_ssl_ciphersuite_from_id( opt.force_ciphersuite[0] );
+        /* Bound ciphersuite versions by the range enabled at compile time */
+        int min_minor_ver = ciphersuite_info->min_minor_ver;
+        if( min_minor_ver < MBEDTLS_SSL_MIN_MINOR_VERSION )
+            min_minor_ver = MBEDTLS_SSL_MIN_MINOR_VERSION;
+        int max_minor_ver = ciphersuite_info->max_minor_ver;
+        if( max_minor_ver > MBEDTLS_SSL_MIN_MINOR_VERSION )
+            max_minor_ver = MBEDTLS_SSL_MIN_MINOR_VERSION;
 
-        if( opt.max_version != -1 &&
-            ciphersuite_info->min_minor_ver > opt.max_version )
+        if( opt.max_version != -1 && min_minor_ver > opt.max_version )
         {
             mbedtls_printf( "forced ciphersuite not allowed with this protocol version\n" );
             ret = 2;
             goto usage;
         }
-        if( opt.min_version != -1 &&
-            ciphersuite_info->max_minor_ver < opt.min_version )
+        if( opt.min_version != -1 && max_minor_ver < opt.min_version )
         {
             mbedtls_printf( "forced ciphersuite not allowed with this protocol version\n" );
             ret = 2;
@@ -1389,14 +1395,11 @@ int main( int argc, char *argv[] )
 
         /* If the server selects a version that's not supported by
          * this suite, then there will be no common ciphersuite... */
-        if( opt.max_version == -1 ||
-            opt.max_version > ciphersuite_info->max_minor_ver )
+        if( opt.max_version == -1 || opt.max_version > max_minor_ver )
+            opt.max_version = max_minor_ver;
+        if( opt.min_version < min_minor_ver )
         {
-            opt.max_version = ciphersuite_info->max_minor_ver;
-        }
-        if( opt.min_version < ciphersuite_info->min_minor_ver )
-        {
-            opt.min_version = ciphersuite_info->min_minor_ver;
+            opt.min_version = min_minor_ver;
             /* DTLS starts with TLS 1.1 */
             if( opt.transport == MBEDTLS_SSL_TRANSPORT_DATAGRAM &&
                 opt.min_version < MBEDTLS_SSL_MINOR_VERSION_2 )
