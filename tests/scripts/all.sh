@@ -2628,6 +2628,7 @@ component_build_mbedtls_config_file () {
     sed 's!"check_config.h"!"mbedtls/check_config.h"!' <"$CONFIG_H" >full_config.h
     echo '#error "MBEDTLS_CONFIG_FILE is not working"' >"$CONFIG_H"
     make CFLAGS="-I '$PWD' -DMBEDTLS_CONFIG_FILE='\"full_config.h\"'"
+    # Make sure this feature is enabled. We'll disable it in the next phase.
     programs/test/query_compile_time_config MBEDTLS_NIST_KW_C
     make clean
 
