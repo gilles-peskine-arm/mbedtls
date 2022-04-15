@@ -144,6 +144,20 @@ void list_config( void )
 {
     LIST_CONFIG
 }
+
+#if defined(MBEDTLS_SSL_TLS_C)
+static void try_ciphersuite( int id )
+{
+    const char *name = mbedtls_ssl_get_ciphersuite_name( id );
+    if( mbedtls_ssl_get_ciphersuite_id( name ) == id )
+        mbedtls_printf( "%s\n", name );
+}
+
+void list_ciphersuites( void )
+{
+LIST_CIPHERSUITES
+}
+#endif /* MBEDTLS_SSL_TLS_C */
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif /* _MSC_VER */

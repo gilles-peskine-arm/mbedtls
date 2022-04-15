@@ -33,12 +33,13 @@
 #endif
 
 #define USAGE                                                                \
-    "usage: %s [ <MBEDTLS_CONFIG> | -l ]\n\n"                                \
+    "usage: %s [ <MBEDTLS_CONFIG> | -c | -l ]\n\n"                           \
     "This program takes one command line argument which corresponds to\n"    \
     "the string representation of a Mbed TLS compile time configuration.\n"  \
     "The value 0 will be returned if this configuration is defined in the\n" \
     "Mbed TLS build and the macro expansion of that configuration will be\n" \
     "printed (if any). Otherwise, 1 will be returned.\n"                     \
+    "-c\tPrint all available ciphersuites.\n"                                \
     "-l\tPrint all available configuration.\n"
 #include <string.h>
 #include "query_config.h"
@@ -53,8 +54,18 @@ int main( int argc, char *argv[] )
 
     if( strcmp( argv[1], "-l" ) == 0 )
     {
-        list_config();
-        return( 0 );
+        list_config( );
+        return( MBEDTLS_EXIT_SUCCESS );
+    }
+
+    if( strcmp( argv[1], "-c" ) == 0 )
+    {
+#if defined(MBEDTLS_SSL_TLS_C)
+        list_ciphersuites( );
+        return( MBEDTLS_EXIT_SUCCESS );
+#else
+        return( MBEDTLS_EXIT_FAILURE );
+#endif /* MBEDTLS_SSL_TLS_C */
     }
 
     return( query_config( argv[1] ) );

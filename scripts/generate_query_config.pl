@@ -14,6 +14,9 @@
 # information is used to automatically generate the body of the query_config()
 # function by using the template in scripts/data_files/query_config.fmt.
 #
+# This program can also list all the supported ciphersuites, based on the
+# list in include/mbedtls/ssl_ciphersuites.h.
+#
 # Usage: ./scripts/generate_query_config.pl without arguments
 #
 # Copyright The Mbed TLS Contributors
@@ -34,6 +37,7 @@
 use strict;
 
 my $config_file = "./include/mbedtls/config.h";
+my $ciphersuites_header = "./include/mbedtls/ssl_ciphersuites.h";
 
 my $query_config_format_file = "./scripts/data_files/query_config.fmt";
 my $query_config_file = "./programs/test/query_config.c";
@@ -54,6 +58,7 @@ open(CONFIG_FILE, "$config_file") or die "Opening config file '$config_file': $!
 # format file
 my $config_check = "";
 my $list_config = "";
+my $list_ciphersuites = "";
 
 while (my $line = <CONFIG_FILE>) {
     if ($line =~ /^(\/\/)?\s*#\s*define\s+(MBEDTLS_\w+).*/) {
@@ -81,6 +86,14 @@ while (my $line = <CONFIG_FILE>) {
     }
 }
 
+open(CIPHERSUITES_HEADER, "$ciphersuites_header") or die "Opening config file '$ciphersuites_header': $!";
+while (my $line = <CIPHERSUITES_HEADER>) {
+    if ($line =~ /^\s*#\s*define\s+(MBEDTLS_TLS_\w+).*/) {
+        my $symbol = $1;
+        $list_ciphersuites .= "    try_ciphersuite( $symbol );\n";
+    }
+}
+
 # Read the full format file into a string
 local $/;
 open(FORMAT_FILE, "$query_config_format_file") or die "Opening query config format file '$query_config_format_file': $!";
@@ -90,6 +103,7 @@ close(FORMAT_FILE);
 # Replace the body of the query_config() function with the code we just wrote
 $query_config_format =~ s/CHECK_CONFIG/$config_check/g;
 $query_config_format =~ s/LIST_CONFIG/$list_config/g;
+$query_config_format =~ s/LIST_CIPHERSUITES/$list_ciphersuites/g;
 
 # Rewrite the query_config.c file
 open(QUERY_CONFIG_FILE, ">$query_config_file") or die "Opening destination file '$query_config_file': $!";
