@@ -56,7 +56,7 @@ import shutil
 import subprocess
 import logging
 
-# Naming patterns to check against. These are defined outside the NameCheck
+# Naming patterns to check against. These are defined outside the NameChecker
 # class for ease of modification.
 MACRO_PATTERN = r"^(MBEDTLS|PSA)_[0-9A-Z_]*[0-9A-Z]$"
 CONSTANTS_PATTERN = MACRO_PATTERN
@@ -134,7 +134,7 @@ class SymbolNotInHeader(Problem): # pylint: disable=too-few-public-methods
     """
     A problem that occurs when an exported/available symbol in the object file
     is not explicitly declared in header files. Created with
-    NameCheck.check_symbols_declared_in_header()
+    NameChecker.check_symbols_declared_in_header()
 
     Fields:
     * symbol_name: the name of the symbol.
@@ -155,7 +155,7 @@ class SymbolNotInHeader(Problem): # pylint: disable=too-few-public-methods
 class PatternMismatch(Problem): # pylint: disable=too-few-public-methods
     """
     A problem that occurs when something doesn't match the expected pattern.
-    Created with NameCheck.check_match_pattern()
+    Created with NameChecker.check_match_pattern()
 
     Fields:
     * pattern: the expected regex pattern
@@ -187,7 +187,7 @@ class PatternMismatch(Problem): # pylint: disable=too-few-public-methods
 class Typo(Problem): # pylint: disable=too-few-public-methods
     """
     A problem that occurs when a word using MBED doesn't appear to be defined as
-    constants nor enum values. Created with NameCheck.check_for_typos()
+    constants nor enum values. Created with NameChecker.check_for_typos()
 
     Fields:
     * match: the Match object of the MBED name in question.
