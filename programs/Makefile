@@ -382,9 +382,9 @@ test/benchmark$(EXEXT): test/benchmark.c $(DEP)
 	echo "  CC    test/benchmark.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/benchmark.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-test/cpp_dummy_build.cpp: test/generate_cpp_dummy_build.sh
+test/cpp_dummy_build.cpp: ../scripts/generate_cpp_dummy_build.py
 	echo "  Gen   test/cpp_dummy_build.cpp"
-	test/generate_cpp_dummy_build.sh
+	../scripts/generate_cpp_dummy_build.py
 
 test/cpp_dummy_build$(EXEXT): test/cpp_dummy_build.cpp $(DEP)
 	echo "  CXX   test/cpp_dummy_build.cpp"

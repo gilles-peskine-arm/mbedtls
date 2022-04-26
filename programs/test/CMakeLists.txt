@@ -15,7 +15,7 @@ set(executables_mbedcrypto
 
 if(TEST_CPP)
     set(cpp_dummy_build_cpp "${CMAKE_CURRENT_BINARY_DIR}/cpp_dummy_build.cpp")
-    set(generate_cpp_dummy_build "${CMAKE_CURRENT_SOURCE_DIR}/generate_cpp_dummy_build.sh")
+    set(generate_cpp_dummy_build "${CMAKE_CURRENT_SOURCE_DIR}/../../scripts/generate_cpp_dummy_build.py")
     add_custom_command(
         OUTPUT "${cpp_dummy_build_cpp}"
         COMMAND "${generate_cpp_dummy_build}" "${cpp_dummy_build_cpp}"
