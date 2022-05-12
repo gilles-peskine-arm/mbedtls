@@ -134,11 +134,19 @@ static int net_prepare( void )
 }
 
 /*
+ * Flag bits for the flags field of mbedtls_net_context
+ */
+/* Use recvmsg() to detect message boundaries.
+ * Used for MBEDTLS_NET_PROTO_SCTP_PACKET and MBEDTLS_NET_PROTO_SCTP_MULTI. */
+#define NET_FLAG_RECVMSG 1
+
+/*
  * Initialize a context
  */
 void mbedtls_net_init( mbedtls_net_context *ctx )
 {
     ctx->fd = -1;
+    ctx->flags = 0;
 }
 
 typedef enum
@@ -214,6 +222,17 @@ static int plug_socket( mbedtls_net_context *ctx,
             hints.ai_socktype = SOCK_DGRAM;
             hints.ai_protocol = IPPROTO_UDP;
             break;
+        case MBEDTLS_NET_PROTO_SCTP_STREAM:
+        case MBEDTLS_NET_PROTO_SCTP_PACKET:
+            hints.ai_socktype = SOCK_STREAM;
+            hints.ai_protocol = IPPROTO_SCTP;
+            break;
+#if 0 /* Not implemented yet */
+        case MBEDTLS_NET_PROTO_SCTP_MULTI:
+            hints.ai_socktype = SOCK_SEQPACKET;
+            hints.ai_protocol = IPPROTO_SCTP;
+            break;
+#endif /* Not implemented yet */
         default:
             return( MBEDTLS_ERR_NET_BAD_INPUT_DATA );
     }
@@ -227,7 +246,11 @@ static int plug_socket( mbedtls_net_context *ctx,
     {
         ret = open_socket( cur, &ctx->fd, conn );
         if( ret == 0 )
+        {
+            if( proto == MBEDTLS_NET_PROTO_SCTP_PACKET )
+                ctx->flags |= NET_FLAG_RECVMSG;
             break;
+        }
         if( ctx->fd < 0 )
             close( ctx->fd );
     }
@@ -252,9 +275,8 @@ int mbedtls_net_connect( mbedtls_net_context *ctx,
 int mbedtls_net_bind( mbedtls_net_context *ctx,
                       const char *bind_ip, const char *port, int proto )
 {
-    /* Listen only makes sense for TCP */
     connection_type conn =
-        proto == MBEDTLS_NET_PROTO_TCP ? CONN_LISTEN : CONN_BIND;
+        proto == MBEDTLS_NET_PROTO_UDP ? CONN_BIND : CONN_LISTEN;
     return( plug_socket( ctx, bind_ip, port, proto, conn ) );
 }
 
@@ -341,6 +363,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
             break;
 
         case SOCK_DGRAM:
+        case SOCK_SEQPACKET:
             /* UDP: wait for a message, but keep it in the queue */
             {
                 char buf[1] = { 0 };
@@ -542,15 +565,32 @@ void mbedtls_net_usleep( unsigned long usec )
 /*
  * Read at most 'len' characters
  */
-int mbedtls_net_recv( void *ctx, unsigned char *buf, size_t len )
+int mbedtls_net_recv( void *ctx_arg, unsigned char *buf, size_t len )
 {
     int ret;
-    int fd = ((mbedtls_net_context *) ctx)->fd;
+    mbedtls_net_context *ctx = ctx_arg;
+    int fd = ctx->fd;
 
     if( fd < 0 )
         return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
 
-    ret = (int) read( fd, buf, len );
+    if( ctx->flags & NET_FLAG_RECVMSG )
+    {
+        struct iovec iov;
+        struct msghdr msg;
+        iov.iov_base = buf;
+        iov.iov_len = len;
+        memset( &msg, 0, sizeof( msg ) );
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+        ret = MSVC_INT_CAST recvmsg( fd, &msg, 0 );
+        if( ! ( msg.msg_flags & MSG_EOR ) )
+            return( MBEDTLS_ERR_NET_BUFFER_TOO_SMALL );
+    }
+    else
+    {
+        ret = MSVC_INT_CAST read( fd, buf, len );
+    }
 
     if( ret < 0 )
     {
@@ -578,13 +618,14 @@ int mbedtls_net_recv( void *ctx, unsigned char *buf, size_t len )
 /*
  * Read at most 'len' characters, blocking for at most 'timeout' ms
  */
-int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf,
+int mbedtls_net_recv_timeout( void *ctx_arg, unsigned char *buf,
                               size_t len, uint32_t timeout )
 {
     int ret;
     struct timeval tv;
     fd_set read_fds;
-    int fd = ((mbedtls_net_context *) ctx)->fd;
+    mbedtls_net_context *ctx = ctx_arg;
+    int fd = ctx->fd;
 
     if( fd < 0 )
         return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
@@ -622,15 +663,44 @@ int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf,
 /*
  * Write at most 'len' characters
  */
-int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
+int mbedtls_net_send( void *ctx_arg, const unsigned char *buf, size_t len )
 {
     int ret;
-    int fd = ((mbedtls_net_context *) ctx)->fd;
+    mbedtls_net_context *ctx = ctx_arg;
+    int fd = ctx->fd;
 
     if( fd < 0 )
         return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
 
-    ret = (int) write( fd, buf, len );
+#if 0
+    if( ctx->flags & NET_FLAG_RECVMSG )
+    {
+        struct iovec iov;
+        struct msghdr msg;
+        iov.iov_base = (void*) buf;
+        iov.iov_len = len;
+        memset( &msg, 0, sizeof( msg ) );
+        msg.msg_iov = &iov;
+        msg.msg_iovlen = 1;
+        ret = MSVC_INT_CAST sendmsg( fd, &msg, MSG_EOR );
+    }
+    else
+#endif
+    {
+        ret = MSVC_INT_CAST write( fd, buf, len );
+        if( ctx->flags | NET_FLAG_RECVMSG )
+        {
+            /* With DTLS, the server closes its socket after receiving
+             * the initial ClientHello and sending back a HelloVerifyRequest.
+             * Over UDP this has no consequence: closing a socket has no
+             * effect on the remote side. But over SCTP, closing a socket
+             * closes the connection. In this case write() receives EPIPE. */
+            if( ret == EPIPE )
+            {
+                /* TODO: close our end, open a new socket and write again. */
+            }
+        }
+    }
 
     if( ret < 0 )
     {
@@ -660,6 +730,8 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len )
  */
 void mbedtls_net_close( mbedtls_net_context *ctx )
 {
+    ctx->flags = 0;
+
     if( ctx->fd == -1 )
         return;
 
@@ -673,6 +745,8 @@ void mbedtls_net_close( mbedtls_net_context *ctx )
  */
 void mbedtls_net_free( mbedtls_net_context *ctx )
 {
+    ctx->flags = 0;
+
     if( ctx->fd == -1 )
         return;
 

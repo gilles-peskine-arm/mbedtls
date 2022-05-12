@@ -77,6 +77,41 @@
  */
 #define MBEDTLS_NET_PROTO_UDP 1
 
+/** The SCTP transport protocol in stream mode.
+ * This is a suitable underlying transport for TLS.
+ *
+ * This protocol is built on top of sockets using the SCTP one-to-one style.
+ * Sending and receiving does not preserve message boundaries.
+ *
+ * \warning     Support for TLS over SCTP is experimental. It may be removed,
+ *              or have its interface or behavior changed, in future versions
+ *              of the library.
+ */
+#define MBEDTLS_NET_PROTO_SCTP_STREAM 2
+
+/** The SCTP transport protocol in message-oriented mode.
+ * This is a suitable underlying transport for DTLS.
+ *
+ * This protocol is built on top of sockets using the SCTP one-to-one style.
+ * Sending and receiving preserves message boundaries.
+ *
+ * \warning     Support for DTLS over SCTP is experimental. It may be removed,
+ *              or have its interface or behavior changed, in future versions
+ *              of the library.
+ */
+#define MBEDTLS_NET_PROTO_SCTP_PACKET 3
+
+/** The SCTP transport protocol in one-to-many message-oriented mode.
+ * This is a suitable underlying transport for DTLS.
+ *
+ * This protocol is built on top of sockets using the SCTP one-to-many style.
+ * Sending and receiving preserves message boundaries.
+ *
+ * \note        This feature is not currently implemented in the library.
+ *              The identifier is reserved for future use.
+ */
+#define MBEDTLS_NET_PROTO_SCTP_MULTI 4
+
 #define MBEDTLS_NET_POLL_READ  1 /**< Used in \c mbedtls_net_poll to check for pending data  */
 #define MBEDTLS_NET_POLL_WRITE 2 /**< Used in \c mbedtls_net_poll to check if write possible */
 
@@ -94,6 +129,7 @@ extern "C" {
 typedef struct mbedtls_net_context
 {
     int fd;             /**< The underlying file descriptor                 */
+    unsigned flags;     /**< Flags for internal library use. */
 }
 mbedtls_net_context;
 
@@ -117,6 +153,8 @@ void mbedtls_net_init( mbedtls_net_context *ctx );
  * \param proto    The protocol. One of:
  *                 - #MBEDTLS_NET_PROTO_TCP
  *                 - #MBEDTLS_NET_PROTO_UDP
+ *                 - #MBEDTLS_NET_PROTO_SCTP_STREAM
+ *                 - #MBEDTLS_NET_PROTO_SCTP_PACKET
  *
  * \return         0 if successful.
  * \return         #MBEDTLS_ERR_NET_SOCKET_FAILED if setting up the socket
@@ -144,6 +182,8 @@ int mbedtls_net_connect( mbedtls_net_context *ctx,
  * \param proto    The protocol. One of:
  *                 - #MBEDTLS_NET_PROTO_TCP
  *                 - #MBEDTLS_NET_PROTO_UDP
+ *                 - #MBEDTLS_NET_PROTO_SCTP_STREAM
+ *                 - #MBEDTLS_NET_PROTO_SCTP_PACKET
  *
  * \return         0 if successful.
  * \return         #MBEDTLS_ERR_NET_SOCKET_FAILED if setting up the socket

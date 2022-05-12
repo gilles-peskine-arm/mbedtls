@@ -87,6 +87,7 @@ int main( void )
 #define DFL_EVENT               0
 #define DFL_READ_TIMEOUT        0
 #define DFL_MAX_RESEND          0
+#define DFL_SCTP                0
 #define DFL_CA_FILE             ""
 #define DFL_CA_PATH             ""
 #define DFL_CRT_FILE            ""
@@ -380,6 +381,7 @@ int main( void )
     "                        options: 1 (level-triggered, implies nbio=1),\n" \
     "    read_timeout=%%d     default: 0 ms (no timeout)\n"        \
     "    max_resend=%%d       default: 0 (no resend on timeout)\n" \
+    "    sctp=%%d             default: 0 (use TCP or UDP); option 1: use SCTP\n" \
     "\n"                                                    \
     USAGE_DTLS                                              \
     USAGE_CID                                               \
@@ -449,6 +451,7 @@ struct options
     int event;                  /* loop or event-driven IO? level or edge triggered? */
     uint32_t read_timeout;      /* timeout on mbedtls_ssl_read() in milliseconds     */
     int max_resend;             /* DTLS times to resend on read timeout     */
+    int sctp;                   /* use SCTP? */
     const char *request_page;   /* page on server to request                */
     int request_size;           /* pad request with header to requested size */
     const char *ca_file;        /* the file with the CA certificate(s)      */
@@ -1126,6 +1129,7 @@ int main( int argc, char *argv[] )
     size_t cid_renego_len = 0;
 #endif
 
+    int proto;
 #if defined(MBEDTLS_SSL_ALPN)
     const char *alpn_list[ALPN_LIST_SIZE];
 #endif
@@ -1241,6 +1245,7 @@ int main( int argc, char *argv[] )
     opt.context_crt_cb      = DFL_CONTEXT_CRT_CB;
     opt.read_timeout        = DFL_READ_TIMEOUT;
     opt.max_resend          = DFL_MAX_RESEND;
+    opt.sctp                = DFL_SCTP;
     opt.request_page        = DFL_REQUEST_PAGE;
     opt.request_size        = DFL_REQUEST_SIZE;
     opt.ca_file             = DFL_CA_FILE;
@@ -1348,6 +1353,8 @@ int main( int argc, char *argv[] )
             if( opt.max_resend < 0 )
                 goto usage;
         }
+        else if( strcmp( p, "sctp" ) == 0 )
+            opt.sctp = atoi( q );
         else if( strcmp( p, "request_page" ) == 0 )
             opt.request_page = q;
         else if( strcmp( p, "request_size" ) == 0 )
@@ -2124,15 +2131,23 @@ int main( int argc, char *argv[] )
     if( opt.server_addr == NULL)
         opt.server_addr = opt.server_name;
 
+    proto = (
+        opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM ?
+        opt.sctp ? MBEDTLS_NET_PROTO_SCTP_STREAM : MBEDTLS_NET_PROTO_TCP :
+        opt.sctp ? MBEDTLS_NET_PROTO_SCTP_PACKET : MBEDTLS_NET_PROTO_UDP );
+
     mbedtls_printf( "  . Connecting to %s/%s/%s...",
-            opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM ? "tcp" : "udp",
-            opt.server_addr, opt.server_port );
+                    proto == MBEDTLS_NET_PROTO_TCP ?         "tcp" :
+                    proto == MBEDTLS_NET_PROTO_UDP ?         "udp" :
+                    proto == MBEDTLS_NET_PROTO_SCTP_STREAM ? "sctp_stream" :
+                    proto == MBEDTLS_NET_PROTO_SCTP_PACKET ? "sctp_packet" :
+                    "???",
+                    opt.server_addr, opt.server_port );
     fflush( stdout );
 
     if( ( ret = mbedtls_net_connect( &server_fd,
-                       opt.server_addr, opt.server_port,
-                       opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM ?
-                       MBEDTLS_NET_PROTO_TCP : MBEDTLS_NET_PROTO_UDP ) ) != 0 )
+                                     opt.server_addr, opt.server_port,
+                                     proto ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_net_connect returned -0x%x\n\n",
                         -ret );

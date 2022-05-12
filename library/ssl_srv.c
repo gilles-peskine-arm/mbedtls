@@ -4440,6 +4440,23 @@ static int ssl_write_new_session_ticket( mbedtls_ssl_context *ssl )
 }
 #endif /* MBEDTLS_SSL_SESSION_TICKETS */
 
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
+static int ssl_wait_for_new_client_hello( mbedtls_ssl_context *ssl )
+{
+    int ret;
+    /* TODO: what exactly do we need to clean up in the SSL state?
+     * And if we need to clean things up, this isn't the right place:
+     * it's done on every run handshake step that's triggered because nothing
+     * happened in the previous step. */
+    ret = mbedtls_ssl_session_reset_partial( ssl );
+    if( ret != 0 )
+        return( ret );
+
+    ssl->state = MBEDTLS_SSL_CLIENT_HELLO;
+    return( ssl_parse_client_hello( ssl ) );
+}
+#endif /* MBEDTLS_SSL_PROTO_DTLS */
+
 /*
  * SSL handshake -- server side -- single step
  */
@@ -4479,7 +4496,20 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
         case MBEDTLS_SSL_SERVER_HELLO_VERIFY_REQUEST_SENT:
-            return( MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED );
+            if( ssl->conf->connected_dtls )
+            {
+                /* Disconnected protocol: close the socket. The client
+                 * should now send a ClientHello with a cookie on the
+                 * same connection. */
+                ret = ssl_wait_for_new_client_hello( ssl );
+            }
+            else
+            {
+                /* Disconnected protocol: close the socket. The client
+                 * should now reconnect with a cookie. The server will
+                 * handle this in a new SSL connection instance. */
+                return( MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED );
+            }
 #endif
 
         /*

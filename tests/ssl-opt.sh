@@ -464,6 +464,12 @@ has_mem_err() {
 if type lsof >/dev/null 2>/dev/null; then
     wait_app_start() {
         START_TIME=$(date +%s)
+        # As of lsof 4.89, -i doesn't support SCTP, so the lsof loop
+        # below would always time out with SCTP.
+        if [ "$SCTP" -eq 1 ]; then
+            sleep "$START_DELAY"
+            return
+        fi
         if [ "$DTLS" -eq 1 ]; then
             proto=UDP
         else
@@ -488,8 +494,59 @@ else
     }
 fi
 
+# Wait for a log message indicating that the server is listening.
+# This is currently only supported for recent OpenSSL >=1.1.1 and
+# for ssl_server2.
+#
+# $1: the log file.
+# $2: the server's nickname.
+# $3: the server command line.
+wait_server_start_log() {
+    START_TIME=$(date +%s)
+    # Look for a telltale pattern in the log output.
+    case "$3" in
+        */udp_proxy*)
+            # Not implemented yet.
+            return 1;;
+        */ssl_server*)
+            # "Bind on <proto>://<host>:<post>/ ..." is
+            # printed before bind(), so look for that plus extra output
+            # printed after bind() returns.
+            p='Bind on.*\.\.\..';;
+        */openssl*)
+            # Look for "ACCEPT" (which may be followed by extra indications
+            # in recent versions). This is only reliable since OpenSSL 1.1.1.
+            # Before this, "ACCEPT" is printed before calling socket(),
+            # instead of after bind(), so relying on it is race-prone.
+            c=${3%%" s_server "*}       # full command line --> .../openssl
+            c=${c##* }                  # keep just the command
+            v=$("$c" version)           # name, version and date
+            v=${v#"${v%% [0-9]*}"}      # strip text up to the first digit
+            case $v in
+                0*|1.0*) return 1;;
+            esac
+            p='^ACCEPT';;
+        */gnutls*)
+            return 1;;
+        *)
+            return 1;;
+    esac
+
+    while ! grep -q -E "$p" "$1"; do
+        if [ $(( $(date +%s) - $START_TIME )) -gt $DOG_DELAY ]; then
+            echo "$3 START TIMEOUT"
+            echo "$3 START TIMEOUT" >>"$1"
+            break
+        fi
+        # Linux and *BSD support decimal arguments to sleep. On other
+        # OSes this may be a tight loop.
+        sleep 0.1 2>/dev/null || true
+    done
+}
+
 # Wait for server process $2 to be listening on port $1.
 wait_server_start() {
+    wait_server_start_log "$SRV_OUT" SERVER "$SRV_CMD" ||
     wait_app_start $1 $2 "SERVER" $SRV_OUT
 }
 
@@ -548,13 +605,17 @@ wait_client_done() {
     SRV_DELAY_SECONDS=0
 }
 
-# check if the given command uses dtls and sets global variable DTLS
-detect_dtls() {
-    if echo "$1" | grep 'dtls=1\|-dtls1\|-u' >/dev/null; then
-        DTLS=1
-    else
-        DTLS=0
-    fi
+# Check which protocol the given command uses and
+# set global variables accordingly.
+detect_protocol() {
+    DTLS=0
+    SCTP=0
+    case " $1 " in
+        *" dtls=1 "*|*" -dtls1 "*|*" -u "*) DTLS=1;;
+    esac
+    case " $1 " in
+        *" sctp=1 "*|*" -sctp "*) SCTP=1;;
+    esac
 }
 
 # Usage: run_test name [-p proxy_cmd] srv_cmd cli_cmd cli_exit [option [...]]
@@ -633,8 +694,8 @@ run_test() {
         CLI_CMD=$( echo "$CLI_CMD" | sed s/+SRV_PORT/$SRV_PORT/g )
     fi
 
-    # update DTLS variable
-    detect_dtls "$SRV_CMD"
+    # update DTLS and SCTP variables
+    detect_protocol "$SRV_CMD"
 
     # prepend valgrind to our commands if active
     if [ "$MEMCHECK" -gt 0 ]; then
@@ -992,6 +1053,20 @@ run_test    "Default" \
 run_test    "Default, DTLS" \
             "$P_SRV dtls=1" \
             "$P_CLI dtls=1" \
+            0 \
+            -s "Protocol is DTLSv1.2" \
+            -s "Ciphersuite is TLS-ECDHE-RSA-WITH-CHACHA20-POLY1305-SHA256"
+
+run_test    "SCTP, TLS" \
+            "$P_SRV sctp=1" \
+            "$P_CLI sctp=1" \
+            0 \
+            -s "Protocol is TLSv1.2" \
+            -s "Ciphersuite is TLS-ECDHE-RSA-WITH-CHACHA20-POLY1305-SHA256"
+
+run_test    "SCTP, DTLS" \
+            "$P_SRV sctp=1 dtls=1" \
+            "$P_CLI sctp=1 dtls=1" \
             0 \
             -s "Protocol is DTLSv1.2" \
             -s "Ciphersuite is TLS-ECDHE-RSA-WITH-CHACHA20-POLY1305-SHA256"

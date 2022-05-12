@@ -1130,6 +1130,11 @@ struct mbedtls_ssl_config
                                              *   record with unexpected CID
                                              *   should lead to failure.    */
 #endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
+#if defined(MBEDTLS_SSL_PROTO_DTLS)
+    unsigned int connected_dtls : 1; /*!< DTLS is being used over a connected
+                                      *   protocol. Keep the connection open
+                                      *   when sending HelloVerifyRequest. */
+#endif
 };
 
 

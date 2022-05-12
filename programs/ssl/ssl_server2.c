@@ -117,6 +117,7 @@ int main( void )
 #define DFL_NBIO                0
 #define DFL_EVENT               0
 #define DFL_READ_TIMEOUT        0
+#define DFL_SCTP                0
 #define DFL_CA_FILE             ""
 #define DFL_CA_PATH             ""
 #define DFL_CRT_FILE            ""
@@ -471,6 +472,7 @@ int main( void )
     "    event=%%d            default: 0 (loop)\n"                            \
     "                        options: 1 (level-triggered, implies nbio=1),\n" \
     "    read_timeout=%%d     default: 0 ms (no timeout)\n"    \
+    "    sctp=%%d             default: 0 (use TCP or UDP); option 1: use SCTP\n" \
     "\n"                                                    \
     USAGE_DTLS                                              \
     USAGE_COOKIES                                           \
@@ -551,6 +553,7 @@ struct options
     int nbio;                   /* should I/O be blocking?                  */
     int event;                  /* loop or event-driven IO? level or edge triggered? */
     uint32_t read_timeout;      /* timeout on mbedtls_ssl_read() in milliseconds    */
+    int sctp;                   /* use SCTP? */
     int response_size;          /* pad response with header to requested size */
     uint16_t buffer_size;       /* IO buffer size */
     const char *ca_file;        /* the file with the CA certificate(s)      */
@@ -1803,6 +1806,7 @@ int main( int argc, char *argv[] )
     mbedtls_ecp_group_id curve_list[CURVE_LIST_SIZE];
     const mbedtls_ecp_curve_info * curve_cur;
 #endif
+    int proto;
 #if defined(MBEDTLS_SSL_ALPN)
     const char *alpn_list[ALPN_LIST_SIZE];
 #endif
@@ -1923,6 +1927,7 @@ int main( int argc, char *argv[] )
     opt.cid_val             = DFL_CID_VALUE;
     opt.cid_val_renego      = DFL_CID_VALUE_RENEGO;
     opt.read_timeout        = DFL_READ_TIMEOUT;
+    opt.sctp                = DFL_SCTP;
     opt.ca_file             = DFL_CA_FILE;
     opt.ca_path             = DFL_CA_PATH;
     opt.crt_file            = DFL_CRT_FILE;
@@ -2025,6 +2030,8 @@ int main( int argc, char *argv[] )
         }
         else if( strcmp( p, "read_timeout" ) == 0 )
             opt.read_timeout = atoi( q );
+        else if( strcmp( p, "sctp" ) == 0 )
+            opt.sctp = atoi( q );
         else if( strcmp( p, "buffer_size" ) == 0 )
         {
             opt.buffer_size = atoi( q );
@@ -2958,15 +2965,24 @@ int main( int argc, char *argv[] )
     /*
      * 2. Setup the listening TCP socket
      */
+    proto = (
+        opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM ?
+        opt.sctp ? MBEDTLS_NET_PROTO_SCTP_STREAM : MBEDTLS_NET_PROTO_TCP :
+        opt.sctp ? MBEDTLS_NET_PROTO_SCTP_PACKET : MBEDTLS_NET_PROTO_UDP );
+
     mbedtls_printf( "  . Bind on %s://%s:%s/ ...",
-            opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM ? "tcp" : "udp",
-            opt.server_addr ? opt.server_addr : "*",
-            opt.server_port );
+                    proto == MBEDTLS_NET_PROTO_TCP ?         "tcp" :
+                    proto == MBEDTLS_NET_PROTO_UDP ?         "udp" :
+                    proto == MBEDTLS_NET_PROTO_SCTP_STREAM ? "sctp_stream" :
+                    proto == MBEDTLS_NET_PROTO_SCTP_PACKET ? "sctp_packet" :
+                    "???",
+                    opt.server_addr ? opt.server_addr : "*",
+                    opt.server_port );
     fflush( stdout );
 
-    if( ( ret = mbedtls_net_bind( &listen_fd, opt.server_addr, opt.server_port,
-                          opt.transport == MBEDTLS_SSL_TRANSPORT_STREAM ?
-                          MBEDTLS_NET_PROTO_TCP : MBEDTLS_NET_PROTO_UDP ) ) != 0 )
+    if( ( ret = mbedtls_net_bind( &listen_fd,
+                                  opt.server_addr, opt.server_port,
+                                  proto ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_net_bind returned -0x%x\n\n", -ret );
         goto exit;
@@ -3013,6 +3029,9 @@ int main( int argc, char *argv[] )
 
     if( opt.dgram_packing != DFL_DGRAM_PACKING )
         mbedtls_ssl_set_datagram_packing( &ssl, opt.dgram_packing );
+
+    if( opt.sctp != 0 )
+        conf.connected_dtls = 1;
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
 
 #if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)

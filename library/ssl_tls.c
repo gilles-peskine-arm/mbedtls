@@ -8782,6 +8782,13 @@ int mbedtls_ssl_session_reset( mbedtls_ssl_context *ssl )
     return( ssl_session_reset_int( ssl, 0 ) );
 }
 
+#if defined(MBEDTLS_SSL_PROTO_DTLS) && defined(MBEDTLS_SSL_SRV_C)
+int mbedtls_ssl_session_reset_partial( mbedtls_ssl_context *ssl )
+{
+    return( ssl_session_reset_int( ssl, 1 ) );
+}
+#endif /* MBEDTLS_SSL_PROTO_DTLS && MBEDTLS_SSL_SRV_C */
+
 /*
  * SSL set accessors
  */
