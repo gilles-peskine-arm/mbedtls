@@ -4,16 +4,16 @@
  * code. Other test suites validate macros that require creating a key
  * and using it. */
 
-/* Validate that the error macros that we define in "psa/crypto_values.h"
- * are compatible with the official PSA list. */
-#include "external/psa-ff-m/allocated_errors.h"
-
 #if defined(MBEDTLS_PSA_CRYPTO_SPM)
 #include "spm/psa_defs.h"
 #endif
 
 #include "psa/crypto.h"
 #include "psa_crypto_invasive.h"
+
+/* Validate that the error macros that we define in "psa/crypto_values.h"
+ * are compatible with the official PSA list. */
+#include "external/psa-ff-m/allocated_errors.h"
 
 /* Flags for algorithm classification macros. There is a flag for every
  * algorithm classification macro PSA_ALG_IS_xxx except for the
