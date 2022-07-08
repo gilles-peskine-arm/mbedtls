@@ -1834,21 +1834,19 @@ static mbedtls_ssl_mode_t mbedtls_ssl_get_base_mode(
 }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
+#if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
 static mbedtls_ssl_mode_t mbedtls_ssl_get_actual_mode(
     mbedtls_ssl_mode_t base_mode,
     int encrypt_then_mac )
 {
-#if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
     if( encrypt_then_mac == MBEDTLS_SSL_ETM_ENABLED &&
         base_mode == MBEDTLS_SSL_MODE_CBC )
     {
         return( MBEDTLS_SSL_MODE_CBC_ETM );
     }
-#else
-    (void) encrypt_then_mac;
-#endif
     return( base_mode );
 }
+#endif
 
 mbedtls_ssl_mode_t mbedtls_ssl_get_mode_from_transform(
                     const mbedtls_ssl_transform *transform )
@@ -1861,11 +1859,12 @@ mbedtls_ssl_mode_t mbedtls_ssl_get_mode_from_transform(
 #endif
         );
 
-    int encrypt_then_mac = 0;
 #if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
-    encrypt_then_mac = transform->encrypt_then_mac;
-#endif
+    int encrypt_then_mac = transform->encrypt_then_mac;
     return( mbedtls_ssl_get_actual_mode( base_mode, encrypt_then_mac ) );
+#else
+    return( base_mode );
+#endif
 }
 
 mbedtls_ssl_mode_t mbedtls_ssl_get_mode_from_ciphersuite(
@@ -1895,10 +1894,11 @@ mbedtls_ssl_mode_t mbedtls_ssl_get_mode_from_ciphersuite(
     }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
-#if !defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
-    int encrypt_then_mac = 0;
-#endif
+#if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
     return( mbedtls_ssl_get_actual_mode( base_mode, encrypt_then_mac ) );
+#else
+    return( base_mode );
+#endif
 }
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO) || defined(MBEDTLS_SSL_PROTO_TLS1_3)
@@ -7414,7 +7414,6 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
     mbedtls_ssl_mode_t ssl_mode;
 #if !defined(MBEDTLS_USE_PSA_CRYPTO)
     const mbedtls_cipher_info_t *cipher_info;
-    const mbedtls_md_info_t *md_info;
 #endif /* !MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
@@ -7467,27 +7466,18 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
     }
 
-    ssl_mode = mbedtls_ssl_get_mode_from_ciphersuite(
-#if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
-                                        encrypt_then_mac,
-#endif /* MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM */
-                                        ciphersuite_info );
-
-    if( ssl_mode == MBEDTLS_SSL_MODE_AEAD )
-        transform->taglen =
-            ciphersuite_info->flags & MBEDTLS_CIPHERSUITE_SHORT_TAG ? 8 : 16;
-
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     if( ( status = mbedtls_ssl_cipher_to_psa( ciphersuite_info->cipher,
-                                 transform->taglen,
+                                 0,
                                  &alg,
                                  &key_type,
                                  &key_bits ) ) != PSA_SUCCESS )
     {
         ret = psa_ssl_status_to_mbedtls( status );
         MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ssl_cipher_to_psa", ret );
-        goto end;
+        return( ret );
     }
+    ssl_mode = mbedtls_ssl_get_base_mode( alg );
 #else
     cipher_info = mbedtls_cipher_info_from_type( ciphersuite_info->cipher );
     if( cipher_info == NULL )
@@ -7496,21 +7486,29 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
                                     ciphersuite_info->cipher ) );
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
     }
+    ssl_mode = mbedtls_ssl_get_base_mode(
+                   mbedtls_cipher_info_get_mode( cipher_info ) );
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
+
+    if( ssl_mode == MBEDTLS_SSL_MODE_AEAD )
+    {
+        transform->taglen =
+            ciphersuite_info->flags & MBEDTLS_CIPHERSUITE_SHORT_TAG ? 8 : 16;
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+        mbedtls_ssl_cipher_to_psa( ciphersuite_info->cipher, transform->taglen,
+                                   &alg, &key_type, &key_bits );
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
+    }
+#if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
+    else
+        ssl_mode = mbedtls_ssl_get_actual_mode( ssl_mode, encrypt_then_mac );
+#endif /* MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM */
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     mac_alg = mbedtls_hash_info_psa_from_md( ciphersuite_info->mac );
     if( mac_alg == 0 )
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "mbedtls_hash_info_psa_from_md for %u not found",
-                            (unsigned) ciphersuite_info->mac ) );
-        return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
-    }
-#else
-    md_info = mbedtls_md_info_from_type( ciphersuite_info->mac );
-    if( md_info == NULL )
-    {
-        MBEDTLS_SSL_DEBUG_MSG( 1, ( "mbedtls_md info for %u not found",
                             (unsigned) ciphersuite_info->mac ) );
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
     }
@@ -7601,10 +7599,16 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
         ssl_mode == MBEDTLS_SSL_MODE_CBC ||
         ssl_mode == MBEDTLS_SSL_MODE_CBC_ETM )
     {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
-        size_t block_size = PSA_BLOCK_CIPHER_BLOCK_LENGTH( key_type );
-#else
-        size_t block_size = cipher_info->block_size;
+#if !defined(MBEDTLS_USE_PSA_CRYPTO)
+        const mbedtls_md_info_t *md_info;
+        md_info = mbedtls_md_info_from_type( ciphersuite_info->mac );
+        if( md_info == NULL )
+        {
+            MBEDTLS_SSL_DEBUG_MSG( 1, ( "mbedtls_md info for %u not found",
+                                (unsigned) ciphersuite_info->mac ) );
+            ret = MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
+            goto end;
+        }
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
@@ -7642,6 +7646,11 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
              *    otherwise: * first multiple of blocklen greater than maclen
              * 2. IV
              */
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+            size_t block_size = PSA_BLOCK_CIPHER_BLOCK_LENGTH( key_type );
+#else
+            size_t block_size = cipher_info->block_size;
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
 #if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
             if( ssl_mode == MBEDTLS_SSL_MODE_CBC_ETM )
             {
@@ -7672,7 +7681,8 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
 #endif /* MBEDTLS_SSL_SOME_SUITES_USE_MAC */
     {
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
-        return( MBEDTLS_ERR_SSL_INTERNAL_ERROR );
+        ret = MBEDTLS_ERR_SSL_INTERNAL_ERROR;
+        goto end;
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "keylen: %u, minlen: %u, ivlen: %u, maclen: %u",
