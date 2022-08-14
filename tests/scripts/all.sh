@@ -1901,6 +1901,7 @@ component_test_psa_crypto_config_accel_hash_use_psa () {
     scripts/config.py unset MBEDTLS_SSL_TLS_C
     # TLS 1.2 currently depends on SHA1_C || SHA256_C || SHA512_C
     scripts/config.py unset MBEDTLS_SSL_PROTO_TLS1_2
+    scripts/config.py unset MBEDTLS_SSL_RENEGOTIATION
     scripts/config.py unset MBEDTLS_SSL_ENCRYPT_THEN_MAC
     scripts/config.py unset MBEDTLS_SSL_EXTENDED_MASTER_SECRET
     scripts/config.py unset MBEDTLS_SSL_PROTO_DTLS
