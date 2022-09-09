@@ -2076,6 +2076,72 @@ mpi_set_bit:"00":32:1:"0100000000":0
 Test bit set (Invalid bit value)
 mpi_set_bit:"00":5:2:"00":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
 
+Fill random core: 0 bytes
+mpi_core_fill_random:0:0:1:0:0
+
+Fill random core: 1 byte, RNG stops at 0
+mpi_core_fill_random:1:-1:0:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Fill random core: 1 byte, RNG just sufficient
+mpi_core_fill_random:1:0:0:0:0
+
+Fill random core: 1 byte, RNG not exhausted
+mpi_core_fill_random:1:1:0:0:0
+
+Fill random core: 1 byte, prior content nonzero
+mpi_core_fill_random:1:0:0:0xba:0
+
+Fill random core: 1 byte, 1 extra limb
+mpi_core_fill_random:1:0:1:0:0
+
+Fill random core: 1 byte, 1 extra limb, prior content nonzero
+mpi_core_fill_random:1:0:1:0xba:0
+
+Fill random core: 8 bytes, RNG stops before
+mpi_core_fill_random:8:-1:0:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Fill random core: 8 bytes, RNG just sufficient
+mpi_core_fill_random:8:0:0:0:0
+
+Fill random core: 8 bytes, RNG not exhausted
+mpi_core_fill_random:8:1:0:0:0
+
+Fill random core: 8 bytes, prior content nonzero
+mpi_core_fill_random:8:0:0:0xba:0
+
+Fill random core: 8 bytes, 1 extra limb
+mpi_core_fill_random:8:0:1:0:0
+
+Fill random core: 8 bytes, 1 extra limb, prior content nonzero
+mpi_core_fill_random:8:0:1:0xba:0
+
+Fill random core: 9 bytes, 1 missing limb
+mpi_core_fill_random:9:0:-1:0:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+Fill random core: 42 bytes, RNG stops before
+mpi_core_fill_random:42:-1:0:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
+
+Fill random core: 42 bytes, RNG just sufficient
+mpi_core_fill_random:42:0:0:0:0
+
+Fill random core: 42 bytes, RNG not exhausted
+mpi_core_fill_random:42:1:0:0:0
+
+Fill random core: 42 bytes, prior content nonzero
+mpi_core_fill_random:42:0:0:0xba:0
+
+Fill random core: 42 bytes, 1 extra limb
+mpi_core_fill_random:42:0:1:0:0
+
+Fill random core: 42 bytes, 1 extra limb, prior content nonzero
+mpi_core_fill_random:42:0:1:0xba:0
+
+Fill random core: 42 bytes, 1 missing limb
+mpi_core_fill_random:42:0:-1:0:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
+Fill random core: 42 bytes, 5 missing limbs
+mpi_core_fill_random:42:0:-5:0:MBEDTLS_ERR_MPI_BAD_INPUT_DATA
+
 Fill random: 0 bytes
 mpi_fill_random:0:0:0:0
 
