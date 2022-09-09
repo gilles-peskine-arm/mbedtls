@@ -2126,6 +2126,27 @@ cleanup:
     return( ret );
 }
 
+/* Whether min <= X, in constant time.
+ * X_limbs must be at least 1. */
+static unsigned uint_le_mpi_core( mbedtls_mpi_uint min,
+                                  const mbedtls_mpi_uint *X,
+                                  size_t X_limbs )
+{
+    /* min <= least significant limb? */
+    unsigned min_le_lsl = 1 ^ mbedtls_ct_mpi_uint_lt( X[0], min );
+
+    /* most significant limbs (excluding 1) are all zero? */
+    mbedtls_mpi_uint msll_mask = 0;
+    for( size_t i = 1; i < X_limbs; i++ )
+        msll_mask |= X[i];
+    /* The most significant limbs of X are not all zero iff msll_mask != 0. */
+    unsigned msll_nonzero = mbedtls_ct_mpi_uint_mask( msll_mask ) & 1;
+
+    /* min <= X iff the lowest limb of X is >= min or the other limbs
+     * are not all zero. */
+    return( min_le_lsl | msll_nonzero );
+}
+
 int mbedtls_mpi_random( mbedtls_mpi *X,
                         mbedtls_mpi_sint min,
                         const mbedtls_mpi *N,
@@ -2134,10 +2155,9 @@ int mbedtls_mpi_random( mbedtls_mpi *X,
 {
     int ret = MBEDTLS_ERR_MPI_BAD_INPUT_DATA;
     int count;
-    unsigned lt_lower = 1, lt_upper = 0;
+    unsigned ge_lower = 1, lt_upper = 0;
     size_t n_bits = mbedtls_mpi_bitlen( N );
     size_t n_bytes = ( n_bits + 7 ) / 8;
-    mbedtls_mpi lower_bound;
 
     if( min < 0 )
         return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
@@ -2163,14 +2183,10 @@ int mbedtls_mpi_random( mbedtls_mpi *X,
      */
     count = ( n_bytes > 4 ? 30 : 250 );
 
-    mbedtls_mpi_init( &lower_bound );
-
     /* Ensure that target MPI has exactly the same number of limbs
      * as the upper bound, even if the upper bound has leading zeros.
      * This is necessary for the mbedtls_mpi_lt_mpi_ct() check. */
     MBEDTLS_MPI_CHK( mbedtls_mpi_resize_clear( X, N->n ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_grow( &lower_bound, N->n ) );
-    MBEDTLS_MPI_CHK( mbedtls_mpi_lset( &lower_bound, min ) );
 
     /*
      * Match the procedure given in RFC 6979 §3.3 (deterministic ECDSA)
@@ -2193,13 +2209,12 @@ int mbedtls_mpi_random( mbedtls_mpi *X,
             goto cleanup;
         }
 
-        MBEDTLS_MPI_CHK( mbedtls_mpi_lt_mpi_ct( X, &lower_bound, &lt_lower ) );
-        MBEDTLS_MPI_CHK( mbedtls_mpi_lt_mpi_ct( X, N, &lt_upper ) );
+        ge_lower = uint_le_mpi_core( min, X->p, X->n );
+        lt_upper = mbedtls_mpi_core_lt_ct( X->p, N->p, N->n );
     }
-    while( lt_lower != 0 || lt_upper == 0 );
+    while( ge_lower == 0 || lt_upper == 0 );
 
 cleanup:
-    mbedtls_mpi_free( &lower_bound );
     return( ret );
 }
 
