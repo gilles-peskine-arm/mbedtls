@@ -306,4 +306,69 @@ unsigned mbedtls_mpi_core_uint_le_mpi( mbedtls_mpi_uint min,
                                        const mbedtls_mpi_uint *A,
                                        size_t A_limbs );
 
+/**
+ * \brief          Fill an integer with a number of random bytes.
+ *
+ * \param X        The destination MPI.
+ * \param X_limbs  The number of limbs of \p X.
+ * \param bytes    The number of random bytes to generate.
+ * \param f_rng    The RNG function to use. This must not be \c NULL.
+ * \param p_rng    The RNG parameter to be passed to \p f_rng. This may be
+ *                 \c NULL if \p f_rng doesn't need a context argument.
+ *
+ * \return         \c 0 if successful.
+ * \return         #MBEDTLS_ERR_MPI_BAD_INPUT_DATA if \p X does not have
+ *                 enough room for \p bytes bytes.
+ * \return         A negative error code on RNG failure.
+ *
+ * \note           The bytes obtained from the RNG are interpreted
+ *                 as a big-endian representation of an MPI; this can
+ *                 be relevant in applications like deterministic ECDSA.
+ */
+int mbedtls_mpi_core_fill_random( mbedtls_mpi_uint *X, size_t X_limbs,
+                                  size_t bytes,
+                                  int (*f_rng)(void *, unsigned char *, size_t),
+                                  void *p_rng );
+
+/** Generate a random number uniformly in a range.
+ *
+ * This function generates a random number between \p min inclusive and
+ * \p N exclusive.
+ *
+ * The procedure complies with RFC 6979 §3.3 (deterministic ECDSA)
+ * when the RNG is a suitably parametrized instance of HMAC_DRBG
+ * and \p min is \c 1.
+ *
+ * \note           There are `N - min` possible outputs. The lower bound
+ *                 \p min can be reached, but the upper bound \p N cannot.
+ *
+ * \param X        The destination MPI.
+ * \param X_limbs  The number of limbs of \p X.
+ *                 This must be at least \p N_limbs.
+ * \param min      The minimum value to return.
+ *                 It must be nonnegative.
+ * \param N        The upper bound of the range, exclusive.
+ *                 In other words, this is one plus the maximum value to return.
+ *                 \p N must be strictly larger than \p min.
+ * \param N_limbs  The number of limbs of \p N.
+ * \param f_rng    The RNG function to use. This must not be \c NULL.
+ * \param p_rng    The RNG parameter to be passed to \p f_rng.
+ *
+ * \return         \c 0 if successful.
+ * \return         #MBEDTLS_ERR_MPI_BAD_INPUT_DATA if \p min or \p N is invalid
+ *                 or if they are incompatible
+ *                 or if \p X_limbs is too small (less than \p N_limbs).
+ * \return         #MBEDTLS_ERR_MPI_NOT_ACCEPTABLE if the implementation was
+ *                 unable to find a suitable value within a limited number
+ *                 of attempts. This has a negligible probability if \p N
+ *                 is significantly larger than \p min, which is the case
+ *                 for all usual cryptographic applications.
+ * \return         Another negative error code on failure.
+ */
+int mbedtls_mpi_core_random( mbedtls_mpi_uint *X, size_t X_limbs,
+                             mbedtls_mpi_sint min,
+                             const mbedtls_mpi_uint *N, size_t N_limbs,
+                             int (*f_rng)(void *, unsigned char *, size_t),
+                             void *p_rng );
+
 #endif /* MBEDTLS_BIGNUM_CORE_H */
