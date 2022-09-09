@@ -2118,6 +2118,8 @@ int mbedtls_mpi_core_fill_random(
 
     if( X_limbs < limbs )
         return( MBEDTLS_ERR_MPI_BAD_INPUT_DATA );
+    if( X_limbs == 0 )
+        return( 0 );
 
     memset( X, 0, overhead );
     memset( (unsigned char *) X + limbs * ciL, 0, ( X_limbs - limbs ) * ciL );
@@ -2147,8 +2149,6 @@ int mbedtls_mpi_fill_random( mbedtls_mpi *X, size_t size,
 
     /* Ensure that target MPI has exactly the necessary number of limbs */
     MBEDTLS_MPI_CHK( mbedtls_mpi_resize_clear( X, limbs ) );
-    if( size == 0 )
-        return( 0 );
 
     ret = mbedtls_mpi_core_fill_random( X->p, X->n, size, f_rng, p_rng );
 
