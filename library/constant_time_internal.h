@@ -26,8 +26,12 @@
 #include "mbedtls/bignum.h"
 #endif
 
-#if defined(MBEDTLS_SSL_TLS_C)
-#include "ssl_misc.h"
+#if defined(MBEDTLS_SSL_SOME_SUITES_USE_TLS_CBC)
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+#include <psa/crypto.h>
+#else
+#include "mbedtls/md.h"
+#endif
 #endif
 
 #include <stddef.h>
