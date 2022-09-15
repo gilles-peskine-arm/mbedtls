@@ -1,0 +1,5 @@
+Features
+   * mbedtls_ecp_point_read_binary from MBEDTLS_ECP_PF_COMPRESSED format
+     for Short Weisserstrass curves with prime p where p = 3 mod 4
+     (all mbedtls MBEDTLS_ECP_DP_SECP* and MBEDTLS_ECP_DP_BP* curves
+      except MBEDTLS_ECP_DP_SECP224R1 and MBEDTLS_ECP_DP_SECP224K1)
