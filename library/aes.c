@@ -40,10 +40,6 @@
 #include "aesni.h"
 #endif
 
-#if defined(MBEDTLS_SELF_TEST)
-#include "mbedtls/platform.h"
-#endif /* MBEDTLS_SELF_TEST */
-
 #if !defined(MBEDTLS_AES_ALT)
 
 /* Parameter validation macros based on platform_util.h */
