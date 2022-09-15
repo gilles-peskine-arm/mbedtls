@@ -42,11 +42,8 @@
 
 #include <string.h>
 
-#if defined(MBEDTLS_PLATFORM_C)
+#if defined(MBEDTLS_SELF_TEST)
 #include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#define mbedtls_printf printf
 #endif
 
 #if defined(MBEDTLS_ASN1_PARSE_C)

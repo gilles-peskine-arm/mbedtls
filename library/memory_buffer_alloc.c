@@ -22,8 +22,6 @@
 #if defined(MBEDTLS_MEMORY_BUFFER_ALLOC_C)
 #include "mbedtls/memory_buffer_alloc.h"
 
-/* No need for the header guard as MBEDTLS_MEMORY_BUFFER_ALLOC_C
-   is dependent upon MBEDTLS_PLATFORM_C */
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
 

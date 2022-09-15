@@ -30,7 +30,6 @@
 #include <string.h>
 
 #include "mbedtls/aes.h"
-#include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error.h"
 #if defined(MBEDTLS_PADLOCK_C)
@@ -41,12 +40,7 @@
 #endif
 
 #if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
 #endif /* MBEDTLS_SELF_TEST */
 
 #if !defined(MBEDTLS_AES_ALT)

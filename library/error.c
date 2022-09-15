@@ -25,11 +25,7 @@
 
 #if defined(MBEDTLS_ERROR_C)
 
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#define mbedtls_snprintf snprintf
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -96,10 +92,6 @@
 
 #if defined(MBEDTLS_ERROR_C)
 #include "mbedtls/error.h"
-#endif
-
-#if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
 #endif
 
 #if defined(MBEDTLS_GCM_C)

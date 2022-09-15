@@ -35,15 +35,11 @@
 
 #if defined(MBEDTLS_FS_IO)
 #include <stdio.h>
+#include "mbedtls/platform.h"
 #endif
 
 #if defined(MBEDTLS_SELF_TEST)
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#define mbedtls_printf printf
-#endif /* MBEDTLS_SELF_TEST */
 #endif /* MBEDTLS_PLATFORM_C */
 
 /*
