@@ -155,4 +155,20 @@ int mbedtls_mpi_core_write_be( const mbedtls_mpi_uint *A,
 #define GET_BYTE( X, i )                                \
     ( ( (X)[(i) / ciL] >> ( ( (i) % ciL ) * 8 ) ) & 0xff )
 
+/** \brief         Compare a machine integer with an MPI.
+ *
+ *                 This function operates in constant time with respect
+ *                 to the values of \p min and \p A.
+ *
+ * \param min      A machine integer.
+ * \param[in] A    An MPI.
+ * \param A_limbs  The number of limbs of \p A.
+ *                 This must be at least 1.
+ *
+ * \return         1 if \p min is less than or equal to \p A, otherwise 0.
+ */
+unsigned mbedtls_mpi_core_uint_le_mpi( mbedtls_mpi_uint min,
+                                       const mbedtls_mpi_uint *A,
+                                       size_t A_limbs );
+
 #endif /* MBEDTLS_BIGNUM_CORE_H */
