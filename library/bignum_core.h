@@ -305,6 +305,22 @@ void mbedtls_mpi_core_montmul( mbedtls_mpi_uint *X,
                                const mbedtls_mpi_uint *N, size_t AN_limbs,
                                mbedtls_mpi_uint mm, mbedtls_mpi_uint *T );
 
+/** \brief         Compare a machine integer with an MPI.
+ *
+ *                 This function operates in constant time with respect
+ *                 to the values of \p min and \p A.
+ *
+ * \param min      A machine integer.
+ * \param[in] A    An MPI.
+ * \param A_limbs  The number of limbs of \p A.
+ *                 This must be at least 1.
+ *
+ * \return         1 if \p min is less than or equal to \p A, otherwise 0.
+ */
+unsigned mbedtls_mpi_core_uint_le_mpi( mbedtls_mpi_uint min,
+                                       const mbedtls_mpi_uint *A,
+                                       size_t A_limbs );
+
 /**
  * \brief          Fill an integer with a number of random bytes.
  *
