@@ -810,6 +810,72 @@ mbedtls_mpi_cmp_abs:"2":"-3":-1
 Base test mbedtls_mpi_cmp_abs (Mix values) #3
 mbedtls_mpi_cmp_abs:"-2":"1":1
 
+Test mbedtls_mpi_core_uint_le_mpi: 0 (1 limb)
+mpi_core_uint_le_mpi:"0"
+
+Test mbedtls_mpi_core_uint_le_mpi: 0 (>=2 limbs)
+mpi_core_uint_le_mpi:"00000000000000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 1 (1 limb)
+mpi_core_uint_le_mpi:"1"
+
+Test mbedtls_mpi_core_uint_le_mpi: 1 (>=2 limbs)
+mpi_core_uint_le_mpi:"00000000000000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 42 (1 limb)
+mpi_core_uint_le_mpi:"2a"
+
+Test mbedtls_mpi_core_uint_le_mpi: 42 (>=2 limbs)
+mpi_core_uint_le_mpi:"00000000000000042"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^31-1
+mpi_core_uint_le_mpi:"7fffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^31-1 with leading zero limb
+mpi_core_uint_le_mpi:"0000000007fffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32-1
+mpi_core_uint_le_mpi:"ffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32-1 with leading zero limb
+mpi_core_uint_le_mpi:"000000000ffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32
+mpi_core_uint_le_mpi:"10000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32 with leading zero limb
+mpi_core_uint_le_mpi:"00000000010000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32+1
+mpi_core_uint_le_mpi:"10000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^32+1 with leading zero limb
+mpi_core_uint_le_mpi:"00000000010000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^63-1
+mpi_core_uint_le_mpi:"7fffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^63-1 with leading zero limb
+mpi_core_uint_le_mpi:"007fffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64-1
+mpi_core_uint_le_mpi:"ffffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64-1 with leading zero limb
+mpi_core_uint_le_mpi:"00ffffffffffffffff"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64
+mpi_core_uint_le_mpi:"1000000000000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64 with leading zero limb
+mpi_core_uint_le_mpi:"01000000000000000"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64+1
+mpi_core_uint_le_mpi:"1000000000000001"
+
+Test mbedtls_mpi_core_uint_le_mpi: 2^64+1 with leading zero limb
+mpi_core_uint_le_mpi:"01000000000000001"
+
 Copy large negative to large negative
 mbedtls_mpi_copy:"-ca5cadedb01dfaceacc01ade":"-face1e55ca11ab1ecab005e5"
 

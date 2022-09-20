@@ -37,6 +37,7 @@
 #endif
 
 #include "bignum_core.h"
+#include "constant_time_internal.h"
 
 size_t mbedtls_mpi_core_clz( mbedtls_mpi_uint a )
 {
@@ -292,6 +293,27 @@ int mbedtls_mpi_core_write_be( const mbedtls_mpi_uint *X,
 }
 
 
+
+/* Whether min <= A, in constant time.
+ * A_limbs must be at least 1. */
+unsigned mbedtls_mpi_core_uint_le_mpi( mbedtls_mpi_uint min,
+                                       const mbedtls_mpi_uint *A,
+                                       size_t A_limbs )
+{
+    /* min <= least significant limb? */
+    unsigned min_le_lsl = 1 ^ mbedtls_ct_mpi_uint_lt( A[0], min );
+
+    /* most significant limbs (excluding 1) are all zero? */
+    mbedtls_mpi_uint msll_mask = 0;
+    for( size_t i = 1; i < A_limbs; i++ )
+        msll_mask |= A[i];
+    /* The most significant limbs of A are not all zero iff msll_mask != 0. */
+    unsigned msll_nonzero = mbedtls_ct_mpi_uint_mask( msll_mask ) & 1;
+
+    /* min <= A iff the lowest limb of A is >= min or the other limbs
+     * are not all zero. */
+    return( min_le_lsl | msll_nonzero );
+}
 
 /* Fill X with n_bytes random bytes.
  * X must already have room for those bytes.
