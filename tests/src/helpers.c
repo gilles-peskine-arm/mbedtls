@@ -357,4 +357,17 @@ int mbedtls_test_read_mpi( mbedtls_mpi *X, const char *s )
     else
         return( mbedtls_mpi_read_string( X, 16, s ) );
 }
+
+int mbedtls_test_read_mpi_core( mbedtls_mpi_uint **X, size_t *X_limbs,
+                                const char *s )
+{
+    mbedtls_mpi XX;
+    mbedtls_mpi_init( &XX );
+    int ret = mbedtls_mpi_read_string( &XX, 16, s );
+    if( ret != 0 )
+        return( ret );
+    *X = XX.p;
+    *X_limbs = XX.n;
+    return( 0 );
+}
 #endif

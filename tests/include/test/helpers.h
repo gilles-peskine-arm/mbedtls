@@ -293,6 +293,24 @@ void mbedtls_test_err_add_check( int high, int low,
  */
 /* Since the library has exactly the desired behavior, this is trivial. */
 int mbedtls_test_read_mpi( mbedtls_mpi *X, const char *s );
+
+/** Read a core MPI from a hexadecimal string.
+ *
+ * This function always allocates at least one limb, even for an empty string.
+ * For non-empty strings, this function allocates as many limbs as needed to
+ * fit the number of digits in the string regardless of their value. In other
+ * words, this function retains leading zeros.
+ *
+ * \param[out] X        On output, the allocated limb array.
+ *                      Null on error.
+ * \param[out] X_limbs  On output, the number of limbs in \p X.
+ *                      This is always at least 1.
+ * \param[in] s         The null-terminated hexadecimal string to read from.
+ *
+ * \return \c 0 on success, an \c MBEDTLS_ERR_MPI_xxx error code otherwise.
+ */
+int mbedtls_test_read_mpi_core( mbedtls_mpi_uint **X, size_t *X_limbs,
+                                const char *s );
 #endif /* MBEDTLS_BIGNUM_C */
 
 #endif /* TEST_HELPERS_H */
