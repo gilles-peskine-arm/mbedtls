@@ -81,7 +81,7 @@ extern const struct mbedtls_ssl_tls13_labels_struct mbedtls_ssl_tls13_labels;
  * Since contexts are always hashes of message transcripts, this can
  * be approximated from above by the maximum hash size. */
 #define MBEDTLS_SSL_TLS1_3_KEY_SCHEDULE_MAX_CONTEXT_LEN  \
-    MBEDTLS_MD_MAX_SIZE
+    PSA_HASH_MAX_SIZE
 
 /* Maximum desired length for expanded key material generated
  * by HKDF-Expand-Label.
@@ -636,8 +636,7 @@ int mbedtls_ssl_tls13_generate_application_keys(
  * \returns    A negative error code on failure.
  */
 MBEDTLS_CHECK_RETURN_CRITICAL
-int mbedtls_ssl_tls13_generate_resumption_master_secret(
-    mbedtls_ssl_context *ssl );
+int mbedtls_ssl_tls13_compute_resumption_master_secret( mbedtls_ssl_context *ssl );
 
 /**
  * \brief Calculate the verify_data value for the client or server TLS 1.3

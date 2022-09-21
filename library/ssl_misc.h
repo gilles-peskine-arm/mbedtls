@@ -32,7 +32,7 @@
 #include "mbedtls/psa_util.h"
 #include "hash_info.h"
 #endif
-#include "legacy_or_psa.h"
+#include "mbedtls/legacy_or_psa.h"
 
 #if defined(MBEDTLS_MD5_C)
 #include "mbedtls/md5.h"
@@ -2137,33 +2137,33 @@ static inline int mbedtls_ssl_tls13_sig_alg_for_cert_verify_is_supported(
     switch( sig_alg )
     {
 #if defined(MBEDTLS_ECDSA_C)
-#if defined(MBEDTLS_SHA256_C) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+#if defined(PSA_WANT_ALG_SHA_256) && defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
         case MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256:
             break;
-#endif /* MBEDTLS_SHA256_C && MBEDTLS_ECP_DP_SECP256R1_ENABLED */
-#if defined(MBEDTLS_SHA384_C) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
+#endif /* PSA_WANT_ALG_SHA_256 && MBEDTLS_ECP_DP_SECP256R1_ENABLED */
+#if defined(PSA_WANT_ALG_SHA_384) && defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
         case MBEDTLS_TLS1_3_SIG_ECDSA_SECP384R1_SHA384:
             break;
-#endif /* MBEDTLS_SHA384_C && MBEDTLS_ECP_DP_SECP384R1_ENABLED */
-#if defined(MBEDTLS_SHA512_C) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
+#endif /* PSA_WANT_ALG_SHA_384 && MBEDTLS_ECP_DP_SECP384R1_ENABLED */
+#if defined(PSA_WANT_ALG_SHA_512) && defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
         case MBEDTLS_TLS1_3_SIG_ECDSA_SECP521R1_SHA512:
             break;
-#endif /* MBEDTLS_SHA512_C && MBEDTLS_ECP_DP_SECP521R1_ENABLED */
+#endif /* PSA_WANT_ALG_SHA_512 && MBEDTLS_ECP_DP_SECP521R1_ENABLED */
 #endif /* MBEDTLS_ECDSA_C */
 
 #if defined(MBEDTLS_PKCS1_V21)
-#if defined(MBEDTLS_SHA256_C)
+#if defined(PSA_WANT_ALG_SHA_256)
         case MBEDTLS_TLS1_3_SIG_RSA_PSS_RSAE_SHA256:
             break;
-#endif /* MBEDTLS_SHA256_C  */
-#if defined(MBEDTLS_SHA384_C)
+#endif /* PSA_WANT_ALG_SHA_256  */
+#if defined(PSA_WANT_ALG_SHA_384)
         case MBEDTLS_TLS1_3_SIG_RSA_PSS_RSAE_SHA384:
             break;
-#endif /* MBEDTLS_SHA384_C */
-#if defined(MBEDTLS_SHA512_C)
+#endif /* PSA_WANT_ALG_SHA_384 */
+#if defined(PSA_WANT_ALG_SHA_512)
         case MBEDTLS_TLS1_3_SIG_RSA_PSS_RSAE_SHA512:
             break;
-#endif /* MBEDTLS_SHA512_C */
+#endif /* PSA_WANT_ALG_SHA_512 */
 #endif /* MBEDTLS_PKCS1_V21 */
         default:
             return( 0 );
@@ -2178,18 +2178,18 @@ static inline int mbedtls_ssl_tls13_sig_alg_is_supported(
     switch( sig_alg )
     {
 #if defined(MBEDTLS_PKCS1_V15)
-#if defined(MBEDTLS_SHA256_C)
+#if defined(MBEDTLS_HAS_ALG_SHA_256_VIA_MD_OR_PSA_BASED_ON_USE_PSA)
         case MBEDTLS_TLS1_3_SIG_RSA_PKCS1_SHA256:
             break;
-#endif /* MBEDTLS_SHA256_C */
-#if defined(MBEDTLS_SHA384_C)
+#endif /* MBEDTLS_HAS_ALG_SHA_256_VIA_MD_OR_PSA_BASED_ON_USE_PSA */
+#if defined(MBEDTLS_HAS_ALG_SHA_384_VIA_MD_OR_PSA_BASED_ON_USE_PSA)
         case MBEDTLS_TLS1_3_SIG_RSA_PKCS1_SHA384:
             break;
-#endif /* MBEDTLS_SHA384_C */
-#if defined(MBEDTLS_SHA512_C)
+#endif /* MBEDTLS_HAS_ALG_SHA_384_VIA_MD_OR_PSA_BASED_ON_USE_PSA */
+#if defined(MBEDTLS_HAS_ALG_SHA_512_VIA_MD_OR_PSA_BASED_ON_USE_PSA)
         case MBEDTLS_TLS1_3_SIG_RSA_PKCS1_SHA512:
             break;
-#endif /* MBEDTLS_SHA512_C */
+#endif /* MBEDTLS_HAS_ALG_SHA_512_VIA_MD_OR_PSA_BASED_ON_USE_PSA */
 #endif /* MBEDTLS_PKCS1_V15 */
         default:
             return( mbedtls_ssl_tls13_sig_alg_for_cert_verify_is_supported(
@@ -2457,16 +2457,6 @@ int mbedtls_ssl_check_dtls_clihlo_cookie(
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-/* Check if we have any PSK to offer, returns 0 if PSK is available.
- * Assign the psk and ticket if pointers are present.
- */
-MBEDTLS_CHECK_RETURN_CRITICAL
-int mbedtls_ssl_get_psk_to_offer(
-        const mbedtls_ssl_context *ssl,
-        int *psk_type,
-        const unsigned char **psk, size_t *psk_len,
-        const unsigned char **psk_identity, size_t *psk_identity_len );
-
 /**
  * \brief Given an SSL context and its associated configuration, write the TLS
  *        1.3 specific Pre-Shared key extension.
