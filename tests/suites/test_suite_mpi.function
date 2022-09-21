@@ -1556,6 +1556,26 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void mpi_core_shift_r( data_t *input, int count, data_t *result )
+{
+    mbedtls_mpi_uint *X = NULL;
+    mbedtls_mpi_uint *Y = NULL;
+    size_t limbs, n;
+
+    TEST_EQUAL( 0, mbedtls_test_read_mpi_core( &X, &limbs, input ) );
+    TEST_EQUAL( 0, mbedtls_test_read_mpi_core( &Y, &n, result ) );
+    TEST_EQUAL( limbs, n );
+
+    mbedtls_mpi_core_shift_r( X, limbs, count );
+    ASSERT_COMPARE( X, limbs * ciL, Y, limbs * ciL );
+
+exit:
+    mbedtls_free( X );
+    mbedtls_free( Y );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void mpi_core_fill_random( int wanted_bytes_arg, int extra_rng_bytes,
                            int extra_limbs, int before, int expected_ret )
 {
