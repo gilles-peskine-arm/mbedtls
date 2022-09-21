@@ -90,6 +90,27 @@ class BignumTarget(test_generation.BaseTarget, metaclass=ABCMeta):
     """Target for bignum (mpi) test case generation."""
     target_basename = 'test_suite_mpi.generated'
 
+    @staticmethod
+    def int_to_arg(n: int, zeros: int = 0) -> str:
+        """Format an integer as a test argument.
+
+        The formatted string is suitable either as string that the test code
+        will parse as hex, or as a data_t input. Negative numbers can only
+        be strings parsed as hex.
+
+        If zeros is given, pad with that many bytes worth of zero on the left.
+        """
+        sign = ''
+        if n < 0:
+            sign = '-'
+            n = -n
+        digits = hex(n)[2:]
+        pad = '00' * zeros
+        # data_t inputs need an even number of hex digits
+        if len(digits) % 2 == 1:
+            pad += '0'
+        return '"{}{}{}"'.format(sign, pad, digits)
+
 
 class BignumOperation(BignumTarget, metaclass=ABCMeta):
     """Common features for bignum binary operations.
