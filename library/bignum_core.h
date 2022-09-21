@@ -357,22 +357,20 @@ int mbedtls_mpi_core_fill_random( mbedtls_mpi_uint *X, size_t X_limbs,
  * \note           There are `N - min` possible outputs. The lower bound
  *                 \p min can be reached, but the upper bound \p N cannot.
  *
- * \param X        The destination MPI.
- * \param X_limbs  The number of limbs of \p X.
- *                 This must be at least \p N_limbs.
+ * \param X        The destination MPI, with \p limbs limbs.
  * \param min      The minimum value to return.
  *                 It must be nonnegative.
- * \param N        The upper bound of the range, exclusive.
+ * \param N        The upper bound of the range, exclusive, with \p limbs limbs.
  *                 In other words, this is one plus the maximum value to return.
  *                 \p N must be strictly larger than \p min.
- * \param N_limbs  The number of limbs of \p N.
+ * \param limbs    The number of limbs of \p N and \p X.
+ *                 This must not be 0.
  * \param f_rng    The RNG function to use. This must not be \c NULL.
  * \param p_rng    The RNG parameter to be passed to \p f_rng.
  *
  * \return         \c 0 if successful.
  * \return         #MBEDTLS_ERR_MPI_BAD_INPUT_DATA if \p min or \p N is invalid
- *                 or if they are incompatible
- *                 or if \p X_limbs is too small (less than \p N_limbs).
+ *                 or if they are incompatible.
  * \return         #MBEDTLS_ERR_MPI_NOT_ACCEPTABLE if the implementation was
  *                 unable to find a suitable value within a limited number
  *                 of attempts. This has a negligible probability if \p N
@@ -380,9 +378,10 @@ int mbedtls_mpi_core_fill_random( mbedtls_mpi_uint *X, size_t X_limbs,
  *                 for all usual cryptographic applications.
  * \return         Another negative error code on failure.
  */
-int mbedtls_mpi_core_random( mbedtls_mpi_uint *X, size_t X_limbs,
+int mbedtls_mpi_core_random( mbedtls_mpi_uint *X,
                              mbedtls_mpi_sint min,
-                             const mbedtls_mpi_uint *N, size_t N_limbs,
+                             const mbedtls_mpi_uint *N,
+                             size_t limbs,
                              int (*f_rng)(void *, unsigned char *, size_t),
                              void *p_rng );
 
