@@ -539,7 +539,7 @@ int mbedtls_mpi_core_random( mbedtls_mpi_uint *X,
     unsigned ge_lower = 1, lt_upper = 0;
     size_t n_bits = mbedtls_mpi_core_bitlen( N, limbs );
     size_t n_bytes = ( n_bits + 7 ) / 8;
-    int ret = MBEDTLS_ERR_MPI_BAD_INPUT_DATA;
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
     /*
      * When min == 0, each try has at worst a probability 1/2 of failing
