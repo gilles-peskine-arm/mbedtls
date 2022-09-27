@@ -357,7 +357,11 @@ int mbedtls_mpi_core_fill_random( mbedtls_mpi_uint *X, size_t X_limbs,
  * \note           There are `N - min` possible outputs. The lower bound
  *                 \p min can be reached, but the upper bound \p N cannot.
  *
+ * \note           \p X and \p N must not overlap, otherwise the behavior
+ *                 is undefined.
+ *
  * \param X        The destination MPI, with \p limbs limbs.
+ *                 It must not be aliased with \p N or otherwise overlap it.
  * \param min      The minimum value to return.
  *                 It must be nonnegative.
  * \param N        The upper bound of the range, exclusive, with \p limbs limbs.
@@ -369,8 +373,6 @@ int mbedtls_mpi_core_fill_random( mbedtls_mpi_uint *X, size_t X_limbs,
  * \param p_rng    The RNG parameter to be passed to \p f_rng.
  *
  * \return         \c 0 if successful.
- * \return         #MBEDTLS_ERR_MPI_BAD_INPUT_DATA if \p min or \p N is invalid
- *                 or if they are incompatible.
  * \return         #MBEDTLS_ERR_MPI_NOT_ACCEPTABLE if the implementation was
  *                 unable to find a suitable value within a limited number
  *                 of attempts. This has a negligible probability if \p N
