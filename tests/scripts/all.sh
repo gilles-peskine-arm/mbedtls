@@ -2314,6 +2314,15 @@ component_test_no_platform () {
     make CC=gcc CFLAGS='-Werror -Wall -Wextra -Os' test
 }
 
+component_test_platform_macros_with_module () {
+    msg "build: with platform macros and platform.c"
+    scripts/config.py full
+    make CFLAGS="$ASAN_CFLAGS -DMBEDTLS_TEST_PLATFORM_MACROS -DMBEDTLS_USER_CONFIG_FILE='\"../tests/configs/user-config-for-test.h\"' -O2" LDFLAGS="$ASAN_CFLAGS"
+
+    msg "test: with platform macros and platform.c"
+    make test
+}
+
 component_build_no_std_function () {
     # catch compile bugs in _uninit functions
     msg "build: full config with NO_STD_FUNCTION, make, gcc" # ~ 30s
