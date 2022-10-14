@@ -55,3 +55,17 @@
 #define MBEDTLS_PSA_ACCEL_ALG_HMAC
 
 #endif  /* PSA_CRYPTO_DRIVER_TEST_ALL */
+
+#if defined(MBEDTLS_TEST_PLATFORM_MACROS)
+#include <stddef.h>
+
+#if defined(MBEDTLS_PLATFORM_C)
+#define MBEDTLS_PLATFORM_MEMORY
+#endif
+
+void *mbedtls_test_platform_calloc_macro( size_t, size_t );
+#define MBEDTLS_PLATFORM_CALLOC_MACRO mbedtls_test_platform_calloc_macro
+void mbedtls_test_platform_free_macro( void* );
+#define MBEDTLS_PLATFORM_FREE_MACRO mbedtls_test_platform_free_macro
+
+#endif

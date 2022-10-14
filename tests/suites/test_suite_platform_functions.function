@@ -1,0 +1,113 @@
+/* BEGIN_HEADER */
+#include <stdlib.h>
+#include <mbedtls/platform.h>
+#include "test/platform.h"
+/* END_HEADER */
+
+/* BEGIN_CASE */
+void memory_functions( )
+{
+    void *ptr = NULL;
+#if defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi A;
+    mbedtls_mpi_init( &A );
+#endif
+
+    size_t calloc_call_counter = 0;
+    size_t free_call_counter = 0;
+
+#if defined(MBEDTLS_TEST_PLATFORM_MACROS)
+    size_t *calloc_platform_counter = &mbedtls_test_platform_macro_counters.calloc;
+    size_t *free_platform_counter = &mbedtls_test_platform_macro_counters.free;
+#else /* Direct definitions to standard functions */
+    size_t *calloc_platform_counter = &calloc_call_counter;
+    size_t *free_platform_counter = &free_call_counter;
+#endif
+
+    TEST_EQUAL( *calloc_platform_counter, calloc_call_counter );
+    TEST_EQUAL( *free_platform_counter, free_call_counter );
+
+    ++calloc_call_counter;
+    ptr = mbedtls_calloc( 1, 1 );
+    TEST_EQUAL( *calloc_platform_counter, calloc_call_counter );
+
+    ++free_call_counter;
+    mbedtls_free( ptr );
+    ptr = NULL;
+    TEST_EQUAL( *free_platform_counter, free_call_counter );
+
+#if defined(MBEDTLS_BIGNUM_C)
+    ++calloc_call_counter;
+    TEST_EQUAL( mbedtls_mpi_grow( &A, 1 ), 0 );
+    TEST_EQUAL( *calloc_platform_counter, calloc_call_counter );
+
+    ++free_call_counter;
+    mbedtls_mpi_free( &A );
+    ptr = NULL;
+    TEST_EQUAL( *free_platform_counter, free_call_counter );
+#endif /* MBEDTLS_BIGNUM_C */
+
+exit:
+    mbedtls_free( ptr );
+#if defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi_free( &A );
+#endif
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_TEST_PLATFORM_MEMORY_VARIABLES */
+void memory_variables( )
+{
+    void *ptr = NULL;
+#if defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi A;
+    mbedtls_mpi_init( &A );
+#endif
+
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.calloc, 0 );
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.free, 0 );
+
+    TEST_EQUAL( mbedtls_platform_set_calloc_free(
+                    mbedtls_test_platform_calloc_variable,
+                    mbedtls_test_platform_free_variable ), 0 );
+
+    ptr = mbedtls_calloc( 1, 1 );
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.calloc, 1 );
+    mbedtls_free( ptr );
+    ptr = NULL;
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.free, 1 );
+
+#if defined(MBEDTLS_BIGNUM_C)
+    TEST_EQUAL( mbedtls_mpi_grow( &A, 1 ), 0 );
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.calloc, 2 );
+    mbedtls_mpi_free( &A );
+    ptr = NULL;
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.free, 2 );
+#endif /* MBEDTLS_BIGNUM_C */
+
+    TEST_EQUAL( mbedtls_platform_set_calloc_free(
+                    MBEDTLS_PLATFORM_STD_CALLOC,
+                    MBEDTLS_PLATFORM_STD_FREE ), 0 );
+    mbedtls_test_reset_platform_variable_counters( );
+
+    ptr = mbedtls_calloc( 1, 1 );
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.calloc, 0 );
+    mbedtls_free( ptr );
+    ptr = NULL;
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.free, 0 );
+
+#if defined(MBEDTLS_BIGNUM_C)
+    TEST_EQUAL( mbedtls_mpi_grow( &A, 1 ), 0 );
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.calloc, 0 );
+    mbedtls_mpi_free( &A );
+    ptr = NULL;
+    TEST_EQUAL( mbedtls_test_platform_variable_counters.free, 0 );
+#endif /* MBEDTLS_BIGNUM_C */
+
+exit:
+    mbedtls_free( ptr );
+#if defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi_free( &A );
+#endif
+}
+/* END_CASE */

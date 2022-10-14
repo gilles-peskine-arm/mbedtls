@@ -17,6 +17,7 @@
 
 #include <test/helpers.h>
 #include <test/macros.h>
+#include <test/platform.h>
 #include <string.h>
 
 /*----------------------------------------------------------------------------*/
@@ -97,6 +98,13 @@ void mbedtls_test_info_reset( void )
     mbedtls_test_info.filename = 0;
     memset( mbedtls_test_info.line1, 0, sizeof( mbedtls_test_info.line1 ) );
     memset( mbedtls_test_info.line2, 0, sizeof( mbedtls_test_info.line2 ) );
+
+#if defined(MBEDTLS_TEST_PLATFORM_MACROS)
+    mbedtls_test_reset_platform_macro_counters( );
+#endif /* MBEDTLS_TEST_PLATFORM_MACROS */
+#if defined(MBEDTLS_PLATFORM_C)
+    mbedtls_test_reset_platform_variable_counters( );
+#endif /* MBEDTLS_PLATFORM_C */
 }
 
 int mbedtls_test_equal( const char *test, int line_no, const char* filename,
