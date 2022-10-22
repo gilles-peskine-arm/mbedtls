@@ -1,5 +1,7 @@
 /* BEGIN_HEADER */
 #include "mbedtls/md.h"
+#include "hash_info.h"
+#include <psa/crypto_values.h>
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -107,12 +109,13 @@ void md_null_args(  )
 /* END_CASE */
 
 /* BEGIN_CASE */
-void md_info( int md_type, char * md_name, int md_size )
+void md_info( int md_type, int psa_alg, char * md_name, int md_size )
 {
     const mbedtls_md_info_t *md_info;
     const int *md_type_ptr;
     int found;
 
+    /* Look up by md type value and check info properties */
     md_info = mbedtls_md_info_from_type( md_type );
     TEST_ASSERT( md_info != NULL );
     TEST_ASSERT( md_info == mbedtls_md_info_from_string( md_name ) );
@@ -120,12 +123,17 @@ void md_info( int md_type, char * md_name, int md_size )
     TEST_ASSERT( mbedtls_md_get_type( md_info ) == (mbedtls_md_type_t) md_type );
     TEST_ASSERT( mbedtls_md_get_size( md_info ) == (unsigned char) md_size );
     TEST_ASSERT( strcmp( mbedtls_md_get_name( md_info ), md_name ) == 0 );
+    TEST_EQUAL( mbedtls_hash_info_psa_from_md( md_type ), psa_alg );
 
+    /* Look up by name */
     found = 0;
     for( md_type_ptr = mbedtls_md_list(); *md_type_ptr != 0; md_type_ptr++ )
         if( *md_type_ptr == md_type )
             found = 1;
     TEST_ASSERT( found == 1 );
+
+    /* Look up by PSA algorithm identifier */
+    TEST_EQUAL( md_type, mbedtls_hash_info_md_from_psa( psa_alg ) );
 }
 /* END_CASE */
 
