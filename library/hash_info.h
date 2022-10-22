@@ -77,7 +77,12 @@ unsigned char mbedtls_hash_info_get_block_size( mbedtls_md_type_t md_type );
  * \return          The corresponding PSA algorithm identifier,
  *                  or PSA_ALG_NONE if not known.
  */
-psa_algorithm_t mbedtls_hash_info_psa_from_md( mbedtls_md_type_t md_type );
+static inline psa_algorithm_t mbedtls_hash_info_psa_from_md(
+    mbedtls_md_type_t md_type )
+{
+    return( md_type == MBEDTLS_MD_NONE ? PSA_ALG_NONE :
+            PSA_ALG_CATEGORY_HASH | md_type );
+}
 
 /** Get the MD type alg from the PSA algorithm identifier.
  *
@@ -86,7 +91,21 @@ psa_algorithm_t mbedtls_hash_info_psa_from_md( mbedtls_md_type_t md_type );
  * \return          The corresponding MD type,
  *                  or MBEDTLS_MD_NONE if not known.
  */
-mbedtls_md_type_t mbedtls_hash_info_md_from_psa( psa_algorithm_t psa_alg );
+static inline mbedtls_md_type_t mbedtls_hash_info_md_from_psa(
+    psa_algorithm_t psa_alg )
+{
+    switch( psa_alg )
+    {
+        case PSA_ALG_MD5: return( MBEDTLS_MD_MD5 );
+        case PSA_ALG_SHA_1: return( MBEDTLS_MD_SHA1 );
+        case PSA_ALG_SHA_224: return( MBEDTLS_MD_SHA224 );
+        case PSA_ALG_SHA_256: return( MBEDTLS_MD_SHA256 );
+        case PSA_ALG_SHA_384: return( MBEDTLS_MD_SHA384 );
+        case PSA_ALG_SHA_512: return( MBEDTLS_MD_SHA512 );
+        case PSA_ALG_RIPEMD160: return( MBEDTLS_MD_RIPEMD160 );
+        default: return( MBEDTLS_MD_NONE );
+    }
+}
 
 /** Convert PSA status to MD error code.
  *

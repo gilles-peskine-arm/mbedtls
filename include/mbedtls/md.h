@@ -53,14 +53,14 @@ extern "C" {
  *
  */
 typedef enum {
-    MBEDTLS_MD_NONE=0,    /**< None. */
-    MBEDTLS_MD_MD5,       /**< The MD5 message digest. */
-    MBEDTLS_MD_SHA1,      /**< The SHA-1 message digest. */
-    MBEDTLS_MD_SHA224,    /**< The SHA-224 message digest. */
-    MBEDTLS_MD_SHA256,    /**< The SHA-256 message digest. */
-    MBEDTLS_MD_SHA384,    /**< The SHA-384 message digest. */
-    MBEDTLS_MD_SHA512,    /**< The SHA-512 message digest. */
-    MBEDTLS_MD_RIPEMD160, /**< The RIPEMD-160 message digest. */
+    MBEDTLS_MD_NONE = 0x00,      /**< None. */
+    MBEDTLS_MD_MD5 = 0x03,       /**< The MD5 message digest. */
+    MBEDTLS_MD_SHA1 = 0x05,      /**< The SHA-1 message digest. */
+    MBEDTLS_MD_SHA224 = 0x08,    /**< The SHA-224 message digest. */
+    MBEDTLS_MD_SHA256 = 0x09,    /**< The SHA-256 message digest. */
+    MBEDTLS_MD_SHA384 = 0x0a,    /**< The SHA-384 message digest. */
+    MBEDTLS_MD_SHA512 = 0x0b,    /**< The SHA-512 message digest. */
+    MBEDTLS_MD_RIPEMD160 = 0x04, /**< The RIPEMD-160 message digest. */
 } mbedtls_md_type_t;
 
 #if defined(MBEDTLS_SHA512_C)

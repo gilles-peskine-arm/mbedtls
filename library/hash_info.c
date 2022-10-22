@@ -83,32 +83,6 @@ unsigned char mbedtls_hash_info_get_block_size( mbedtls_md_type_t md_type )
     return entry->block_size;
 }
 
-/* Get PSA from MD */
-psa_algorithm_t mbedtls_hash_info_psa_from_md( mbedtls_md_type_t md_type )
-{
-    const hash_entry *entry = hash_table;
-    while( entry->md_type != MBEDTLS_MD_NONE &&
-           entry->md_type != md_type )
-    {
-        entry++;
-    }
-
-    return entry->psa_alg;
-}
-
-/* Get MD from PSA */
-mbedtls_md_type_t mbedtls_hash_info_md_from_psa( psa_algorithm_t psa_alg )
-{
-    const hash_entry *entry = hash_table;
-    while( entry->md_type != MBEDTLS_MD_NONE &&
-           entry->psa_alg != psa_alg )
-    {
-        entry++;
-    }
-
-    return entry->md_type;
-}
-
 int mbedtls_md_error_from_psa( psa_status_t status )
 {
     switch( status )
