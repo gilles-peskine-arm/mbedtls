@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
 #include "mbedtls/md.h"
 #include "hash_info.h"
-#include <psa/crypto_values.h>
+#include <psa/crypto.h>
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
@@ -134,6 +134,53 @@ void md_info( int md_type, int psa_alg, char * md_name, int md_size )
 
     /* Look up by PSA algorithm identifier */
     TEST_EQUAL( md_type, mbedtls_hash_info_md_from_psa( psa_alg ) );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void md_from_psa( )
+{
+    /* Test all inputs that follow the bit pattern for hashes, whether
+     * they're valid values or not. */
+    for( unsigned i = 0; i < 256; i++ )
+    {
+        mbedtls_test_set_step( i );
+        psa_algorithm_t alg = PSA_ALG_CATEGORY_HASH | i;
+        unsigned md_type = mbedtls_hash_info_md_from_psa( alg );
+        switch( md_type )
+        {
+            case MBEDTLS_MD_MD5:
+            case MBEDTLS_MD_SHA1:
+            case MBEDTLS_MD_SHA224:
+            case MBEDTLS_MD_SHA256:
+            case MBEDTLS_MD_SHA384:
+            case MBEDTLS_MD_SHA512:
+            case MBEDTLS_MD_RIPEMD160:
+                /* Valid, so move on. Correctness is validated by the
+                 * md_info test cases. */
+                break;
+            default:
+                /* Not a valid md type, so must be NONE */
+                TEST_EQUAL( md_type, MBEDTLS_MD_NONE );
+        }
+    }
+    mbedtls_test_set_step( -1L );
+
+    /* Test a few non-hash inputs. */
+    TEST_EQUAL( mbedtls_hash_info_md_from_psa( PSA_ALG_NONE ),
+                MBEDTLS_MD_NONE );
+    TEST_EQUAL( mbedtls_hash_info_md_from_psa( PSA_ALG_CATEGORY_MAC | 1 ),
+                MBEDTLS_MD_NONE );
+    TEST_EQUAL( mbedtls_hash_info_md_from_psa( PSA_ALG_HMAC( PSA_ALG_SHA_256 ) ),
+                MBEDTLS_MD_NONE );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void psa_from_md( )
+{
+    /* Enum members other than none are validated by the md_info test cases. */
+    TEST_EQUAL( mbedtls_hash_info_psa_from_md( MBEDTLS_MD_NONE ), PSA_ALG_NONE );
 }
 /* END_CASE */
 

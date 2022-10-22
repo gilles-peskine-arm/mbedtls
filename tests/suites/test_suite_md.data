@@ -33,6 +33,12 @@ Information on SHA512
 depends_on:MBEDTLS_SHA512_C
 md_info:MBEDTLS_MD_SHA512:PSA_ALG_SHA_512:"SHA512":64
 
+Hash id conversion: MD from PSA
+md_from_psa:
+
+Hash id conversion: PSA from MD
+psa_from_md:
+
 generic mbedtls_md5 Test vector RFC1321 #1
 depends_on:MBEDTLS_MD5_C
 md_text:"MD5":"":"d41d8cd98f00b204e9800998ecf8427e"
