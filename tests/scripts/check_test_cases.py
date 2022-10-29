@@ -25,6 +25,7 @@ import argparse
 import glob
 import os
 import re
+import subprocess
 import sys
 from typing import Optional
 
@@ -204,6 +205,48 @@ class DescriptionChecker(TestDescriptionExplorer):
                             len(description))
         seen[description] = line_number
 
+
+class DependencyChecker:
+    """Perform some sanity checks on test case dependencies.
+    """
+
+    def __init__(self, results):
+        self.results = results
+
+    def forbid_regex(self, regex, globs):
+        """Signal an error if regex appears in any of the given files."""
+        filenames = [f for g in globs for f in glob.glob(g)]
+        cmd = ['grep', '-n', '-e', regex, '--'] + filenames
+        proc = subprocess.run(cmd, check=False, stdout=sys.stderr)
+        if proc.returncode == 0:
+            # The forbidden regex appears, so this is a failure.
+            # Show what regex failed. The problematic file names and lines
+            # have been printed above. We only count a single error
+            # for this script's final report regardless of the number
+            # of hits: it's not really nice, but it's simpler to implement.
+            self.results.error(None, None,
+                               'There were forbidden test dependencies ({})'
+                               .format(regex))
+        elif proc.returncode == 1:
+            # No hits and no failure of grep. This is a success.
+            pass
+        else:
+            # Runtime error. There may be hits above as well.
+            self.results.error(' '.join(['grep', '...'] + globs), None,
+                               'Unexpected status {}'.format(proc.returncode))
+
+    def check_use_psa_crypto(self):
+        # Check that no tests are explicitely disabled when USE_PSA_CRYPTO is
+        # set as a matter of policy to ensure there is no missed testing.
+        self.forbid_regex('depends_on:.*!MBEDTLS_USE_PSA_CRYPTO',
+                          ['tests/suites/*.function', 'tests/suites/*.data'])
+        self.forbid_regex('^ *requires_config_disabled.*MBEDTLS_USE_PSA_CRYPTO',
+                          ['tests/ssl-opt.sh', 'tests/opt-testcases/*.sh'])
+
+    def run_all(self):
+        self.check_use_psa_crypto()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--list-all',
@@ -221,8 +264,10 @@ def main():
         sys.stdout.write('\n'.join(descriptions + ['']))
         return
     results = Results(options)
-    checker = DescriptionChecker(results)
-    checker.walk_all()
+    description_checker = DescriptionChecker(results)
+    description_checker.walk_all()
+    dependency_checker = DependencyChecker(results)
+    dependency_checker.run_all()
     if (results.warnings or results.errors) and not options.quiet:
         sys.stderr.write('{}: {} errors, {} warnings\n'
                          .format(sys.argv[0], results.errors, results.warnings))
