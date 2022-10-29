@@ -26,6 +26,7 @@ import glob
 import os
 import re
 import sys
+from typing import Optional
 
 class Results:
     """Store file and line information about errors or warnings in test suites."""
@@ -35,15 +36,24 @@ class Results:
         self.warnings = 0
         self.ignore_warnings = options.quiet
 
-    def error(self, file_name, line_number, fmt, *args):
-        sys.stderr.write(('{}:{}:ERROR:' + fmt + '\n').
-                         format(file_name, line_number, *args))
+    @staticmethod
+    def message(level: str,
+                file_name: Optional[str], line_number: Optional[int],
+                fmt, *args) -> None:
+        sys.stderr.write(('{}{}{}:' + fmt + '\n').
+                         format('' if file_name is None else file_name + ':',
+                                ('' if line_number is None else
+                                 str(line_number) + ':'),
+                                level,
+                                *args))
+
+    def error(self, *args):
+        self.message('ERROR', *args)
         self.errors += 1
 
-    def warning(self, file_name, line_number, fmt, *args):
+    def warning(self, *args):
         if not self.ignore_warnings:
-            sys.stderr.write(('{}:{}:Warning:' + fmt + '\n')
-                             .format(file_name, line_number, *args))
+            self.message('Warning', *args)
             self.warnings += 1
 
 class TestDescriptionExplorer:
