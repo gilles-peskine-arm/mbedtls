@@ -946,17 +946,6 @@ component_test_full_cmake_gcc_asan () {
     tests/context-info.sh
 }
 
-component_test_psa_crypto_key_id_encodes_owner () {
-    msg "build: full config + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
-    scripts/config.py full
-    scripts/config.py set MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
-    CC=gcc cmake -D CMAKE_BUILD_TYPE:String=Asan .
-    make
-
-    msg "test: full config - USE_PSA_CRYPTO + PSA_CRYPTO_KEY_ID_ENCODES_OWNER, cmake, gcc, ASan"
-    make test
-}
-
 # check_renamed_symbols HEADER LIB
 # Check that if HEADER contains '#define MACRO ...' then MACRO is not a symbol
 # name is LIB.
@@ -1747,8 +1736,11 @@ component_test_crypto_for_psa_service () {
   scripts/config.py unset MBEDTLS_PK_C
   scripts/config.py unset MBEDTLS_PK_PARSE_C
   scripts/config.py unset MBEDTLS_PK_WRITE_C
-  make CFLAGS='-O1 -Werror' all test
+  make CFLAGS="$ASAN_CFLAGS -O2" LDFLAGS="$ASAN_CFLAGS"
   are_empty_libraries library/libmbedx509.* library/libmbedtls.*
+
+  msg "test: make, config for PSA crypto service"
+  make test
 }
 
 component_build_crypto_baremetal () {
