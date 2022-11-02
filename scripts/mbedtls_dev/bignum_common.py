@@ -127,6 +127,78 @@ class OperationCommon:
 
 # BEGIN MERGE SLOT 1
 
+class ModOperationCommon:
+    """Common features for bignum modular operations.
+
+    This adds functionality common in modular operation tests. This includes
+    generation of case descriptions, using descriptions of values and symbols
+    to represent the operation or result.
+
+    Attributes:
+        symbol: Symbol used for the operation in case description.
+        input_1st_operands: List of values to use as first operands.
+        input_2nd_operands: List of values to use as second operands.
+        input_moduli: List of moduli this to use in test cases. These are
+            combined with the operands to produce the test cases.
+        input_cases: List of tuples containing triplets (operand 1, operand 2,
+            modulus) of test case inputs. This can be used to implement
+            specific combination of inputs.
+    """
+    symbol = ""
+    input_1st_operands = [] # type: List[str]
+    input_2nd_operands = [] # type: List[str]
+    input_moduli = [] # type: List[str]
+
+    def __init__(self, val_a: str, val_b: str, val_m: str) -> None:
+        self.arg_a = val_a
+        self.arg_b = val_b
+        self.arg_m = val_m
+        self.int_a = hex_to_int(val_a)
+        self.int_b = hex_to_int(val_b)
+        self.int_m = hex_to_int(val_m)
+
+    def arguments(self) -> List[str]:
+        return [quote_str(self.arg_a), quote_str(self.arg_b),
+                quote_str(self.arg_m), self.result()]
+
+    def generate_description(self) -> str:
+        """Generate a description for the test case."""
+        return "{} {} {} mod {}".format(
+            self.value_description(self.int_a),
+            self.symbol,
+            self.value_description(self.int_b),
+            self.value_description(self.int_m)
+        )
+
+    @abstractmethod
+    def result(self) -> str:
+        """Get the result of the operation.
+
+        This could be calculated during initialization and stored as `_result`
+        and then returned, or calculated when the method is called.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def value_description(val) -> str:
+        """Generate a description of the argument val.
+
+        This produces a simple description of the value, which is used in test
+        case naming to add context.
+        """
+        if val.bit_length() < 32:
+            return '{}'.format(val)
+        else:
+            return '{} bit value'.format(val.bitlength())
+
+    @classmethod
+    def get_value_triplets(cls) -> Iterator[Tuple[str, str, str]]:
+        for a in cls.input_1st_operands:
+            for b in cls.input_2nd_operands:
+                for m in cls.input_moduli:
+                    yield (a, b, m)
+
+
 # END MERGE SLOT 1
 
 # BEGIN MERGE SLOT 2

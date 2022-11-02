@@ -181,6 +181,7 @@ class BignumCoreOperationArchSplit(BignumCoreOperation):
             yield cls(a_value, b_value, 32).create_test_case()
             yield cls(a_value, b_value, 64).create_test_case()
 
+
 class BignumCoreAddAndAddIf(BignumCoreOperationArchSplit):
     """Test cases for bignum core add and add-if."""
     count = 0
@@ -817,6 +818,53 @@ def mpi_modmul_case_generate() -> None:
     print(generated_inputs)
 
 # BEGIN MERGE SLOT 1
+
+class BignumCoreModOperation(bignum_common.ModOperationCommon, BignumCoreTarget,
+                             metaclass=ABCMeta):
+    #pylint: disable=abstract-method
+    """Unlike with other modular operations core operands
+    are not linked to the modulus at I/O time and the test
+    cases need to make sure that they are of the same
+    length as the modulus.
+    """
+
+    def __init__(self, val_a: str, val_b: str, val_m: str) -> None:
+        super().__init__(val_a, val_b, val_m)
+        self.m_hex_digits = (self.int_m.bit_length() + 3) // 4
+
+    def arguments(self) -> List[str]:
+        return [bignum_common.quote_str(self.arg_a.zfill(self.m_hex_digits)),
+                bignum_common.quote_str(self.arg_b.zfill(self.m_hex_digits)),
+                bignum_common.quote_str(self.arg_m),
+                bignum_common.quote_str(self.result().zfill(self.m_hex_digits))]
+
+    def description(self) -> str:
+        if not self.case_description:
+            self.case_description = self.generate_description()
+        return super().description()
+
+    @classmethod
+    def generate_function_tests(cls) -> Iterator[test_case.TestCase]:
+        for a_value, b_value, m_value in cls.get_value_triplets():
+            cur_op = cls(a_value, b_value, m_value)
+            yield cur_op.create_test_case()
+
+
+class BignumCoreExpMod(BignumCoreModOperation):
+    """Test cases for core modular exponentiation."""
+    count = 0
+    test_function = "mpi_core_exp_mod"
+    test_name = "MPI Core Exp Mod"
+    symbol = "^"
+    input_moduli = ["31"]
+    # Bases
+    input_1st_operands = ["17"]
+    # Exponents
+    input_2nd_operands = ["13"]
+
+    def result(self) -> str:
+        result = pow(self.int_a, self.int_b, self.int_m)
+        return '{:x}'.format(result)
 
 # END MERGE SLOT 1
 
