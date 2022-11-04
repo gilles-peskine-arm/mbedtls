@@ -69,6 +69,7 @@ class BignumCoreShiftR(BignumCoreTarget, metaclass=ABCMeta):
             for count in counts:
                 yield cls(input_hex, descr, count).create_test_case()
 
+
 class BignumCoreCTLookup(BignumCoreTarget, metaclass=ABCMeta):
     """Test cases for mbedtls_mpi_core_ct_uint_table_lookup()."""
     test_function = "mpi_core_ct_uint_table_lookup"
@@ -828,8 +829,9 @@ class BignumCoreModOperation(bignum_common.ModOperationCommon, BignumCoreTarget,
     length as the modulus.
     """
 
-    def __init__(self, val_a: str, val_b: str, val_m: str) -> None:
-        super().__init__(val_a, val_b, val_m)
+    def __init__(self, a: Tuple[str, str], b: Tuple[str, str],
+                 m: Tuple[str, str]) -> None:
+        super().__init__(a, b, m)
         self.m_hex_digits = (self.int_m.bit_length() + 3) // 4
 
     def arguments(self) -> List[str]:
@@ -845,9 +847,20 @@ class BignumCoreModOperation(bignum_common.ModOperationCommon, BignumCoreTarget,
 
     @classmethod
     def generate_function_tests(cls) -> Iterator[test_case.TestCase]:
-        for a_value, b_value, m_value in cls.get_value_triplets():
-            cur_op = cls(a_value, b_value, m_value)
-            yield cur_op.create_test_case()
+        """Generator to yield test cases.
+
+        All combination of first and second operands with all moduli are
+        generated.
+
+        If a combination is not a valid test case or we don't want to test it
+        for some reason, then the constructor of the subclass should raise a
+        `ValueError`.
+        """
+        for a, b, m in cls.get_value_triplets():
+            try:
+                yield cls(a, b, m).create_test_case()
+            except ValueError:
+                pass
 
 
 class BignumCoreExpMod(BignumCoreModOperation):
@@ -856,11 +869,26 @@ class BignumCoreExpMod(BignumCoreModOperation):
     test_function = "mpi_core_exp_mod"
     test_name = "MPI Core Exp Mod"
     symbol = "^"
-    input_moduli = ["31"]
+    input_moduli = [("31", "small"),
+                    ("011a9351d2d32ccd568e75bf8b4ebbb2a36be691b55832edac662ff79"
+                     "803df8af525fba453068be16ac3920bcc1b468f8f7fe786e0fa4ecbab"
+                     "cad31e5e3b05def802eb8600deaf11ef452487db878df20a80606e4bb"
+                     "6a163b83895d034cc8b53dbcd005be42ffdd2ce99bed06089a0b79d",
+                     "random")]
     # Bases
-    input_1st_operands = ["17"]
+    input_1st_operands = [("17", "small"),
+                          ("109fe45714866e56fdd4ad9b6b686df27224afb7868cf4f0cbb"
+                           "794526932853cbf0beea61594166654d13cd9fe0d9da594a97e"
+                           "e20230f12fb5434de73fb4f8102725a01622b31b1ea42e3a265"
+                           "019039ac1df31869bd97930d792fb72cdaa971d8a8015af",
+                           "random")]
     # Exponents
-    input_2nd_operands = ["13"]
+    input_2nd_operands = [("13", "small"),
+                          ("33ae3764fd06a00cdc3cba5c45dc79a9edb4e67e4d057cc7413"
+                           "9d531c25190d111775fc4a0f4439b8b1930bbd766e7b46f1706"
+                           "01f316c8a18ff8d5cb5ca5581f168345d101edb462b7d93b7c5"
+                           "20ccb8fb276b447a63d869203cc11f67a1122dc4da034218de8"
+                           "5e39", "random")]
 
     def result(self) -> str:
         result = pow(self.int_a, self.int_b, self.int_m)

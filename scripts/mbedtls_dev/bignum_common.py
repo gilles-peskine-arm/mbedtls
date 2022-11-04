@@ -145,17 +145,23 @@ class ModOperationCommon:
             specific combination of inputs.
     """
     symbol = ""
-    input_1st_operands = [] # type: List[str]
-    input_2nd_operands = [] # type: List[str]
-    input_moduli = [] # type: List[str]
+    input_1st_operands = [] # type: List[Tuple[str, str]]
+    input_2nd_operands = [] # type: List[Tuple[str, str]]
+    input_moduli = [] # type: List[Tuple[str, str]]
 
-    def __init__(self, val_a: str, val_b: str, val_m: str) -> None:
-        self.arg_a = val_a
-        self.arg_b = val_b
-        self.arg_m = val_m
-        self.int_a = hex_to_int(val_a)
-        self.int_b = hex_to_int(val_b)
-        self.int_m = hex_to_int(val_m)
+    def __init__(self, a: Tuple[str, str], b: Tuple[str, str],
+                 m: Tuple[str, str]) -> None:
+        self.arg_a = a[0]
+        self.arg_b = b[0]
+        self.arg_m = m[0]
+        self.desc_a = a[1]
+        self.desc_b = b[1]
+        self.desc_m = m[1]
+        self.int_a = hex_to_int(self.arg_a)
+        self.int_b = hex_to_int(self.arg_b)
+        self.int_m = hex_to_int(self.arg_m)
+        if self.int_a >= self.int_m or self.int_b >= self.int_m:
+            raise ValueError("Operand(s) are not canonical")
 
     def arguments(self) -> List[str]:
         return [quote_str(self.arg_a), quote_str(self.arg_b),
@@ -164,10 +170,10 @@ class ModOperationCommon:
     def generate_description(self) -> str:
         """Generate a description for the test case."""
         return "{} {} {} mod {}".format(
-            self.value_description(self.int_a),
+            self.value_description(self.int_a, self.desc_a),
             self.symbol,
-            self.value_description(self.int_b),
-            self.value_description(self.int_m)
+            self.value_description(self.int_b, self.desc_b),
+            self.value_description(self.int_m, self.desc_m)
         )
 
     @abstractmethod
@@ -180,19 +186,21 @@ class ModOperationCommon:
         raise NotImplementedError
 
     @staticmethod
-    def value_description(val) -> str:
+    def value_description(val, desc) -> str:
         """Generate a description of the argument val.
 
         This produces a simple description of the value, which is used in test
         case naming to add context.
         """
-        if val.bit_length() < 32:
-            return '{}'.format(val)
+        bit_length = val.bit_length()
+        if bit_length <= 16:
+            return '{} ({})'.format(val, desc)
         else:
-            return '{} bit value'.format(val.bitlength())
+            return '{} bit {}'.format(bit_length, desc)
 
     @classmethod
-    def get_value_triplets(cls) -> Iterator[Tuple[str, str, str]]:
+    def get_value_triplets(cls) -> Iterator[
+            Tuple[Tuple[str, str], Tuple[str, str], Tuple[str, str]]]:
         for a in cls.input_1st_operands:
             for b in cls.input_2nd_operands:
                 for m in cls.input_moduli:
