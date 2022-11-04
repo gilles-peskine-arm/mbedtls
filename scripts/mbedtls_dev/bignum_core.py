@@ -869,21 +869,25 @@ class BignumCoreExpMod(BignumCoreModOperation):
     test_function = "mpi_core_exp_mod"
     test_name = "MPI Core Exp Mod"
     symbol = "^"
-    input_moduli = [("31", "small"),
+    input_moduli = [("53", "safe prime"), ("45", "non-prime"),
                     ("011a9351d2d32ccd568e75bf8b4ebbb2a36be691b55832edac662ff79"
                      "803df8af525fba453068be16ac3920bcc1b468f8f7fe786e0fa4ecbab"
                      "cad31e5e3b05def802eb8600deaf11ef452487db878df20a80606e4bb"
                      "6a163b83895d034cc8b53dbcd005be42ffdd2ce99bed06089a0b79d",
                      "random")]
     # Bases
-    input_1st_operands = [("17", "small"),
+    input_1st_operands = [("0", "corner case"), ("1", "corner case"),
+                          ("2", "small prime"), ("3", "small prime"),
+                          ("4", "non-prime even"), ("38", "small random"),
                           ("109fe45714866e56fdd4ad9b6b686df27224afb7868cf4f0cbb"
                            "794526932853cbf0beea61594166654d13cd9fe0d9da594a97e"
                            "e20230f12fb5434de73fb4f8102725a01622b31b1ea42e3a265"
                            "019039ac1df31869bd97930d792fb72cdaa971d8a8015af",
                            "random")]
     # Exponents
-    input_2nd_operands = [("13", "small"),
+    input_2nd_operands = [("0", "corner case"), ("1", "corner case"),
+                          ("2", "small prime"), ("3", "small prime"),
+                          ("4", "non-prime even"), ("38", "small random"),
                           ("33ae3764fd06a00cdc3cba5c45dc79a9edb4e67e4d057cc7413"
                            "9d531c25190d111775fc4a0f4439b8b1930bbd766e7b46f1706"
                            "01f316c8a18ff8d5cb5ca5581f168345d101edb462b7d93b7c5"
