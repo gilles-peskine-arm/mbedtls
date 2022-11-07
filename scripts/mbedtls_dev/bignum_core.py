@@ -831,8 +831,12 @@ class BignumCoreModOperation(bignum_common.ModOperationCommon, BignumCoreTarget,
 
     def __init__(self, a: Tuple[str, str], b: Tuple[str, str],
                  m: Tuple[str, str]) -> None:
-        super().__init__(a, b, m)
-        self.m_hex_digits = (self.int_m.bit_length() + 3) // 4
+        try:
+            super().__init__(a, b, m)
+        finally:
+            # Some classes catch exceptions from the superclass and we need
+            # them to have this field set properly.
+            self.m_hex_digits = (self.int_m.bit_length() + 3) // 4
 
     def arguments(self) -> List[str]:
         return [bignum_common.quote_str(self.arg_a.zfill(self.m_hex_digits)),
@@ -917,6 +921,16 @@ class BignumCoreExpMod(BignumCoreModOperation):
                            "01f316c8a18ff8d5cb5ca5581f168345d101edb462b7d93b7c5"
                            "20ccb8fb276b447a63d869203cc11f67a1122dc4da034218de8"
                            "5e39", "random")]
+
+    def __init__(self, a: Tuple[str, str], b: Tuple[str, str],
+                 m: Tuple[str, str]) -> None:
+        try:
+            super().__init__(a, b, m)
+        except ValueError:
+            # The exponent (val_b) does not need to be canonical.
+            # We need larger exponents for example for blinding in RSA.
+            if self.int_a >= self.int_m:
+                raise ValueError("Base is not canonical")
 
     def result(self) -> str:
         result = pow(self.int_a, self.int_b, self.int_m)
