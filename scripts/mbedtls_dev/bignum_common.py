@@ -127,6 +127,22 @@ class OperationCommon:
 
 # BEGIN MERGE SLOT 1
 
+# A helper function to generate test data.
+#
+# Commented out as it uses pycryptodome:
+#   from Crypto.Util.number import isPrime, getPrime
+# (pycryptodome is only a maintainer requirement and we don't want the test
+# generation to depend on it.)
+#
+# def gen_safe_prime(bits, seed):
+#     rng = random.Random()
+#     # We want reproducability across python versions
+#     rng.seed(seed, version=2)
+#     while True:
+#         prime = 2*getPrime(bits-1, rng.randbytes)+1
+#         if isPrime(prime, 1e-30):
+#             return prime
+
 class ModOperationCommon:
     """Common features for bignum modular operations.
 
