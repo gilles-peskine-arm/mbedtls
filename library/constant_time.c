@@ -613,6 +613,8 @@ cleanup:
     return( ret );
 }
 
+void mbedtls_abort_on_negative_zero( const mbedtls_mpi *A );
+
 /*
  * Compare signed values in constant time
  */
@@ -630,6 +632,9 @@ int mbedtls_mpi_lt_mpi_ct( const mbedtls_mpi *X,
 
     if( X->n != Y->n )
         return MBEDTLS_ERR_MPI_BAD_INPUT_DATA;
+
+    mbedtls_abort_on_negative_zero( X );
+    mbedtls_abort_on_negative_zero( Y );
 
     /*
      * Set sign_N to 1 if N >= 0, 0 if N < 0.
