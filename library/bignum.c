@@ -1249,6 +1249,25 @@ cleanup:
     return( ret );
 }
 
+static int is_zero( const mbedtls_mpi *A )
+{
+    for( size_t i = 0; i < A->n; i++ )
+    {
+        if( A->p[i] != 0 )
+            return( 0 );
+    }
+    return( 1 );
+}
+
+void mbedtls_abort_on_negative_zero( const mbedtls_mpi *A );
+void mbedtls_abort_on_negative_zero( const mbedtls_mpi *A )
+{
+    if( A->s < 0 && is_zero( A ) )
+        abort( );
+}
+
+#define CHECK_NEGATIVE_ZERO( A ) mbedtls_abort_on_negative_zero( A )
+
 /*
  * Signed addition: X = A + B
  */
@@ -1272,6 +1291,7 @@ int mbedtls_mpi_add_mpi( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
             MBEDTLS_MPI_CHK( mbedtls_mpi_sub_abs( X, B, A ) );
             X->s = -s;
         }
+        //CHECK_NEGATIVE_ZERO( X );
     }
     else
     {
@@ -1307,6 +1327,7 @@ int mbedtls_mpi_sub_mpi( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
             MBEDTLS_MPI_CHK( mbedtls_mpi_sub_abs( X, B, A ) );
             X->s = -s;
         }
+        //CHECK_NEGATIVE_ZERO( X );
     }
     else
     {
@@ -2491,6 +2512,8 @@ int mbedtls_mpi_inv_mod( mbedtls_mpi *X, const mbedtls_mpi *A, const mbedtls_mpi
     mbedtls_mpi_init( &TA ); mbedtls_mpi_init( &TU ); mbedtls_mpi_init( &U1 ); mbedtls_mpi_init( &U2 );
     mbedtls_mpi_init( &G ); mbedtls_mpi_init( &TB ); mbedtls_mpi_init( &TV );
     mbedtls_mpi_init( &V1 ); mbedtls_mpi_init( &V2 );
+
+    CHECK_NEGATIVE_ZERO( A );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_gcd( &G, A, N ) );
 
