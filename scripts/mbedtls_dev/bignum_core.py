@@ -16,7 +16,7 @@
 
 import random
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from typing import Dict, Iterator, List, Tuple
 
 from . import test_case
@@ -820,23 +820,33 @@ def mpi_modmul_case_generate() -> None:
 
 # BEGIN MERGE SLOT 1
 
-class BignumCoreModOperation(bignum_common.ModOperationCommon, BignumCoreTarget,
-                             metaclass=ABCMeta):
+class BignumCoreExpModTmp(BignumCoreTarget):
     #pylint: disable=abstract-method
-    """Unlike with other modular operations core operands
-    are not linked to the modulus at I/O time and the test
-    cases need to make sure that they are of the same
-    length as the modulus.
+    """Base class specifically for BignumCoreExpMod.
+
+    Holds functionality that BignumCoreExpMod would ideally inherit. Will be
+    refactored when corresponding changes reach the codebase.
     """
+    symbol = ""
+    input_1st_operands = [] # type: List[Tuple[str, str]]
+    input_2nd_operands = [] # type: List[Tuple[str, str]]
+    input_moduli = [] # type: List[Tuple[str, str]]
+
 
     def __init__(self, a: Tuple[str, str], b: Tuple[str, str],
                  m: Tuple[str, str]) -> None:
-        try:
-            super().__init__(a, b, m)
-        finally:
-            # Some classes catch exceptions from the superclass and we need
-            # them to have this field set properly.
-            self.m_hex_digits = (self.int_m.bit_length() + 3) // 4
+        self.arg_a = a[0]
+        self.arg_b = b[0]
+        self.arg_m = m[0]
+        self.desc_a = a[1]
+        self.desc_b = b[1]
+        self.desc_m = m[1]
+        self.int_a = bignum_common.hex_to_int(self.arg_a)
+        self.int_b = bignum_common.hex_to_int(self.arg_b)
+        self.int_m = bignum_common.hex_to_int(self.arg_m)
+        self.m_hex_digits = (self.int_m.bit_length() + 3) // 4
+        if self.int_a >= self.int_m or self.int_b >= self.int_m:
+            raise ValueError("Operand(s) are not canonical")
 
     def arguments(self) -> List[str]:
         return [bignum_common.quote_str(self.arg_a.zfill(self.m_hex_digits)),
@@ -844,10 +854,46 @@ class BignumCoreModOperation(bignum_common.ModOperationCommon, BignumCoreTarget,
                 bignum_common.quote_str(self.arg_m),
                 bignum_common.quote_str(self.result().zfill(self.m_hex_digits))]
 
+    @abstractmethod
+    def result(self) -> str:
+        """Get the result of the operation.
+
+        This could be calculated during initialization and stored as `_result`
+        and then returned, or calculated when the method is called.
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def value_description(val, desc) -> str:
+        """Generate a description of the argument val.
+
+        This produces a simple description of the value, which is used in test
+        case naming to add context.
+        """
+        bit_length = val.bit_length()
+        if bit_length <= 16:
+            return '{} ({})'.format(val, desc)
+        else:
+            return '{} bit {}'.format(bit_length, desc)
+
     def description(self) -> str:
+        """Generate a description for the test case."""
         if not self.case_description:
-            self.case_description = self.generate_description()
+            self.case_description = "{} {} {} mod {}".format(
+                self.value_description(self.int_a, self.desc_a),
+                self.symbol,
+                self.value_description(self.int_b, self.desc_b),
+                self.value_description(self.int_m, self.desc_m)
+            )
         return super().description()
+
+    @classmethod
+    def get_value_triplets(cls) -> Iterator[
+            Tuple[Tuple[str, str], Tuple[str, str], Tuple[str, str]]]:
+        for a in cls.input_1st_operands:
+            for b in cls.input_2nd_operands:
+                for m in cls.input_moduli:
+                    yield (a, b, m)
 
     @classmethod
     def generate_function_tests(cls) -> Iterator[test_case.TestCase]:
@@ -933,7 +979,7 @@ RANDOM_1024_BIT_SEED_4_NO5 = ("53be4721f5b9e1f5acdac615bc20f6264922b9ccf469aef8"
                               "4708d9893a973000b54a23020fc5b043d6e4a51519d9c9cc"
                               "52d32377e78131c1")
 
-class BignumCoreExpMod(BignumCoreModOperation):
+class BignumCoreExpMod(BignumCoreExpModTmp):
     """Test cases for core modular exponentiation."""
     count = 0
     test_function = "mpi_core_exp_mod"
