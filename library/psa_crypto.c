@@ -6284,8 +6284,14 @@ void mbedtls_psa_crypto_free(void)
      * indicating "uninitialized". */
     mbedtls_platform_zeroize(&global_data, sizeof(global_data));
 
-    /* Terminate drivers */
-    psa_driver_wrapper_free();
+    if (mbedtls_psa_crypto_is_subsystem_initialized(
+            PSA_CRYPTO_SUBSYSTEM_SECURE_ELEMENTS)) {
+        psa_driver_wrapper_free_secure_elements();
+    }
+    if (mbedtls_psa_crypto_is_subsystem_initialized(
+            PSA_CRYPTO_SUBSYSTEM_ACCELERATORS)) {
+        psa_driver_wrapper_free_accelerators();
+    }
 
     global_data.active_subsystems = 0;
 }
@@ -6361,8 +6367,42 @@ psa_status_t psa_crypto_init_subsystem(psa_crypto_subsystem_t subsystems)
         if (status != PSA_SUCCESS) {
             return status;
         }
+#if defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS)
+        /* Recover transactions once both storage and SE drivers are up */
+        if (subsystems & PSA_CRYPTO_SUBSYSTEM_SECURE_ELEMENTS) {
+            status = psa_crypto_init_transactions();
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+        }
+#endif /* PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS */
         global_data.active_subsystems |= (PSA_CRYPTO_SUBSYSTEM_KEYS |
                                           PSA_CRYPTO_SUBSYSTEM_STORAGE);
+    }
+
+    if (subsystems & PSA_CRYPTO_SUBSYSTEM_ACCELERATORS) {
+        status = psa_driver_wrapper_init_accelerators();
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+        global_data.active_subsystems |= PSA_CRYPTO_SUBSYSTEM_ACCELERATORS;
+    }
+
+    if (subsystems & PSA_CRYPTO_SUBSYSTEM_SECURE_ELEMENTS) {
+        status = psa_driver_wrapper_init_secure_elements();
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+#if defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS)
+        /* Recover transactions once both storage and SE drivers are up */
+        if (subsystems & PSA_CRYPTO_SUBSYSTEM_STORAGE) {
+            status = psa_crypto_init_transactions();
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+        }
+#endif /* PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS */
+        global_data.active_subsystems |= PSA_CRYPTO_SUBSYSTEM_SECURE_ELEMENTS;
     }
 
     return PSA_SUCCESS;
@@ -6390,23 +6430,6 @@ psa_status_t psa_crypto_init(void)
         goto exit;
     }
     global_data.rng_state = RNG_SEEDED;
-
-    /* Init drivers */
-    status = psa_driver_wrapper_init_accelerators();
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-    status = psa_driver_wrapper_init_secure_elements();
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-
-#if defined(PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS)
-    status = psa_crypto_init_transactions();
-    if (status != PSA_SUCCESS) {
-        goto exit;
-    }
-#endif /* PSA_CRYPTO_STORAGE_HAS_TRANSACTIONS */
 
     /* All done. */
     global_data.initialized = 1;
