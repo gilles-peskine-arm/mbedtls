@@ -7495,8 +7495,7 @@ static int ssl_tls12_populate_transform( mbedtls_ssl_transform *transform,
         transform->taglen =
             ciphersuite_info->flags & MBEDTLS_CIPHERSUITE_SHORT_TAG ? 8 : 16;
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-        mbedtls_ssl_cipher_to_psa( ciphersuite_info->cipher, transform->taglen,
-                                   &alg, &key_type, &key_bits );
+        alg = PSA_ALG_AEAD_WITH_SHORTENED_TAG( alg, transform->taglen );
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
     }
 #if defined(MBEDTLS_SSL_SOME_SUITES_USE_CBC_ETM)
