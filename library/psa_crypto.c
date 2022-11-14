@@ -6374,13 +6374,12 @@ psa_status_t psa_crypto_init(void)
     }
     global_data.rng_state = RNG_SEEDED;
 
-    status = psa_initialize_key_slots();
+    /* Init drivers */
+    status = psa_driver_wrapper_init_accelerators();
     if (status != PSA_SUCCESS) {
         goto exit;
     }
-
-    /* Init drivers */
-    status = psa_driver_wrapper_init();
+    status = psa_driver_wrapper_init_secure_elements();
     if (status != PSA_SUCCESS) {
         goto exit;
     }
