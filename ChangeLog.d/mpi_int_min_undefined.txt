@@ -1,0 +1,5 @@
+Changes
+   * Passing the most negative value of mbedtls_mpi_sint (-2^31 or -2^63
+     depending on the platform) to mbedtls_mpi_{cmp,add,sub,div,mod}_int()
+     has always had undefined behavior. Document this: it is now officially
+     a feature, not a bug. Resolves #6597.
