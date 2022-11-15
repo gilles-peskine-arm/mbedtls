@@ -193,6 +193,12 @@
  *
  * This is always an signed integer type with no padding bits. The size
  * is platform-dependent.
+ *
+ * This type is capable of representing values in the range
+ * [-(2^(biL-1)-1), 2^(biL-1)-1] inclusive, where biL is the number of bits
+ * in a value of type #mbedtls_mpi_uint.
+ * If you pass the value -2^(biL-1) to a function in this module that
+ * takes an argument of type #mbedtls_mpi_sint, the behavior is undefined.
  */
 
 #ifdef __cplusplus
@@ -644,6 +650,7 @@ int mbedtls_mpi_lt_mpi_ct( const mbedtls_mpi *X, const mbedtls_mpi *Y,
  *
  * \param X        The left-hand MPI. This must point to an initialized MPI.
  * \param z        The integer value to compare \p X to.
+ *                 It must not be -2^(biL-1) (undefined behavior).
  *
  * \return         \c 1 if \p X is greater than \p z.
  * \return         \c -1 if \p X is lesser than \p z.
@@ -714,6 +721,7 @@ int mbedtls_mpi_sub_mpi( mbedtls_mpi *X, const mbedtls_mpi *A,
  * \param X        The destination MPI. This must point to an initialized MPI.
  * \param A        The first summand. This must point to an initialized MPI.
  * \param b        The second summand.
+ *                 It must not be -2^(biL-1) (undefined behavior).
  *
  * \return         \c 0 if successful.
  * \return         #MBEDTLS_ERR_MPI_ALLOC_FAILED if a memory allocation failed.
@@ -729,6 +737,7 @@ int mbedtls_mpi_add_int( mbedtls_mpi *X, const mbedtls_mpi *A,
  * \param X        The destination MPI. This must point to an initialized MPI.
  * \param A        The minuend. This must point to an initialized MPI.
  * \param b        The subtrahend.
+ *                 It must not be -2^(biL-1) (undefined behavior).
  *
  * \return         \c 0 if successful.
  * \return         #MBEDTLS_ERR_MPI_ALLOC_FAILED if a memory allocation failed.
@@ -801,6 +810,8 @@ int mbedtls_mpi_div_mpi( mbedtls_mpi *Q, mbedtls_mpi *R, const mbedtls_mpi *A,
  *                 remainder is not needed.  This must not alias A.
  * \param A        The dividend. This must point to an initialized MPi.
  * \param b        The divisor.
+ *                 It must not be 0 (guaranteed error) or -2^(biL-1)
+ *                 (undefined behavior).
  *
  * \return         \c 0 if successful.
  * \return         #MBEDTLS_ERR_MPI_ALLOC_FAILED if memory allocation failed.
@@ -839,6 +850,8 @@ int mbedtls_mpi_mod_mpi( mbedtls_mpi *R, const mbedtls_mpi *A,
  * \param A        The MPI to compute the residue of.
  *                 This must point to an initialized MPi.
  * \param b        The integer base of the modular reduction.
+ *                 It must not be 0 (guaranteed error) or -2^(biL-1)
+ *                 (undefined behavior).
  *
  * \return         \c 0 if successful.
  * \return         #MBEDTLS_ERR_MPI_ALLOC_FAILED if a memory allocation failed.
