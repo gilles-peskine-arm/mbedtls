@@ -624,6 +624,27 @@ static void exp_mod_precompute_window( const mbedtls_mpi_uint *A,
     }
 }
 
+//#define EXP_MOD_CLEAR_WINDOW
+#ifdef EXP_MOD_CLEAR_WINDOW
+static inline void exp_mod_clear_window( mbedtls_mpi_uint *X,
+                                         const mbedtls_mpi_uint *N,
+                                         size_t AN_limbs,
+                                         const mbedtls_mpi_uint mm,
+                                         size_t welem,
+                                         mbedtls_mpi_uint window,
+                                         mbedtls_mpi_uint *Wtable )
+{
+    const size_t table_limbs   = welem * AN_limbs;
+    const size_t select_limbs  = AN_limbs;
+    mbedtls_mpi_uint *const Wselect = Wtable    + table_limbs;
+    mbedtls_mpi_uint *const temp    = Wselect  + select_limbs;
+    /* Select table entry, square and multiply */
+    mbedtls_mpi_core_ct_uint_table_lookup( Wselect, Wtable,
+                                           AN_limbs, welem, window );
+    mbedtls_mpi_core_montmul( X, X, Wselect, AN_limbs, N, AN_limbs, mm, temp );
+}
+#endif
+
 int mbedtls_mpi_core_exp_mod( mbedtls_mpi_uint *X,
                               const mbedtls_mpi_uint *A,
                               const mbedtls_mpi_uint *N,
@@ -682,24 +703,21 @@ int mbedtls_mpi_core_exp_mod( mbedtls_mpi_uint *X,
     mbedtls_mpi_uint window = 0;
     size_t window_bits = 0;
 
-    while( 1 )
+    while( E_bit_index != 0 || E_limb_index != 0 )
     {
-        size_t window_bits_missing = wsize - window_bits;
-
-        const int no_more_bits =
-            ( E_bit_index == 0 ) && ( E_limb_index == 0 );
-        const int window_full =
-            ( window_bits_missing == 0 );
-
-        /* Clear window if it's full or if we don't have further bits. */
-        if( window_full || no_more_bits )
+        /* Clear window if it's full. */
+        const int window_full = window_bits == wsize;
+        if( window_full )
         {
-            if( window_bits == 0 )
-                break;
+#ifdef EXP_MOD_CLEAR_WINDOW
+            exp_mod_clear_window( X, N, AN_limbs,
+                                  mm, welem, window, Wtable );
+#else
             /* Select table entry, square and multiply */
             mbedtls_mpi_core_ct_uint_table_lookup( Wselect, Wtable,
                                                    AN_limbs, welem, window );
             mbedtls_mpi_core_montmul( X, X, Wselect, AN_limbs, N, AN_limbs, mm, temp );
+#endif
             window = 0;
             window_bits = 0;
             continue;
@@ -722,6 +740,17 @@ int mbedtls_mpi_core_exp_mod( mbedtls_mpi_uint *X,
         window <<= 1;
         window |= ( E[E_limb_index] >> E_bit_index ) & 1;
     }
+
+    /* Clear the window one last time. */
+#ifdef EXP_MOD_CLEAR_WINDOW
+    exp_mod_clear_window( X, N, AN_limbs,
+                          mm, welem, window, Wtable );
+#else
+    /* Select table entry, square and multiply */
+    mbedtls_mpi_core_ct_uint_table_lookup( Wselect, Wtable,
+                                           AN_limbs, welem, window );
+    mbedtls_mpi_core_montmul( X, X, Wselect, AN_limbs, N, AN_limbs, mm, temp );
+#endif
 
     /* Convert X back to normal presentation */
     const mbedtls_mpi_uint one = 1;
