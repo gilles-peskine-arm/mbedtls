@@ -1832,11 +1832,22 @@ requires_config_enabled MBEDTLS_SSL_CLI_C
 requires_config_enabled MBEDTLS_SSL_SRV_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_SHA256_C
-run_test    "Single supported algorithm sending" \
+run_test    "Single supported algorithm sending: mbedtls client" \
             "$P_SRV sig_algs=ecdsa_secp256r1_sha256 auth_mode=required" \
             "$P_CLI sig_algs=ecdsa_secp256r1_sha256 debug_level=3" \
             0 \
             -c "Supported Signature Algorithm found: 04 03"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
+requires_config_enabled MBEDTLS_SSL_SRV_C
+requires_config_enabled MBEDTLS_ECDSA_C
+requires_config_enabled MBEDTLS_ECP_DP_SECP256R1_ENABLED
+requires_config_enabled MBEDTLS_SHA256_C
+run_test    "Single supported algorithm sending: openssl client" \
+            "$P_SRV sig_algs=ecdsa_secp256r1_sha256 auth_mode=required" \
+            "$O_CLI -cert data_files/server6.crt \
+                    -key data_files/server6.key" \
+            0
 
 # Tests for certificate verification callback
 run_test    "Configuration-specific CRT verification callback" \
