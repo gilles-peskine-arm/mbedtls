@@ -99,15 +99,8 @@ static int key_type_is_raw_bytes(psa_key_type_t type)
     return PSA_KEY_TYPE_IS_UNSTRUCTURED(type);
 }
 
-
-/* Values for psa_global_data_t::rng_state */
-#define RNG_NOT_INITIALIZED 0
-#define RNG_INITIALIZED 1
-#define RNG_SEEDED 2
-
 typedef struct {
     psa_crypto_subsystem_t active_subsystems;
-    unsigned rng_state : 2;
     mbedtls_psa_random_context_t rng;
 } psa_global_data_t;
 
@@ -6311,7 +6304,8 @@ psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
     void (* entropy_init)(mbedtls_entropy_context *ctx),
     void (* entropy_free)(mbedtls_entropy_context *ctx))
 {
-    if (global_data.rng_state != RNG_NOT_INITIALIZED) {
+    if (mbedtls_psa_crypto_is_subsystem_initialized(
+            PSA_CRYPTO_SUBSYSTEM_RANDOM)) {
         return PSA_ERROR_BAD_STATE;
     }
     global_data.rng.entropy_init = entropy_init;
@@ -6323,12 +6317,12 @@ psa_status_t mbedtls_psa_crypto_configure_entropy_sources(
 void mbedtls_psa_crypto_free(void)
 {
     psa_wipe_all_key_slots();
-    if (global_data.rng_state != RNG_NOT_INITIALIZED) {
+
+    if (mbedtls_psa_crypto_is_subsystem_initialized(
+            PSA_CRYPTO_SUBSYSTEM_RANDOM)) {
         mbedtls_psa_random_free(&global_data.rng);
     }
-    /* Wipe all remaining data, including configuration.
-     * In particular, this sets all state indicator to the value
-     * indicating "uninitialized". */
+    /* Wipe all remaining data, including configuration. */
     mbedtls_platform_zeroize(&global_data, sizeof(global_data));
 
     if (mbedtls_psa_crypto_is_subsystem_initialized(
@@ -6463,12 +6457,10 @@ psa_status_t psa_crypto_init_subsystem(psa_crypto_subsystem_t subsystems)
 
     if (subsystems & PSA_CRYPTO_SUBSYSTEM_RANDOM) {
         mbedtls_psa_random_init(&global_data.rng);
-        global_data.rng_state = RNG_INITIALIZED;
         status = mbedtls_psa_random_seed(&global_data.rng);
         if (status != PSA_SUCCESS) {
             return status;
         }
-        global_data.rng_state = RNG_SEEDED;
         global_data.active_subsystems |= PSA_CRYPTO_SUBSYSTEM_RANDOM;
     }
 
