@@ -876,6 +876,25 @@ static psa_status_t psa_restrict_key_policy(
     return PSA_SUCCESS;
 }
 
+/** Whether the key in the given slot has reachable material.
+ *
+ * A transparent key is always reachable when the key store is initialized.
+ * An opaque key requires the corresponding secure element driver.
+ *
+ * \param slot  Pointer to a slot containing a key.
+ *
+ * \return 1 if the key material is reachable, otherwise 0.
+ */
+static int psa_is_key_material_reachable(psa_key_slot_t *slot)
+{
+    if (psa_key_lifetime_is_external(slot->attr.lifetime)) {
+        return mbedtls_psa_crypto_is_subsystem_initialized(
+            PSA_CRYPTO_SUBSYSTEM_SECURE_ELEMENTS);
+    } else {
+        return 1;
+    }
+}
+
 psa_status_t psa_get_and_lock_key_slot_with_policy(
     mbedtls_svc_key_id_t key,
     psa_key_slot_t **p_slot,
@@ -890,6 +909,13 @@ psa_status_t psa_get_and_lock_key_slot_with_policy(
         return status;
     }
     slot = *p_slot;
+
+    /* Secure element keys need the secure element driver to be initialized,
+     * except when only retrieving attributes. */
+    if (usage != 0 && !psa_is_key_material_reachable(*p_slot)) {
+        status = PSA_ERROR_BAD_STATE;
+        goto error;
+    }
 
     /* Enforce that usage policy for the key slot contains all the flags
      * required by the usage parameter. There is one exception: public
@@ -1026,6 +1052,10 @@ psa_status_t psa_destroy_key(mbedtls_svc_key_id_t key)
     status = psa_get_and_lock_key_slot(key, &slot);
     if (status != PSA_SUCCESS) {
         return status;
+    }
+
+    if (!psa_is_key_material_reachable(slot)) {
+        return PSA_ERROR_BAD_STATE;
     }
 
     /*
@@ -1413,6 +1443,11 @@ psa_status_t psa_export_public_key(mbedtls_svc_key_id_t key,
         return status;
     }
 
+    if (!psa_is_key_material_reachable(slot)) {
+        status = PSA_ERROR_BAD_STATE;
+        goto exit;
+    }
+
     if (!PSA_KEY_TYPE_IS_ASYMMETRIC(slot->attr.type)) {
         status = PSA_ERROR_INVALID_ARGUMENT;
         goto exit;
@@ -1595,6 +1630,11 @@ static psa_status_t psa_start_key_creation(
 #else
         slot->attr.id.key_id = volatile_key_id;
 #endif
+    }
+    if (psa_key_lifetime_is_external(attributes->core.lifetime) &&
+        !mbedtls_psa_crypto_is_subsystem_initialized(
+            PSA_CRYPTO_SUBSYSTEM_SECURE_ELEMENTS)) {
+        return PSA_ERROR_BAD_STATE;
     }
 
     /* Erase external-only flags from the internal copy. To access
