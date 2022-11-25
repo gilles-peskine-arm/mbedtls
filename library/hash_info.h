@@ -34,6 +34,7 @@
 
 #include "mbedtls/md.h"
 #include "psa/crypto.h"
+#include "legacy_or_psa.h"
 
 /** \def MBEDTLS_HASH_MAX_SIZE
  *
@@ -75,13 +76,36 @@ unsigned char mbedtls_hash_info_get_block_size( mbedtls_md_type_t md_type );
  * \param md_type   The hash MD type.
  *
  * \return          The corresponding PSA algorithm identifier,
- *                  or PSA_ALG_NONE if not known.
+ *                  or PSA_ALG_NONE if not supported in this build.
  */
 static inline psa_algorithm_t mbedtls_hash_info_psa_from_md(
     mbedtls_md_type_t md_type )
 {
-    return( md_type == MBEDTLS_MD_NONE ? PSA_ALG_NONE :
-            PSA_ALG_CATEGORY_HASH | md_type );
+    switch( md_type )
+    {
+#if defined(MBEDTLS_HAS_ALG_MD5_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_MD5: return( PSA_ALG_MD5 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_1_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_SHA1: return( PSA_ALG_SHA_1 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_128_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_SHA224: return( PSA_ALG_SHA_224 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_256_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_SHA256: return( PSA_ALG_SHA_256 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_384_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_SHA384: return( PSA_ALG_SHA_384 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_512_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_SHA512: return( PSA_ALG_SHA_512 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_RIPEMD160_VIA_MD_OR_PSA)
+        case MBEDTLS_MD_RIPEMD160: return( PSA_ALG_RIPEMD160 );
+#endif
+        default: return( MBEDTLS_MD_NONE );
+    }
 }
 
 /** Get the MD type alg from the PSA algorithm identifier.
@@ -89,20 +113,34 @@ static inline psa_algorithm_t mbedtls_hash_info_psa_from_md(
  * \param psa_alg   The PSA hash algorithm.
  *
  * \return          The corresponding MD type,
- *                  or MBEDTLS_MD_NONE if not known.
+ *                  or MBEDTLS_MD_NONE if not supported in this build.
  */
 static inline mbedtls_md_type_t mbedtls_hash_info_md_from_psa(
     psa_algorithm_t psa_alg )
 {
     switch( psa_alg )
     {
+#if defined(MBEDTLS_HAS_ALG_MD5_VIA_MD_OR_PSA)
         case PSA_ALG_MD5: return( MBEDTLS_MD_MD5 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_1_VIA_MD_OR_PSA)
         case PSA_ALG_SHA_1: return( MBEDTLS_MD_SHA1 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_128_VIA_MD_OR_PSA)
         case PSA_ALG_SHA_224: return( MBEDTLS_MD_SHA224 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_256_VIA_MD_OR_PSA)
         case PSA_ALG_SHA_256: return( MBEDTLS_MD_SHA256 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_384_VIA_MD_OR_PSA)
         case PSA_ALG_SHA_384: return( MBEDTLS_MD_SHA384 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_SHA_512_VIA_MD_OR_PSA)
         case PSA_ALG_SHA_512: return( MBEDTLS_MD_SHA512 );
+#endif
+#if defined(MBEDTLS_HAS_ALG_RIPEMD160_VIA_MD_OR_PSA)
         case PSA_ALG_RIPEMD160: return( MBEDTLS_MD_RIPEMD160 );
+#endif
         default: return( MBEDTLS_MD_NONE );
     }
 }

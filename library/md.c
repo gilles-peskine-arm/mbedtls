@@ -22,10 +22,10 @@
  */
 
 #include "common.h"
+#include "mbedtls/md.h"
 
 #if defined(MBEDTLS_MD_C)
 
-#include "mbedtls/md.h"
 #include "md_wrap.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error.h"
@@ -815,4 +815,143 @@ const char *mbedtls_md_get_name( const mbedtls_md_info_t *md_info )
     return md_info->name;
 }
 
-#endif /* MBEDTLS_MD_C */
+#elif defined(MBEDTLS_PSA_CRYPTO_C)
+
+#include <string.h>
+#include "hash_info.h"
+
+/* We just need some minimal way of encoding the MD type in the form
+ * of a pointer to a structure, because that's what the API that exposes.
+ */
+struct mbedtls_md_info_t
+{
+    uint8_t type;
+};
+
+const struct mbedtls_md_info_t supported_types[] = {
+#if defined(PSA_WANT_ALG_MD5)
+    {(uint8_t)MBEDTLS_MD_MD5},
+#endif
+#if defined(PSA_WANT_ALG_SHA_1)
+    {(uint8_t)MBEDTLS_MD_SHA1},
+#endif
+#if defined(PSA_WANT_ALG_SHA_224)
+    {(uint8_t)MBEDTLS_MD_SHA224},
+#endif
+#if defined(PSA_WANT_ALG_SHA_256)
+    {(uint8_t)MBEDTLS_MD_SHA256},
+#endif
+#if defined(PSA_WANT_ALG_SHA_384)
+    {(uint8_t)MBEDTLS_MD_SHA384},
+#endif
+#if defined(PSA_WANT_ALG_SHA_512)
+    {(uint8_t)MBEDTLS_MD_SHA512},
+#endif
+#if defined(PSA_WANT_ALG_RIPEMD160)
+    {(uint8_t)MBEDTLS_MD_RIPEMD160},
+#endif
+};
+
+const mbedtls_md_info_t *mbedtls_md_info_from_type( mbedtls_md_type_t md_type )
+{
+    for( size_t i = 0;
+         i < sizeof( supported_types ) / sizeof( *supported_types );
+         i++ )
+    {
+        if( supported_types[i].type == (uint8_t) md_type )
+            return( &supported_types[i] );
+    }
+    return( MBEDTLS_MD_NONE );
+}
+
+void mbedtls_md_init( mbedtls_md_context_t *ctx )
+{
+    memset( &ctx, 0, sizeof( ctx ) );
+}
+
+void mbedtls_md_free( mbedtls_md_context_t *ctx )
+{
+    psa_hash_abort( &ctx->psa );
+    ctx->md_info = NULL;
+}
+
+static inline psa_algorithm_t psa_alg_of_md_info(
+    const mbedtls_md_info_t *md_info )
+{
+    if( md_info == NULL )
+        return( PSA_ALG_NONE );
+    return( PSA_ALG_CATEGORY_HASH | md_info->type );
+}
+
+int mbedtls_md_setup( mbedtls_md_context_t *ctx,
+                      const mbedtls_md_info_t *md_info,
+                      int hmac )
+{
+    if( hmac != 0 )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    if( md_info == NULL )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    ctx->md_info = md_info;
+    psa_algorithm_t alg = psa_alg_of_md_info( md_info );
+    psa_status_t status = psa_hash_setup( &ctx->psa, alg );
+    return( mbedtls_md_error_from_psa( status ) );
+}
+
+int mbedtls_md_clone( mbedtls_md_context_t *dst,
+                      const mbedtls_md_context_t *src )
+{
+    if( src->md_info == NULL )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    if( dst->md_info != src->md_info )
+        return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+    psa_status_t status = psa_hash_clone( &src->psa, &dst->psa );
+    return( mbedtls_md_error_from_psa( status ) );
+}
+
+unsigned char mbedtls_md_get_size( const mbedtls_md_info_t *md_info )
+{
+    psa_algorithm_t alg = psa_alg_of_md_info( md_info );
+    return( (unsigned char) PSA_HASH_LENGTH( alg ) );
+}
+
+mbedtls_md_type_t mbedtls_md_get_type( const mbedtls_md_info_t *md_info )
+{
+    if( md_info == NULL )
+        return( MBEDTLS_MD_NONE );
+    return( (mbedtls_md_type_t) md_info->type );
+}
+
+int mbedtls_md_starts( mbedtls_md_context_t *ctx )
+{
+    (void) ctx;
+    return( 0 );
+}
+
+int mbedtls_md_update( mbedtls_md_context_t *ctx,
+                       const unsigned char *input, size_t ilen )
+{
+    psa_status_t status = psa_hash_update( &ctx->psa, input, ilen );
+    return( mbedtls_md_error_from_psa( status ) );
+}
+
+int mbedtls_md_finish( mbedtls_md_context_t *ctx, unsigned char *output )
+{
+    size_t length = mbedtls_md_get_size( ctx->md_info );
+    psa_status_t status = psa_hash_finish( &ctx->psa,
+                                           output, length, &length );
+    return( mbedtls_md_error_from_psa( status ) );
+}
+
+int mbedtls_md( const mbedtls_md_info_t *md_info,
+                const unsigned char *input, size_t ilen,
+                unsigned char *output )
+{
+    psa_algorithm_t alg = psa_alg_of_md_info( md_info );
+    size_t length = mbedtls_md_get_size( md_info );
+    psa_status_t status = psa_hash_compute( alg,
+                                            input, ilen,
+                                            output, length, &length );
+    return( mbedtls_md_error_from_psa( status ) );
+}
+
+#endif /* MBEDTLS_MD_C || MBEDTLS_PSA_CRYPTO_C */

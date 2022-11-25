@@ -140,6 +140,9 @@ void md_info( int md_type, int psa_alg, char * md_name, int md_size )
 /* BEGIN_CASE */
 void md_from_psa( )
 {
+    uint8_t output[PSA_HASH_MAX_SIZE];
+    size_t length;
+
     /* Test all inputs that follow the bit pattern for hashes, whether
      * they're valid values or not. */
     for( unsigned i = 0; i < 256; i++ )
@@ -156,8 +159,15 @@ void md_from_psa( )
             case MBEDTLS_MD_SHA384:
             case MBEDTLS_MD_SHA512:
             case MBEDTLS_MD_RIPEMD160:
-                /* Valid, so move on. Correctness is validated by the
-                 * md_info test cases. */
+                /* The md_info tests validate the correctness of the
+                 * mapping between values, but it doesn't handle
+                 * unsupported values. */
+                /* mbedtls_hash_info_md_from_psa() must return NONE on
+                 * hashes that are not supported in the build, so check
+                 * that this hash is supported. */
+                PSA_ASSERT( psa_hash_compute( alg, NULL, 0,
+                                              output, sizeof( output ),
+                                              &length ) );
                 break;
             default:
                 /* Not a valid md type, so must be NONE */
@@ -179,8 +189,39 @@ void md_from_psa( )
 /* BEGIN_CASE */
 void psa_from_md( )
 {
-    /* Enum members other than none are validated by the md_info test cases. */
-    TEST_EQUAL( mbedtls_hash_info_psa_from_md( MBEDTLS_MD_NONE ), PSA_ALG_NONE );
+    uint8_t output[MBEDTLS_MD_MAX_SIZE];
+
+    const mbedtls_md_type_t all_valid_md_types[] = {
+        MBEDTLS_MD_MD5,
+        MBEDTLS_MD_SHA1,
+        MBEDTLS_MD_SHA224,
+        MBEDTLS_MD_SHA256,
+        MBEDTLS_MD_SHA384,
+        MBEDTLS_MD_SHA512,
+        MBEDTLS_MD_RIPEMD160,
+    };
+    for( size_t i = 0; i < ARRAY_LENGTH( all_valid_md_types ); i++ )
+    {
+        mbedtls_md_type_t md_type = all_valid_md_types[i];
+        psa_algorithm_t alg = mbedtls_hash_info_psa_from_md( md_type );
+        /* The md_info tests validate the correctness of the mapping between
+         * values, but it doesn't handle unsupported values. */
+        const mbedtls_md_info_t *md_info =
+            mbedtls_md_info_from_type( md_type );
+        if( alg == PSA_ALG_NONE )
+        {
+            TEST_ASSERT( md_info == NULL );
+        }
+        else
+        {
+            /* mbedtls_hash_info_psa_from_md() must return NONE on
+             * hashes that are not supported in the build, so check
+             * that this hash is supported. */
+            TEST_ASSERT( md_info != NULL );
+            TEST_EQUAL( 0, mbedtls_md( md_info, NULL, 0, output ) );
+        }
+    }
+
 }
 /* END_CASE */
 
