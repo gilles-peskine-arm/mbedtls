@@ -1,5 +1,5 @@
 Features
-   * Added partial support for parsing the PKCS7 cryptographic message syntax,
+   * Added partial support for parsing the PKCS#7 cryptographic message syntax,
      as defined in RFC 2315. Currently, support is limited to the following:
      - Only the signed data content type, version 1 is supported.
      - Only DER encoding is supported.
