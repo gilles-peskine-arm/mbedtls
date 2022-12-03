@@ -188,7 +188,7 @@ static int parse_arguments( char *buf, size_t len, char **params,
         p++;
     }
 
-    /* Replace newlines, question marks and colons in strings */
+    /* Replace backslash escapes in strings */
     for( i = 0; i < cnt; i++ )
     {
         p = params[i];
@@ -196,23 +196,20 @@ static int parse_arguments( char *buf, size_t len, char **params,
 
         while( *p != '\0' )
         {
-            if( *p == '\\' && *( p + 1 ) == 'n' )
+            if( *p == '\\' )
             {
-                p += 2;
-                *( q++ ) = '\n';
+                ++p;
+                switch( *p )
+                {
+                    case 'n':
+                        *p = '\n';
+                        break;
+                    default:
+                        // Fall through to copying *p
+                        break;
+                }
             }
-            else if( *p == '\\' && *( p + 1 ) == ':' )
-            {
-                p += 2;
-                *( q++ ) = ':';
-            }
-            else if( *p == '\\' && *( p + 1 ) == '?' )
-            {
-                p += 2;
-                *( q++ ) = '?';
-            }
-            else
-                *( q++ ) = *( p++ );
+            *( q ++ ) = *( p++ );
         }
         *q = '\0';
     }
