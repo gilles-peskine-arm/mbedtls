@@ -830,9 +830,12 @@ def write_parameters(out_data_f, test_args, func_args, unique_expressions):
         typ = func_args[i]
         val = test_args[i]
 
-        # check if val is a non literal int val (i.e. an expression)
-        if typ == 'int' and not re.match(r'(\d+|0x[0-9a-f]+)$',
-                                         val, re.I):
+        # Pass literal or negative 32-bit integers as is (limit the range
+        # to what is guaranteed to get through strtol()).
+        # Register anything else as an expression.
+        if (typ == 'int' and
+            not (re.match(r'-?(\d+|0x[0-9a-f]+)$', val, re.I) and
+                 abs(int(val, 0)) <= 0x7fffffff)):
             typ = 'exp'
             if val not in unique_expressions:
                 unique_expressions.append(val)
