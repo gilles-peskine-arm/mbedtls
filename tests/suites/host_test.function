@@ -213,7 +213,8 @@ static int parse_arguments( char *buf, size_t len, char **params,
  *
  * \return      0 for success else 1
  */
-static int convert_params( size_t cnt , char ** params , int32_t * int_params_store )
+static int convert_params( size_t cnt , char ** params ,
+                           mbedtls_test_argument_t *int_params_store )
 {
     char ** cur = params;
     char ** out = params;
@@ -238,7 +239,7 @@ static int convert_params( size_t cnt , char ** params , int32_t * int_params_st
         }
         else if ( strcmp( type, "int" ) == 0 )
         {
-            if ( verify_int( val, int_params_store ) == 0 )
+            if ( verify_int( val, &int_params_store->s32 ) == 0 )
             {
               *out++ = (char *) int_params_store++;
             }
@@ -258,7 +259,7 @@ static int convert_params( size_t cnt , char ** params , int32_t * int_params_st
                   mbedtls_test_unhexify( (unsigned char *) val, strlen( val ),
                                          val, &len ) == 0 );
 
-                *int_params_store = len;
+                int_params_store->len = len;
                 *out++ = val;
                 *out++ = (char *)(int_params_store++);
             }
@@ -271,7 +272,7 @@ static int convert_params( size_t cnt , char ** params , int32_t * int_params_st
         else if ( strcmp( type, "exp" ) == 0 )
         {
             int exp_id = strtol( val, NULL, 10 );
-            if ( get_expression ( exp_id, int_params_store ) == 0 )
+            if ( get_expression ( exp_id, &int_params_store->s32 ) == 0 )
             {
               *out++ = (char *)int_params_store++;
             }
@@ -495,7 +496,7 @@ int execute_tests( int argc , const char ** argv )
     char buf[5000];
     char *params[50];
     /* Store for processed integer params. */
-    int32_t int_params[50];
+    mbedtls_test_argument_t int_params[50];
     void *pointer;
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
     int stdout_fd = -1;
