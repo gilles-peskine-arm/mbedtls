@@ -193,7 +193,7 @@ CONDITION_REGEX = r'({})(?:\s*({})\s*({}))?$'.format(C_IDENTIFIER_REGEX,
                                                      CONDITION_VALUE_REGEX)
 TEST_FUNCTION_VALIDATION_REGEX = r'\s*void\s+(?P<func_name>\w+)\s*\('
 INT_CHECK_REGEX = r'int\s+.*'
-CHAR_CHECK_REGEX = r'char\s*\*\s*.*'
+CHAR_CHECK_REGEX = r'(const\s+)?char(\s+const)?\s*\*\s*.*'
 DATA_T_CHECK_REGEX = r'data_t\s*\*\s*.*'
 FUNCTION_ARG_LIST_END_REGEX = r'.*\)'
 EXIT_LABEL_REGEX = r'^exit:'
