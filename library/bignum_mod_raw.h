@@ -207,6 +207,43 @@ void mbedtls_mpi_mod_raw_add( mbedtls_mpi_uint *X,
 
 /* BEGIN MERGE SLOT 6 */
 
+/** Generate a random number uniformly in a range.
+ *
+ * This function generates a random number between \p min inclusive and
+ * \p B exclusive.
+ *
+ * The procedure complies with RFC 6979 §3.3 (deterministic ECDSA)
+ * when the RNG is a suitably parametrized instance of HMAC_DRBG
+ * and \p min is \c 1.
+ *
+ * \note           There are `B - min` possible outputs. The lower bound
+ *                 \p min can be reached, but the upper bound \p B cannot.
+ *
+ * \param X        The destination MPI, in canonical representation modulo \p N.
+ *                 It must not be aliased with \p B or otherwise overlap it.
+ * \param min      The minimum value to return.
+ * \param B        The upper bound of the range, exclusive, in canonical
+ *                 representation modulo \p N.
+ *                 In other words, this is one plus the maximum value to return.
+ *                 \p B must be strictly larger than \p min.
+ * \param N        The modulus.
+ * \param f_rng    The RNG function to use. This must not be \c NULL.
+ * \param p_rng    The RNG parameter to be passed to \p f_rng.
+ *
+ * \return         \c 0 if successful.
+ * \return         #MBEDTLS_ERR_MPI_NOT_ACCEPTABLE if the implementation was
+ *                 unable to find a suitable value within a limited number
+ *                 of attempts. This has a negligible probability if \p B
+ *                 is significantly larger than \p min, which is the case
+ *                 for all usual cryptographic applications.
+ */
+int mbedtls_mpi_mod_raw_random( mbedtls_mpi_uint *X,
+                                mbedtls_mpi_uint min,
+                                const mbedtls_mpi_uint *B,
+                                const mbedtls_mpi_mod_modulus *N,
+                                int (*f_rng)(void *, unsigned char *, size_t),
+                                void *p_rng );
+
 /* END MERGE SLOT 6 */
 
 /* BEGIN MERGE SLOT 7 */

@@ -145,6 +145,16 @@ void mbedtls_mpi_mod_raw_add( mbedtls_mpi_uint *X,
 
 /* BEGIN MERGE SLOT 6 */
 
+int mbedtls_mpi_mod_raw_random( mbedtls_mpi_uint *X,
+                                mbedtls_mpi_uint min,
+                                const mbedtls_mpi_uint *B,
+                                const mbedtls_mpi_mod_modulus *N,
+                                int (*f_rng)(void *, unsigned char *, size_t),
+                                void *p_rng )
+{
+    return( mbedtls_mpi_core_random( X, min, B, N->limbs, f_rng, p_rng ) );
+}
+
 /* END MERGE SLOT 6 */
 
 /* BEGIN MERGE SLOT 7 */
