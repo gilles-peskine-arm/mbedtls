@@ -176,6 +176,45 @@ void mbedtls_mpi_mod_modulus_free( mbedtls_mpi_mod_modulus *m );
 
 /* BEGIN MERGE SLOT 6 */
 
+/** Generate a random number uniformly in a range.
+ *
+ * This function generates a random number between \p min inclusive and
+ * \p B exclusive.
+ *
+ * The procedure complies with RFC 6979 §3.3 (deterministic ECDSA)
+ * when the RNG is a suitably parametrized instance of HMAC_DRBG
+ * and \p min is \c 1.
+ *
+ * \note           All comparisons involving residues in the documentation
+ *                 of this function refer to the canonical representative,
+ *                 i.e. the representative in the range [0, N-1] where N
+ *                 is the modulus.
+ *
+ * \note           There are `B - min` possible outputs. The lower bound
+ *                 \p min can be reached, but the upper bound \p B cannot.
+ *
+ * \param X        The destination residue.
+ *                 It must not be aliased with \p B.
+ * \param min      The minimum value to return.
+ * \param B        The upper bound of the range, exclusive.
+ *                 In other words, this is one plus the maximum value to return.
+ *                 \p B must be strictly larger than \p min.
+ * \param f_rng    The RNG function to use. This must not be \c NULL.
+ * \param p_rng    The RNG parameter to be passed to \p f_rng.
+ *
+ * \return         \c 0 if successful.
+ * \return         #MBEDTLS_ERR_MPI_NOT_ACCEPTABLE if the implementation was
+ *                 unable to find a suitable value within a limited number
+ *                 of attempts. This has a negligible probability if \p B
+ *                 is significantly larger than \p min, which is the case
+ *                 for all usual cryptographic applications.
+ */
+int mbedtls_mpi_mod_random( mbedtls_mpi_mod_residue *X,
+                            mbedtls_mpi_uint min,
+                            const mbedtls_mpi_mod_residue *B,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng );
+
 /* END MERGE SLOT 6 */
 
 /* BEGIN MERGE SLOT 7 */
