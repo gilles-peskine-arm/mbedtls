@@ -66,10 +66,9 @@ while (my $line = <CONFIG_FILE>) {
         next if $name =~ /$excluded_re/;
 
         $config_check .= "#if defined($name)\n";
-        $config_check .= "    if( strcmp( \"$name\", config ) == 0 )\n";
-        $config_check .= "    {\n";
-        $config_check .= "        MACRO_EXPANSION_TO_STR( $name );\n";
-        $config_check .= "        return( 0 );\n";
+        $config_check .= "    if (strcmp(\"$name\", config) == 0) {\n";
+        $config_check .= "        MACRO_EXPANSION_TO_STR($name);\n";
+        $config_check .= "        return 0;\n";
         $config_check .= "    }\n";
         $config_check .= "#endif /* $name */\n";
         $config_check .= "\n";

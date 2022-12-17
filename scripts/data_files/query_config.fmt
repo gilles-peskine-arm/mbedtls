@@ -131,7 +131,8 @@
 
 int query_config( const char *config )
 {
-CHECK_CONFIG    /* If the symbol is not found, return an error */
+CHECK_CONFIG
+    /* If the symbol is not found, return an error */
     return( 1 );
 }
 
