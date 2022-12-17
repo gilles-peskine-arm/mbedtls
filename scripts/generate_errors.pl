@@ -204,7 +204,7 @@ foreach my $match (@matches)
     }
 
     ${$code_check} .= "${white_space}case -($error_name):\n".
-                      "${white_space}    return( \"$module_name - $description\" );\n"
+                      "${white_space}    return \"$module_name - $description\";\n"
 };
 
 if ($ll_old_define ne "")

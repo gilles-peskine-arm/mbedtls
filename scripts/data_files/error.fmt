@@ -45,7 +45,9 @@ const char * mbedtls_high_level_strerr( int error_code )
     switch( high_level_error_code )
     {
         /* Begin Auto-Generated Code. */
+        /* *INDENT-OFF* */
 HIGH_LEVEL_CODE_CHECKS
+        /* *INDENT-ON* */
         /* End Auto-Generated Code. */
 
         default:
@@ -68,7 +70,9 @@ const char * mbedtls_low_level_strerr( int error_code )
     switch( low_level_error_code )
     {
         /* Begin Auto-Generated Code. */
+        /* *INDENT-OFF* */
 LOW_LEVEL_CODE_CHECKS
+        /* *INDENT-ON* */
         /* End Auto-Generated Code. */
 
         default:
