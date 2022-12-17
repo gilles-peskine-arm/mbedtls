@@ -203,8 +203,12 @@ foreach my $match (@matches)
         ${$old_define} = $define_name;
     }
 
+    # Uncrustify requires the string to be on a separate line if the line
+    # length would otherwise go over the limit.
+    # Systematically put the string on a separate line for consistency.
     ${$code_check} .= "${white_space}case -($error_name):\n".
-                      "${white_space}    return( \"$module_name - $description\" );\n"
+                      "${white_space}    return\n".
+                      "${white_space}        \"$module_name - $description\";\n"
 };
 
 if ($ll_old_define ne "")
