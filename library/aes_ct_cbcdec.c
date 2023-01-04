@@ -29,7 +29,6 @@ void
 br_aes_ct_cbcdec_init(br_aes_ct_cbcdec_keys *ctx,
 	const void *key, size_t len)
 {
-	ctx->vtable = &br_aes_ct_cbcdec_vtable;
 	ctx->num_rounds = br_aes_ct_keysched(ctx->skey, key, len);
 }
 
@@ -98,14 +97,3 @@ br_aes_ct_cbcdec_run(const br_aes_ct_cbcdec_keys *ctx,
 	br_enc32le(ivbuf + 8, iv2);
 	br_enc32le(ivbuf + 12, iv3);
 }
-
-/* see bearssl_block.h */
-const br_block_cbcdec_class br_aes_ct_cbcdec_vtable = {
-	sizeof(br_aes_ct_cbcdec_keys),
-	16,
-	4,
-	(void (*)(const br_block_cbcdec_class **, const void *, size_t))
-		&br_aes_ct_cbcdec_init,
-	(void (*)(const br_block_cbcdec_class *const *, void *, void *, size_t))
-		&br_aes_ct_cbcdec_run
-};
