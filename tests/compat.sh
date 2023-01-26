@@ -239,9 +239,14 @@ reset_ciphersuites()
     G_CIPHERS=""
 }
 
-check_translation()
+# translate_ciphers {g|m|o} {STANDARD_CIPHER_SUITE_NAME...}
+# Set $ciphers to the cipher suite name translations for the specified
+# program (gnutls, mbedtls or openssl). $ciphers is a space-separated
+# list of entries of the form "STANDARD_NAME=PROGRAM_NAME".
+translate_ciphers()
 {
-    if [ $1 -ne 0 ]; then
+    ciphers=$(scripts/translate_ciphers.py "$@")
+    if [ $? -ne 0 ]; then
         echo "translate_ciphers.py failed with exit code $1" >&2
         echo "$2" >&2
         exit 1
@@ -787,7 +792,7 @@ wait_client_done() {
     echo "EXIT: $EXIT" >> $CLI_OUT
 }
 
-# run_client <name> <cipher>
+# run_client PROGRAM_NAME STANDARD_CIPHER_SUITE PROGRAM_CIPHER_SUITE
 run_client() {
     # announce what we're going to do
     TESTS=$(( $TESTS + 1 ))
@@ -797,10 +802,6 @@ run_client() {
     printf "%s " "$TITLE"
     LEN=$(( 72 - `echo "$TITLE" | wc -c` ))
     for i in `seq 1 $LEN`; do printf '.'; done; printf ' '
-
-    # Translate ciphersuites based on client's naming scheme
-    t_cipher=$(./scripts/translate_ciphers.py $3 $2)
-    check_translation $? "$t_cipher"
 
     # should we skip?
     if [ "X$SKIP_NEXT" = "XYES" ]; then
@@ -813,7 +814,7 @@ run_client() {
     # run the command and interpret result
     case $1 in
         [Oo]pen*)
-            CLIENT_CMD="$OPENSSL s_client $O_CLIENT_ARGS -cipher $t_cipher"
+            CLIENT_CMD="$OPENSSL s_client $O_CLIENT_ARGS -cipher $3"
             log "$CLIENT_CMD"
             echo "$CLIENT_CMD" > $CLI_OUT
             printf 'GET HTTP/1.0\r\n\r\n' | $CLIENT_CMD >> $CLI_OUT 2>&1 &
@@ -838,7 +839,7 @@ run_client() {
             else
                 G_HOST="localhost"
             fi
-            CLIENT_CMD="$GNUTLS_CLI $G_CLIENT_ARGS --priority $G_PRIO_MODE:$t_cipher $G_HOST"
+            CLIENT_CMD="$GNUTLS_CLI $G_CLIENT_ARGS --priority $G_PRIO_MODE:$3 $G_HOST"
             log "$CLIENT_CMD"
             echo "$CLIENT_CMD" > $CLI_OUT
             printf 'GET HTTP/1.0\r\n\r\n' | $CLIENT_CMD >> $CLI_OUT 2>&1 &
@@ -860,7 +861,7 @@ run_client() {
             ;;
 
         mbed*)
-            CLIENT_CMD="$M_CLI $M_CLIENT_ARGS force_ciphersuite=$t_cipher"
+            CLIENT_CMD="$M_CLI $M_CLIENT_ARGS force_ciphersuite=$3"
             if [ "$MEMCHECK" -gt 0 ]; then
                 CLIENT_CMD="valgrind --leak-check=full $CLIENT_CMD"
             fi
@@ -1023,17 +1024,19 @@ for VERIFY in $VERIFIES; do
 
                     if [ "X" != "X$M_CIPHERS" ]; then
                         start_server "OpenSSL"
-                        for i in $M_CIPHERS; do
+                        translate_ciphers m $M_CIPHERS
+                        for i in $ciphers; do
                             check_openssl_server_bug
-                            run_client mbedTLS $i m
+                            run_client mbedTLS ${i%%=*} ${i#*=}
                         done
                         stop_server
                     fi
 
                     if [ "X" != "X$O_CIPHERS" ]; then
                         start_server "mbedTLS"
-                        for i in $O_CIPHERS; do
-                            run_client OpenSSL $i o
+                        translate_ciphers o $O_CIPHERS
+                        for i in $ciphers; do
+                            run_client OpenSSL ${i%%=*} ${i#*=}
                         done
                         stop_server
                     fi
@@ -1049,16 +1052,18 @@ for VERIFY in $VERIFIES; do
 
                     if [ "X" != "X$M_CIPHERS" ]; then
                         start_server "GnuTLS"
-                        for i in $M_CIPHERS; do
-                            run_client mbedTLS $i m
+                        translate_ciphers m $M_CIPHERS
+                        for i in $ciphers; do
+                            run_client mbedTLS ${i%%=*} ${i#*=}
                         done
                         stop_server
                     fi
 
                     if [ "X" != "X$G_CIPHERS" ]; then
                         start_server "mbedTLS"
-                        for i in $G_CIPHERS; do
-                            run_client GnuTLS $i g
+                        translate_ciphers g $G_CIPHERS
+                        for i in $ciphers; do
+                            run_client GnuTLS ${i%%=*} ${i#*=}
                         done
                         stop_server
                     fi
@@ -1076,8 +1081,9 @@ for VERIFY in $VERIFIES; do
 
                     if [ "X" != "X$M_CIPHERS" ]; then
                         start_server "mbedTLS"
-                        for i in $M_CIPHERS; do
-                            run_client mbedTLS $i m
+                        translate_ciphers m $M_CIPHERS
+                        for i in $ciphers; do
+                            run_client mbedTLS ${i%%=*} ${i#*=}
                         done
                         stop_server
                     fi
