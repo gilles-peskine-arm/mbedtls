@@ -37,40 +37,40 @@ OUTPUT_TEMPLATE = '''\
 static const char *psa_strerror(psa_status_t status)
 {
     switch (status) {
-    %(status_cases)s
-    default: return NULL;
+        %(status_cases)s
+        default: return NULL;
     }
 }
 
 static const char *psa_ecc_family_name(psa_ecc_family_t curve)
 {
     switch (curve) {
-    %(ecc_curve_cases)s
-    default: return NULL;
+        %(ecc_curve_cases)s
+        default: return NULL;
     }
 }
 
 static const char *psa_dh_family_name(psa_dh_family_t group)
 {
     switch (group) {
-    %(dh_group_cases)s
-    default: return NULL;
+        %(dh_group_cases)s
+        default: return NULL;
     }
 }
 
 static const char *psa_hash_algorithm_name(psa_algorithm_t hash_alg)
 {
     switch (hash_alg) {
-    %(hash_algorithm_cases)s
-    default: return NULL;
+        %(hash_algorithm_cases)s
+        default: return NULL;
     }
 }
 
 static const char *psa_ka_algorithm_name(psa_algorithm_t ka_alg)
 {
     switch (ka_alg) {
-    %(ka_algorithm_cases)s
-    default: return NULL;
+        %(ka_algorithm_cases)s
+        default: return NULL;
     }
 }
 
@@ -79,16 +79,16 @@ static int psa_snprint_key_type(char *buffer, size_t buffer_size,
 {
     size_t required_size = 0;
     switch (type) {
-    %(key_type_cases)s
-    default:
-        %(key_type_code)s{
-            return snprintf(buffer, buffer_size,
-                            "0x%%04x", (unsigned) type);
-        }
-        break;
+        %(key_type_cases)s
+        default:
+            %(key_type_code)s{
+                return snprintf(buffer, buffer_size,
+                                "0x%%04x", (unsigned)type);
+            }
+            break;
     }
     buffer[0] = 0;
-    return (int) required_size;
+    return (int)required_size;
 }
 
 #define NO_LENGTH_MODIFIER 0xfffffffflu
@@ -134,13 +134,13 @@ static int psa_snprint_algorithm(char *buffer, size_t buffer_size,
         append(&buffer, buffer_size, &required_size, ", ", 2);
     }
     switch (core_alg) {
-    %(algorithm_cases)s
-    default:
-        %(algorithm_code)s{
-            append_integer(&buffer, buffer_size, &required_size,
-                           "0x%%08lx", (unsigned long) core_alg);
-        }
-        break;
+        %(algorithm_cases)s
+        default:
+            %(algorithm_code)s{
+                append_integer(&buffer, buffer_size, &required_size,
+                               "0x%%08lx", (unsigned long)core_alg);
+            }
+            break;
     }
     if (core_alg != alg) {
         if (length_modifier != NO_LENGTH_MODIFIER) {
@@ -151,7 +151,7 @@ static int psa_snprint_algorithm(char *buffer, size_t buffer_size,
         append(&buffer, buffer_size, &required_size, ")", 1);
     }
     buffer[0] = 0;
-    return (int) required_size;
+    return (int)required_size;
 }
 
 static int psa_snprint_key_usage(char *buffer, size_t buffer_size,
@@ -173,11 +173,11 @@ static int psa_snprint_key_usage(char *buffer, size_t buffer_size,
             append(&buffer, buffer_size, &required_size, " | ", 3);
         }
         append_integer(&buffer, buffer_size, &required_size,
-                       "0x%%08lx", (unsigned long) usage);
+                       "0x%%08lx", (unsigned long)usage);
     } else {
         buffer[0] = 0;
     }
-    return (int) required_size;
+    return (int)required_size;
 }
 
 /* End of automatically generated file. */
@@ -242,20 +242,20 @@ class CaseBuilder(macro_collector.PSAMacroCollector):
                                     'length': len(flag)}
 
     def _make_status_cases(self):
-        return '\n    '.join(map(self._make_return_case,
-                                 sorted(self.statuses)))
+        return '\n        '.join(map(self._make_return_case,
+                                     sorted(self.statuses)))
 
     def _make_ecc_curve_cases(self):
-        return '\n    '.join(map(self._make_return_case,
-                                 sorted(self.ecc_curves)))
+        return '\n        '.join(map(self._make_return_case,
+                                     sorted(self.ecc_curves)))
 
     def _make_dh_group_cases(self):
-        return '\n    '.join(map(self._make_return_case,
-                                 sorted(self.dh_groups)))
+        return '\n        '.join(map(self._make_return_case,
+                                     sorted(self.dh_groups)))
 
     def _make_key_type_cases(self):
-        return '\n    '.join(map(self._make_append_case,
-                                 sorted(self.key_types)))
+        return '\n        '.join(map(self._make_append_case,
+                                     sorted(self.key_types)))
 
     @staticmethod
     def _make_key_type_from_curve_code(builder, tester):
@@ -280,16 +280,16 @@ class CaseBuilder(macro_collector.PSAMacroCollector):
         return ''.join([make(k, d[k]) for k in sorted(d.keys())])
 
     def _make_hash_algorithm_cases(self):
-        return '\n    '.join(map(self._make_return_case,
-                                 sorted(self.hash_algorithms)))
+        return '\n        '.join(map(self._make_return_case,
+                                     sorted(self.hash_algorithms)))
 
     def _make_ka_algorithm_cases(self):
-        return '\n    '.join(map(self._make_return_case,
-                                 sorted(self.ka_algorithms)))
+        return '\n        '.join(map(self._make_return_case,
+                                     sorted(self.ka_algorithms)))
 
     def _make_algorithm_cases(self):
-        return '\n    '.join(map(self._make_append_case,
-                                 sorted(self.algorithms)))
+        return '\n        '.join(map(self._make_append_case,
+                                     sorted(self.algorithms)))
 
     @staticmethod
     def _make_algorithm_from_hash_code(builder, tester):

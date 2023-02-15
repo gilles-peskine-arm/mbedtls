@@ -3,89 +3,89 @@
 static const char *psa_strerror(psa_status_t status)
 {
     switch (status) {
-    case PSA_ERROR_ALREADY_EXISTS: return "PSA_ERROR_ALREADY_EXISTS";
-    case PSA_ERROR_BAD_STATE: return "PSA_ERROR_BAD_STATE";
-    case PSA_ERROR_BUFFER_TOO_SMALL: return "PSA_ERROR_BUFFER_TOO_SMALL";
-    case PSA_ERROR_COMMUNICATION_FAILURE: return "PSA_ERROR_COMMUNICATION_FAILURE";
-    case PSA_ERROR_CORRUPTION_DETECTED: return "PSA_ERROR_CORRUPTION_DETECTED";
-    case PSA_ERROR_DATA_CORRUPT: return "PSA_ERROR_DATA_CORRUPT";
-    case PSA_ERROR_DATA_INVALID: return "PSA_ERROR_DATA_INVALID";
-    case PSA_ERROR_DOES_NOT_EXIST: return "PSA_ERROR_DOES_NOT_EXIST";
-    case PSA_ERROR_GENERIC_ERROR: return "PSA_ERROR_GENERIC_ERROR";
-    case PSA_ERROR_HARDWARE_FAILURE: return "PSA_ERROR_HARDWARE_FAILURE";
-    case PSA_ERROR_INSUFFICIENT_DATA: return "PSA_ERROR_INSUFFICIENT_DATA";
-    case PSA_ERROR_INSUFFICIENT_ENTROPY: return "PSA_ERROR_INSUFFICIENT_ENTROPY";
-    case PSA_ERROR_INSUFFICIENT_MEMORY: return "PSA_ERROR_INSUFFICIENT_MEMORY";
-    case PSA_ERROR_INSUFFICIENT_STORAGE: return "PSA_ERROR_INSUFFICIENT_STORAGE";
-    case PSA_ERROR_INVALID_ARGUMENT: return "PSA_ERROR_INVALID_ARGUMENT";
-    case PSA_ERROR_INVALID_HANDLE: return "PSA_ERROR_INVALID_HANDLE";
-    case PSA_ERROR_INVALID_PADDING: return "PSA_ERROR_INVALID_PADDING";
-    case PSA_ERROR_INVALID_SIGNATURE: return "PSA_ERROR_INVALID_SIGNATURE";
-    case PSA_ERROR_NOT_PERMITTED: return "PSA_ERROR_NOT_PERMITTED";
-    case PSA_ERROR_NOT_SUPPORTED: return "PSA_ERROR_NOT_SUPPORTED";
-    case PSA_ERROR_STORAGE_FAILURE: return "PSA_ERROR_STORAGE_FAILURE";
-    case PSA_SUCCESS: return "PSA_SUCCESS";
-    default: return NULL;
+        case PSA_ERROR_ALREADY_EXISTS: return "PSA_ERROR_ALREADY_EXISTS";
+        case PSA_ERROR_BAD_STATE: return "PSA_ERROR_BAD_STATE";
+        case PSA_ERROR_BUFFER_TOO_SMALL: return "PSA_ERROR_BUFFER_TOO_SMALL";
+        case PSA_ERROR_COMMUNICATION_FAILURE: return "PSA_ERROR_COMMUNICATION_FAILURE";
+        case PSA_ERROR_CORRUPTION_DETECTED: return "PSA_ERROR_CORRUPTION_DETECTED";
+        case PSA_ERROR_DATA_CORRUPT: return "PSA_ERROR_DATA_CORRUPT";
+        case PSA_ERROR_DATA_INVALID: return "PSA_ERROR_DATA_INVALID";
+        case PSA_ERROR_DOES_NOT_EXIST: return "PSA_ERROR_DOES_NOT_EXIST";
+        case PSA_ERROR_GENERIC_ERROR: return "PSA_ERROR_GENERIC_ERROR";
+        case PSA_ERROR_HARDWARE_FAILURE: return "PSA_ERROR_HARDWARE_FAILURE";
+        case PSA_ERROR_INSUFFICIENT_DATA: return "PSA_ERROR_INSUFFICIENT_DATA";
+        case PSA_ERROR_INSUFFICIENT_ENTROPY: return "PSA_ERROR_INSUFFICIENT_ENTROPY";
+        case PSA_ERROR_INSUFFICIENT_MEMORY: return "PSA_ERROR_INSUFFICIENT_MEMORY";
+        case PSA_ERROR_INSUFFICIENT_STORAGE: return "PSA_ERROR_INSUFFICIENT_STORAGE";
+        case PSA_ERROR_INVALID_ARGUMENT: return "PSA_ERROR_INVALID_ARGUMENT";
+        case PSA_ERROR_INVALID_HANDLE: return "PSA_ERROR_INVALID_HANDLE";
+        case PSA_ERROR_INVALID_PADDING: return "PSA_ERROR_INVALID_PADDING";
+        case PSA_ERROR_INVALID_SIGNATURE: return "PSA_ERROR_INVALID_SIGNATURE";
+        case PSA_ERROR_NOT_PERMITTED: return "PSA_ERROR_NOT_PERMITTED";
+        case PSA_ERROR_NOT_SUPPORTED: return "PSA_ERROR_NOT_SUPPORTED";
+        case PSA_ERROR_STORAGE_FAILURE: return "PSA_ERROR_STORAGE_FAILURE";
+        case PSA_SUCCESS: return "PSA_SUCCESS";
+        default: return NULL;
     }
 }
 
 static const char *psa_ecc_family_name(psa_ecc_family_t curve)
 {
     switch (curve) {
-    case PSA_ECC_FAMILY_BRAINPOOL_P_R1: return "PSA_ECC_FAMILY_BRAINPOOL_P_R1";
-    case PSA_ECC_FAMILY_MONTGOMERY: return "PSA_ECC_FAMILY_MONTGOMERY";
-    case PSA_ECC_FAMILY_SECP_K1: return "PSA_ECC_FAMILY_SECP_K1";
-    case PSA_ECC_FAMILY_SECP_R1: return "PSA_ECC_FAMILY_SECP_R1";
-    case PSA_ECC_FAMILY_SECP_R2: return "PSA_ECC_FAMILY_SECP_R2";
-    case PSA_ECC_FAMILY_SECT_K1: return "PSA_ECC_FAMILY_SECT_K1";
-    case PSA_ECC_FAMILY_SECT_R1: return "PSA_ECC_FAMILY_SECT_R1";
-    case PSA_ECC_FAMILY_SECT_R2: return "PSA_ECC_FAMILY_SECT_R2";
-    case PSA_ECC_FAMILY_TWISTED_EDWARDS: return "PSA_ECC_FAMILY_TWISTED_EDWARDS";
-    default: return NULL;
+        case PSA_ECC_FAMILY_BRAINPOOL_P_R1: return "PSA_ECC_FAMILY_BRAINPOOL_P_R1";
+        case PSA_ECC_FAMILY_MONTGOMERY: return "PSA_ECC_FAMILY_MONTGOMERY";
+        case PSA_ECC_FAMILY_SECP_K1: return "PSA_ECC_FAMILY_SECP_K1";
+        case PSA_ECC_FAMILY_SECP_R1: return "PSA_ECC_FAMILY_SECP_R1";
+        case PSA_ECC_FAMILY_SECP_R2: return "PSA_ECC_FAMILY_SECP_R2";
+        case PSA_ECC_FAMILY_SECT_K1: return "PSA_ECC_FAMILY_SECT_K1";
+        case PSA_ECC_FAMILY_SECT_R1: return "PSA_ECC_FAMILY_SECT_R1";
+        case PSA_ECC_FAMILY_SECT_R2: return "PSA_ECC_FAMILY_SECT_R2";
+        case PSA_ECC_FAMILY_TWISTED_EDWARDS: return "PSA_ECC_FAMILY_TWISTED_EDWARDS";
+        default: return NULL;
     }
 }
 
 static const char *psa_dh_family_name(psa_dh_family_t group)
 {
     switch (group) {
-    case PSA_DH_FAMILY_CUSTOM: return "PSA_DH_FAMILY_CUSTOM";
-    case PSA_DH_FAMILY_RFC7919: return "PSA_DH_FAMILY_RFC7919";
-    default: return NULL;
+        case PSA_DH_FAMILY_CUSTOM: return "PSA_DH_FAMILY_CUSTOM";
+        case PSA_DH_FAMILY_RFC7919: return "PSA_DH_FAMILY_RFC7919";
+        default: return NULL;
     }
 }
 
 static const char *psa_hash_algorithm_name(psa_algorithm_t hash_alg)
 {
     switch (hash_alg) {
-    case PSA_ALG_ANY_HASH: return "PSA_ALG_ANY_HASH";
-    case PSA_ALG_CATEGORY_HASH: return "PSA_ALG_CATEGORY_HASH";
-    case PSA_ALG_MD2: return "PSA_ALG_MD2";
-    case PSA_ALG_MD4: return "PSA_ALG_MD4";
-    case PSA_ALG_MD5: return "PSA_ALG_MD5";
-    case PSA_ALG_RIPEMD160: return "PSA_ALG_RIPEMD160";
-    case PSA_ALG_SHA3_224: return "PSA_ALG_SHA3_224";
-    case PSA_ALG_SHA3_256: return "PSA_ALG_SHA3_256";
-    case PSA_ALG_SHA3_384: return "PSA_ALG_SHA3_384";
-    case PSA_ALG_SHA3_512: return "PSA_ALG_SHA3_512";
-    case PSA_ALG_SHAKE256_512: return "PSA_ALG_SHAKE256_512";
-    case PSA_ALG_SHA_1: return "PSA_ALG_SHA_1";
-    case PSA_ALG_SHA_224: return "PSA_ALG_SHA_224";
-    case PSA_ALG_SHA_256: return "PSA_ALG_SHA_256";
-    case PSA_ALG_SHA_384: return "PSA_ALG_SHA_384";
-    case PSA_ALG_SHA_512: return "PSA_ALG_SHA_512";
-    case PSA_ALG_SHA_512_224: return "PSA_ALG_SHA_512_224";
-    case PSA_ALG_SHA_512_256: return "PSA_ALG_SHA_512_256";
-    default: return NULL;
+        case PSA_ALG_ANY_HASH: return "PSA_ALG_ANY_HASH";
+        case PSA_ALG_CATEGORY_HASH: return "PSA_ALG_CATEGORY_HASH";
+        case PSA_ALG_MD2: return "PSA_ALG_MD2";
+        case PSA_ALG_MD4: return "PSA_ALG_MD4";
+        case PSA_ALG_MD5: return "PSA_ALG_MD5";
+        case PSA_ALG_RIPEMD160: return "PSA_ALG_RIPEMD160";
+        case PSA_ALG_SHA3_224: return "PSA_ALG_SHA3_224";
+        case PSA_ALG_SHA3_256: return "PSA_ALG_SHA3_256";
+        case PSA_ALG_SHA3_384: return "PSA_ALG_SHA3_384";
+        case PSA_ALG_SHA3_512: return "PSA_ALG_SHA3_512";
+        case PSA_ALG_SHAKE256_512: return "PSA_ALG_SHAKE256_512";
+        case PSA_ALG_SHA_1: return "PSA_ALG_SHA_1";
+        case PSA_ALG_SHA_224: return "PSA_ALG_SHA_224";
+        case PSA_ALG_SHA_256: return "PSA_ALG_SHA_256";
+        case PSA_ALG_SHA_384: return "PSA_ALG_SHA_384";
+        case PSA_ALG_SHA_512: return "PSA_ALG_SHA_512";
+        case PSA_ALG_SHA_512_224: return "PSA_ALG_SHA_512_224";
+        case PSA_ALG_SHA_512_256: return "PSA_ALG_SHA_512_256";
+        default: return NULL;
     }
 }
 
 static const char *psa_ka_algorithm_name(psa_algorithm_t ka_alg)
 {
     switch (ka_alg) {
-    case PSA_ALG_CATEGORY_KEY_AGREEMENT: return "PSA_ALG_CATEGORY_KEY_AGREEMENT";
-    case PSA_ALG_ECDH: return "PSA_ALG_ECDH";
-    case PSA_ALG_FFDH: return "PSA_ALG_FFDH";
-    default: return NULL;
+        case PSA_ALG_CATEGORY_KEY_AGREEMENT: return "PSA_ALG_CATEGORY_KEY_AGREEMENT";
+        case PSA_ALG_ECDH: return "PSA_ALG_ECDH";
+        case PSA_ALG_FFDH: return "PSA_ALG_FFDH";
+        default: return NULL;
     }
 }
 
@@ -94,31 +94,31 @@ static int psa_snprint_key_type(char *buffer, size_t buffer_size,
 {
     size_t required_size = 0;
     switch (type) {
-    case PSA_KEY_TYPE_AES: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_AES", 16); break;
-    case PSA_KEY_TYPE_ARC4: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ARC4", 17); break;
-    case PSA_KEY_TYPE_ARIA: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ARIA", 17); break;
-    case PSA_KEY_TYPE_CAMELLIA: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CAMELLIA", 21); break;
-    case PSA_KEY_TYPE_CATEGORY_FLAG_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_FLAG_PAIR", 31); break;
-    case PSA_KEY_TYPE_CATEGORY_KEY_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_KEY_PAIR", 30); break;
-    case PSA_KEY_TYPE_CATEGORY_PUBLIC_KEY: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_PUBLIC_KEY", 32); break;
-    case PSA_KEY_TYPE_CATEGORY_RAW: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_RAW", 25); break;
-    case PSA_KEY_TYPE_CATEGORY_SYMMETRIC: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_SYMMETRIC", 31); break;
-    case PSA_KEY_TYPE_CHACHA20: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CHACHA20", 21); break;
-    case PSA_KEY_TYPE_DERIVE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DERIVE", 19); break;
-    case PSA_KEY_TYPE_DES: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DES", 16); break;
-    case PSA_KEY_TYPE_DH_KEY_PAIR_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DH_KEY_PAIR_BASE", 29); break;
-    case PSA_KEY_TYPE_DH_PUBLIC_KEY_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DH_PUBLIC_KEY_BASE", 31); break;
-    case PSA_KEY_TYPE_DSA_KEY_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DSA_KEY_PAIR", 25); break;
-    case PSA_KEY_TYPE_DSA_PUBLIC_KEY: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DSA_PUBLIC_KEY", 27); break;
-    case PSA_KEY_TYPE_ECC_KEY_PAIR_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ECC_KEY_PAIR_BASE", 30); break;
-    case PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE", 32); break;
-    case PSA_KEY_TYPE_HMAC: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_HMAC", 17); break;
-    case PSA_KEY_TYPE_NONE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_NONE", 17); break;
-    case PSA_KEY_TYPE_RAW_DATA: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_RAW_DATA", 21); break;
-    case PSA_KEY_TYPE_RSA_KEY_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_RSA_KEY_PAIR", 25); break;
-    case PSA_KEY_TYPE_RSA_PUBLIC_KEY: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_RSA_PUBLIC_KEY", 27); break;
-    default:
-        if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(type)) {
+        case PSA_KEY_TYPE_AES: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_AES", 16); break;
+        case PSA_KEY_TYPE_ARC4: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ARC4", 17); break;
+        case PSA_KEY_TYPE_ARIA: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ARIA", 17); break;
+        case PSA_KEY_TYPE_CAMELLIA: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CAMELLIA", 21); break;
+        case PSA_KEY_TYPE_CATEGORY_FLAG_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_FLAG_PAIR", 31); break;
+        case PSA_KEY_TYPE_CATEGORY_KEY_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_KEY_PAIR", 30); break;
+        case PSA_KEY_TYPE_CATEGORY_PUBLIC_KEY: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_PUBLIC_KEY", 32); break;
+        case PSA_KEY_TYPE_CATEGORY_RAW: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_RAW", 25); break;
+        case PSA_KEY_TYPE_CATEGORY_SYMMETRIC: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CATEGORY_SYMMETRIC", 31); break;
+        case PSA_KEY_TYPE_CHACHA20: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_CHACHA20", 21); break;
+        case PSA_KEY_TYPE_DERIVE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DERIVE", 19); break;
+        case PSA_KEY_TYPE_DES: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DES", 16); break;
+        case PSA_KEY_TYPE_DH_KEY_PAIR_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DH_KEY_PAIR_BASE", 29); break;
+        case PSA_KEY_TYPE_DH_PUBLIC_KEY_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DH_PUBLIC_KEY_BASE", 31); break;
+        case PSA_KEY_TYPE_DSA_KEY_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DSA_KEY_PAIR", 25); break;
+        case PSA_KEY_TYPE_DSA_PUBLIC_KEY: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_DSA_PUBLIC_KEY", 27); break;
+        case PSA_KEY_TYPE_ECC_KEY_PAIR_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ECC_KEY_PAIR_BASE", 30); break;
+        case PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_ECC_PUBLIC_KEY_BASE", 32); break;
+        case PSA_KEY_TYPE_HMAC: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_HMAC", 17); break;
+        case PSA_KEY_TYPE_NONE: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_NONE", 17); break;
+        case PSA_KEY_TYPE_RAW_DATA: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_RAW_DATA", 21); break;
+        case PSA_KEY_TYPE_RSA_KEY_PAIR: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_RSA_KEY_PAIR", 25); break;
+        case PSA_KEY_TYPE_RSA_PUBLIC_KEY: append(&buffer, buffer_size, &required_size, "PSA_KEY_TYPE_RSA_PUBLIC_KEY", 27); break;
+        default:
+            if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(type)) {
             append_with_curve(&buffer, buffer_size, &required_size,
                               "PSA_KEY_TYPE_ECC_KEY_PAIR", 25,
                               PSA_KEY_TYPE_ECC_GET_FAMILY(type));
@@ -135,13 +135,13 @@ static int psa_snprint_key_type(char *buffer, size_t buffer_size,
                               "PSA_KEY_TYPE_DH_PUBLIC_KEY", 26,
                               PSA_KEY_TYPE_DH_GET_FAMILY(type));
         } else {
-            return snprintf(buffer, buffer_size,
-                            "0x%04x", (unsigned) type);
-        }
-        break;
+                return snprintf(buffer, buffer_size,
+                                "0x%04x", (unsigned)type);
+            }
+            break;
     }
     buffer[0] = 0;
-    return (int) required_size;
+    return (int)required_size;
 }
 
 #define NO_LENGTH_MODIFIER 0xfffffffflu
@@ -187,67 +187,67 @@ static int psa_snprint_algorithm(char *buffer, size_t buffer_size,
         append(&buffer, buffer_size, &required_size, ", ", 2);
     }
     switch (core_alg) {
-    case PSA_ALG_ANY_HASH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ANY_HASH", 16); break;
-    case PSA_ALG_CATEGORY_AEAD: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_AEAD", 21); break;
-    case PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION", 38); break;
-    case PSA_ALG_CATEGORY_CIPHER: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_CIPHER", 23); break;
-    case PSA_ALG_CATEGORY_HASH: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_HASH", 21); break;
-    case PSA_ALG_CATEGORY_KEY_AGREEMENT: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_KEY_AGREEMENT", 30); break;
-    case PSA_ALG_CATEGORY_KEY_DERIVATION: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_KEY_DERIVATION", 31); break;
-    case PSA_ALG_CATEGORY_MAC: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_MAC", 20); break;
-    case PSA_ALG_CATEGORY_SIGN: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_SIGN", 21); break;
-    case PSA_ALG_CBC_MAC: append(&buffer, buffer_size, &required_size, "PSA_ALG_CBC_MAC", 15); break;
-    case PSA_ALG_CBC_NO_PADDING: append(&buffer, buffer_size, &required_size, "PSA_ALG_CBC_NO_PADDING", 22); break;
-    case PSA_ALG_CBC_PKCS7: append(&buffer, buffer_size, &required_size, "PSA_ALG_CBC_PKCS7", 17); break;
-    case PSA_ALG_CCM: append(&buffer, buffer_size, &required_size, "PSA_ALG_CCM", 11); break;
-    case PSA_ALG_CFB: append(&buffer, buffer_size, &required_size, "PSA_ALG_CFB", 11); break;
-    case PSA_ALG_CHACHA20_POLY1305: append(&buffer, buffer_size, &required_size, "PSA_ALG_CHACHA20_POLY1305", 25); break;
-    case PSA_ALG_CIPHER_MAC_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_CIPHER_MAC_BASE", 23); break;
-    case PSA_ALG_CMAC: append(&buffer, buffer_size, &required_size, "PSA_ALG_CMAC", 12); break;
-    case PSA_ALG_CTR: append(&buffer, buffer_size, &required_size, "PSA_ALG_CTR", 11); break;
-    case PSA_ALG_DETERMINISTIC_DSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_DETERMINISTIC_DSA_BASE", 30); break;
-    case PSA_ALG_DETERMINISTIC_ECDSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_DETERMINISTIC_ECDSA_BASE", 32); break;
-    case PSA_ALG_DSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_DSA_BASE", 16); break;
-    case PSA_ALG_ECB_NO_PADDING: append(&buffer, buffer_size, &required_size, "PSA_ALG_ECB_NO_PADDING", 22); break;
-    case PSA_ALG_ECDH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ECDH", 12); break;
-    case PSA_ALG_ECDSA_ANY: append(&buffer, buffer_size, &required_size, "PSA_ALG_ECDSA_ANY", 17); break;
-    case PSA_ALG_ED25519PH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ED25519PH", 17); break;
-    case PSA_ALG_ED448PH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ED448PH", 15); break;
-    case PSA_ALG_FFDH: append(&buffer, buffer_size, &required_size, "PSA_ALG_FFDH", 12); break;
-    case PSA_ALG_GCM: append(&buffer, buffer_size, &required_size, "PSA_ALG_GCM", 11); break;
-    case PSA_ALG_HASH_EDDSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_HASH_EDDSA_BASE", 23); break;
-    case PSA_ALG_HKDF_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_HKDF_BASE", 17); break;
-    case PSA_ALG_HMAC_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_HMAC_BASE", 17); break;
-    case PSA_ALG_MD2: append(&buffer, buffer_size, &required_size, "PSA_ALG_MD2", 11); break;
-    case PSA_ALG_MD4: append(&buffer, buffer_size, &required_size, "PSA_ALG_MD4", 11); break;
-    case PSA_ALG_MD5: append(&buffer, buffer_size, &required_size, "PSA_ALG_MD5", 11); break;
-    case PSA_ALG_NONE: append(&buffer, buffer_size, &required_size, "PSA_ALG_NONE", 12); break;
-    case PSA_ALG_OFB: append(&buffer, buffer_size, &required_size, "PSA_ALG_OFB", 11); break;
-    case PSA_ALG_PURE_EDDSA: append(&buffer, buffer_size, &required_size, "PSA_ALG_PURE_EDDSA", 18); break;
-    case PSA_ALG_RIPEMD160: append(&buffer, buffer_size, &required_size, "PSA_ALG_RIPEMD160", 17); break;
-    case PSA_ALG_RSA_OAEP_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_OAEP_BASE", 21); break;
-    case PSA_ALG_RSA_PKCS1V15_CRYPT: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PKCS1V15_CRYPT", 26); break;
-    case PSA_ALG_RSA_PKCS1V15_SIGN_RAW: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PKCS1V15_SIGN_RAW", 29); break;
-    case PSA_ALG_RSA_PSS_ANY_SALT_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PSS_ANY_SALT_BASE", 29); break;
-    case PSA_ALG_RSA_PSS_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PSS_BASE", 20); break;
-    case PSA_ALG_SHA3_224: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_224", 16); break;
-    case PSA_ALG_SHA3_256: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_256", 16); break;
-    case PSA_ALG_SHA3_384: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_384", 16); break;
-    case PSA_ALG_SHA3_512: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_512", 16); break;
-    case PSA_ALG_SHAKE256_512: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHAKE256_512", 20); break;
-    case PSA_ALG_SHA_1: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_1", 13); break;
-    case PSA_ALG_SHA_224: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_224", 15); break;
-    case PSA_ALG_SHA_256: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_256", 15); break;
-    case PSA_ALG_SHA_384: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_384", 15); break;
-    case PSA_ALG_SHA_512: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_512", 15); break;
-    case PSA_ALG_SHA_512_224: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_512_224", 19); break;
-    case PSA_ALG_SHA_512_256: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_512_256", 19); break;
-    case PSA_ALG_STREAM_CIPHER: append(&buffer, buffer_size, &required_size, "PSA_ALG_STREAM_CIPHER", 21); break;
-    case PSA_ALG_TLS12_PRF_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_TLS12_PRF_BASE", 22); break;
-    case PSA_ALG_TLS12_PSK_TO_MS_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_TLS12_PSK_TO_MS_BASE", 28); break;
-    case PSA_ALG_XTS: append(&buffer, buffer_size, &required_size, "PSA_ALG_XTS", 11); break;
-    default:
-        if (PSA_ALG_IS_DETERMINISTIC_DSA(core_alg)) {
+        case PSA_ALG_ANY_HASH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ANY_HASH", 16); break;
+        case PSA_ALG_CATEGORY_AEAD: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_AEAD", 21); break;
+        case PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_ASYMMETRIC_ENCRYPTION", 38); break;
+        case PSA_ALG_CATEGORY_CIPHER: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_CIPHER", 23); break;
+        case PSA_ALG_CATEGORY_HASH: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_HASH", 21); break;
+        case PSA_ALG_CATEGORY_KEY_AGREEMENT: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_KEY_AGREEMENT", 30); break;
+        case PSA_ALG_CATEGORY_KEY_DERIVATION: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_KEY_DERIVATION", 31); break;
+        case PSA_ALG_CATEGORY_MAC: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_MAC", 20); break;
+        case PSA_ALG_CATEGORY_SIGN: append(&buffer, buffer_size, &required_size, "PSA_ALG_CATEGORY_SIGN", 21); break;
+        case PSA_ALG_CBC_MAC: append(&buffer, buffer_size, &required_size, "PSA_ALG_CBC_MAC", 15); break;
+        case PSA_ALG_CBC_NO_PADDING: append(&buffer, buffer_size, &required_size, "PSA_ALG_CBC_NO_PADDING", 22); break;
+        case PSA_ALG_CBC_PKCS7: append(&buffer, buffer_size, &required_size, "PSA_ALG_CBC_PKCS7", 17); break;
+        case PSA_ALG_CCM: append(&buffer, buffer_size, &required_size, "PSA_ALG_CCM", 11); break;
+        case PSA_ALG_CFB: append(&buffer, buffer_size, &required_size, "PSA_ALG_CFB", 11); break;
+        case PSA_ALG_CHACHA20_POLY1305: append(&buffer, buffer_size, &required_size, "PSA_ALG_CHACHA20_POLY1305", 25); break;
+        case PSA_ALG_CIPHER_MAC_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_CIPHER_MAC_BASE", 23); break;
+        case PSA_ALG_CMAC: append(&buffer, buffer_size, &required_size, "PSA_ALG_CMAC", 12); break;
+        case PSA_ALG_CTR: append(&buffer, buffer_size, &required_size, "PSA_ALG_CTR", 11); break;
+        case PSA_ALG_DETERMINISTIC_DSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_DETERMINISTIC_DSA_BASE", 30); break;
+        case PSA_ALG_DETERMINISTIC_ECDSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_DETERMINISTIC_ECDSA_BASE", 32); break;
+        case PSA_ALG_DSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_DSA_BASE", 16); break;
+        case PSA_ALG_ECB_NO_PADDING: append(&buffer, buffer_size, &required_size, "PSA_ALG_ECB_NO_PADDING", 22); break;
+        case PSA_ALG_ECDH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ECDH", 12); break;
+        case PSA_ALG_ECDSA_ANY: append(&buffer, buffer_size, &required_size, "PSA_ALG_ECDSA_ANY", 17); break;
+        case PSA_ALG_ED25519PH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ED25519PH", 17); break;
+        case PSA_ALG_ED448PH: append(&buffer, buffer_size, &required_size, "PSA_ALG_ED448PH", 15); break;
+        case PSA_ALG_FFDH: append(&buffer, buffer_size, &required_size, "PSA_ALG_FFDH", 12); break;
+        case PSA_ALG_GCM: append(&buffer, buffer_size, &required_size, "PSA_ALG_GCM", 11); break;
+        case PSA_ALG_HASH_EDDSA_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_HASH_EDDSA_BASE", 23); break;
+        case PSA_ALG_HKDF_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_HKDF_BASE", 17); break;
+        case PSA_ALG_HMAC_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_HMAC_BASE", 17); break;
+        case PSA_ALG_MD2: append(&buffer, buffer_size, &required_size, "PSA_ALG_MD2", 11); break;
+        case PSA_ALG_MD4: append(&buffer, buffer_size, &required_size, "PSA_ALG_MD4", 11); break;
+        case PSA_ALG_MD5: append(&buffer, buffer_size, &required_size, "PSA_ALG_MD5", 11); break;
+        case PSA_ALG_NONE: append(&buffer, buffer_size, &required_size, "PSA_ALG_NONE", 12); break;
+        case PSA_ALG_OFB: append(&buffer, buffer_size, &required_size, "PSA_ALG_OFB", 11); break;
+        case PSA_ALG_PURE_EDDSA: append(&buffer, buffer_size, &required_size, "PSA_ALG_PURE_EDDSA", 18); break;
+        case PSA_ALG_RIPEMD160: append(&buffer, buffer_size, &required_size, "PSA_ALG_RIPEMD160", 17); break;
+        case PSA_ALG_RSA_OAEP_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_OAEP_BASE", 21); break;
+        case PSA_ALG_RSA_PKCS1V15_CRYPT: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PKCS1V15_CRYPT", 26); break;
+        case PSA_ALG_RSA_PKCS1V15_SIGN_RAW: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PKCS1V15_SIGN_RAW", 29); break;
+        case PSA_ALG_RSA_PSS_ANY_SALT_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PSS_ANY_SALT_BASE", 29); break;
+        case PSA_ALG_RSA_PSS_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_RSA_PSS_BASE", 20); break;
+        case PSA_ALG_SHA3_224: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_224", 16); break;
+        case PSA_ALG_SHA3_256: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_256", 16); break;
+        case PSA_ALG_SHA3_384: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_384", 16); break;
+        case PSA_ALG_SHA3_512: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA3_512", 16); break;
+        case PSA_ALG_SHAKE256_512: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHAKE256_512", 20); break;
+        case PSA_ALG_SHA_1: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_1", 13); break;
+        case PSA_ALG_SHA_224: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_224", 15); break;
+        case PSA_ALG_SHA_256: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_256", 15); break;
+        case PSA_ALG_SHA_384: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_384", 15); break;
+        case PSA_ALG_SHA_512: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_512", 15); break;
+        case PSA_ALG_SHA_512_224: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_512_224", 19); break;
+        case PSA_ALG_SHA_512_256: append(&buffer, buffer_size, &required_size, "PSA_ALG_SHA_512_256", 19); break;
+        case PSA_ALG_STREAM_CIPHER: append(&buffer, buffer_size, &required_size, "PSA_ALG_STREAM_CIPHER", 21); break;
+        case PSA_ALG_TLS12_PRF_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_TLS12_PRF_BASE", 22); break;
+        case PSA_ALG_TLS12_PSK_TO_MS_BASE: append(&buffer, buffer_size, &required_size, "PSA_ALG_TLS12_PSK_TO_MS_BASE", 28); break;
+        case PSA_ALG_XTS: append(&buffer, buffer_size, &required_size, "PSA_ALG_XTS", 11); break;
+        default:
+            if (PSA_ALG_IS_DETERMINISTIC_DSA(core_alg)) {
             append(&buffer, buffer_size, &required_size,
                    "PSA_ALG_DETERMINISTIC_DSA(", 25 + 1);
             append_with_alg(&buffer, buffer_size, &required_size,
@@ -332,10 +332,10 @@ static int psa_snprint_algorithm(char *buffer, size_t buffer_size,
                             PSA_ALG_GET_HASH(core_alg));
             append(&buffer, buffer_size, &required_size, ")", 1);
         } else {
-            append_integer(&buffer, buffer_size, &required_size,
-                           "0x%08lx", (unsigned long) core_alg);
-        }
-        break;
+                append_integer(&buffer, buffer_size, &required_size,
+                               "0x%08lx", (unsigned long)core_alg);
+            }
+            break;
     }
     if (core_alg != alg) {
         if (length_modifier != NO_LENGTH_MODIFIER) {
@@ -346,7 +346,7 @@ static int psa_snprint_algorithm(char *buffer, size_t buffer_size,
         append(&buffer, buffer_size, &required_size, ")", 1);
     }
     buffer[0] = 0;
-    return (int) required_size;
+    return (int)required_size;
 }
 
 static int psa_snprint_key_usage(char *buffer, size_t buffer_size,
@@ -430,11 +430,11 @@ static int psa_snprint_key_usage(char *buffer, size_t buffer_size,
             append(&buffer, buffer_size, &required_size, " | ", 3);
         }
         append_integer(&buffer, buffer_size, &required_size,
-                       "0x%08lx", (unsigned long) usage);
+                       "0x%08lx", (unsigned long)usage);
     } else {
         buffer[0] = 0;
     }
-    return (int) required_size;
+    return (int)required_size;
 }
 
 /* End of automatically generated file. */
