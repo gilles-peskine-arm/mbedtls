@@ -12,30 +12,15 @@
  */
 int parse_hex_string(char *hex_string, uint64_t *result)
 {
-    uint8_t raw[8];
+    uint8_t raw[8] = {0};
     size_t olen;
     if (mbedtls_test_unhexify(raw, sizeof(raw), hex_string, &olen) != 0) {
         return 0;
     }
 
-    /* If < 8 bytes, shift right and pad with leading zeros for big-endian */
-    if (MBEDTLS_IS_BIG_ENDIAN && olen < 8) {
-        int offset = 8 - olen;
-        for (int i = olen - 1; i >= 0; i--) {
-            raw[i + offset] = raw[i];
-        }
-        for (int i = 0; i < offset; i++) {
-            raw[i] = 0;
-        }
-    }
-
     *result = 0;
     for (size_t i = 0; i < olen; i++) {
-        if (MBEDTLS_IS_BIG_ENDIAN) {
-            *result |= ((uint64_t) raw[i]) << (i * 8);
-        } else {
-            *result |= ((uint64_t) raw[i]) << ((olen - i - 1) * 8);
-        }
+        *result |= ((uint64_t) raw[i]) << ((olen - i - 1) * 8);
     }
     return 1;
 }
