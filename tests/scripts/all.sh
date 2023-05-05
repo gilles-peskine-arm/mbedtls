@@ -805,7 +805,21 @@ pre_generate_files() {
 #
 # Indicative running times are given for reference.
 
-component_check_recursion () {
+component_check_c_sanity () {
+    msg "Public header files include build_info.h"
+    for header in include/mbedtls/*.h include/psa/*.h; do
+        if [ "$header" != include/mbedtls/build_info.h ] &&
+           [ "$header" != include/mbedtls/mbedtls_config.h ] &&
+           [ "$header" != include/psa/crypto_config.h ]
+        then
+            # Expect either an error from including
+            # tests/include/build_info-error/mbedtls/build_info.h or
+            # an explicit #error telling the user not to include the
+            # header directly.
+            not cpp -I tests/include/build_info-error -I include "$header" >/dev/null 2>/dev/null
+        fi
+    done
+
     msg "Check: recursion.pl" # < 1s
     tests/scripts/recursion.pl library/*.c
 }

@@ -20,6 +20,8 @@
 #ifndef MBEDTLS_CONSTANT_TIME_H
 #define MBEDTLS_CONSTANT_TIME_H
 
+#include "mbedtls/build_info.h"
+
 #include <stddef.h>
 
 

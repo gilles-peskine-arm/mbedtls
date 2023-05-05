@@ -30,6 +30,11 @@
 #ifndef PSA_CRYPTO_COMPAT_H
 #define PSA_CRYPTO_COMPAT_H
 
+#if !defined(MBEDTLS_BUILD_INFO_H)
+/* included from psa/crypto.h */
+#error "This header cannot be included directly."
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

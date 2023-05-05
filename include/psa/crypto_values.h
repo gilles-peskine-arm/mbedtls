@@ -33,7 +33,11 @@
 
 #ifndef PSA_CRYPTO_VALUES_H
 #define PSA_CRYPTO_VALUES_H
-#include "mbedtls/private_access.h"
+
+#if !defined(MBEDTLS_BUILD_INFO_H)
+/* included from psa/crypto.h */
+#error "This header cannot be included directly."
+#endif
 
 /** \defgroup error Error codes
  * @{

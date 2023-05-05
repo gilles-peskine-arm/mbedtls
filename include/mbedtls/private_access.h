@@ -23,6 +23,11 @@
 #ifndef MBEDTLS_PRIVATE_ACCESS_H
 #define MBEDTLS_PRIVATE_ACCESS_H
 
+#if !defined(MBEDTLS_BUILD_INFO_H)
+/* included from build_info.h */
+#error "This header cannot be included directly."
+#endif
+
 #ifndef MBEDTLS_ALLOW_PRIVATE_ACCESS
 #define MBEDTLS_PRIVATE(member) private_##member
 #else

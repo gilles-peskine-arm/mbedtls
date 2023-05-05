@@ -22,12 +22,14 @@
  *  limitations under the License.
  */
 
+#ifndef MBEDTLS_COMPAT2X_H
+#define MBEDTLS_COMPAT2X_H
+
+#include "mbedtls/build_info.h"
+
 #if defined(MBEDTLS_DEPRECATED_WARNING)
 #warning "Including compat-2.x.h is deprecated"
 #endif
-
-#ifndef MBEDTLS_COMPAT2X_H
-#define MBEDTLS_COMPAT2X_H
 
 /*
  * Macros for renamed functions

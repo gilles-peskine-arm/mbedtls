@@ -507,11 +507,13 @@ class CodeParser():
     IDENTIFIER_REGEX = re.compile('|'.join([
         # Match " something(a" or " *something(a". Functions.
         # Assumptions:
-        # - function definition from return type to one of its arguments is
-        #   all on one line
-        # - function definition line only contains alphanumeric, asterisk,
-        #   underscore, and open bracket
-        r".* \**(\w+) *\( *\w",
+        # - Function definition from return type to one of its arguments is
+        #   all on one line. (The first argument may be on the next line,
+        #   which parse_identifiers_in_file() will join if a line ends with
+        #   an open parenthesis.)
+        # - Function definition line only contains alphanumeric, asterisk,
+        #   underscore, and open bracket.
+        r".* \**(?P<function>\w+) *\( *\w",
         # Match "(*something)(".
         r".*\( *\* *(\w+) *\) *\(",
         # Match names of named data structures.
@@ -589,6 +591,9 @@ class CodeParser():
                         line_no,
                         identifier.span(),
                         group))
+
+                # If it's a function, is it between extern "C" {}?
+                TODO
 
     def parse_identifiers(self, include, exclude=None):
         """

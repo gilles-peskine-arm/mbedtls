@@ -23,6 +23,11 @@
 #ifndef MBEDTLS_CHECK_CONFIG_H
 #define MBEDTLS_CHECK_CONFIG_H
 
+#if !defined(MBEDTLS_BUILD_INFO_H)
+/* included from build_info.h */
+#error "This header cannot be included directly."
+#endif
+
 /*
  * We assume CHAR_BIT is 8 in many places. In practice, this is true on our
  * target platforms, so not an issue, but let's just be extra sure.
