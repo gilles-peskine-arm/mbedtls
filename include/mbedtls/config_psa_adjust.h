@@ -32,4 +32,38 @@
 #ifndef MBEDTLS_CONFIG_PSA_ADJUST_H
 #define MBEDTLS_CONFIG_PSA_ADJUST_H
 
+/* These features are always enabled. */
+#define PSA_WANT_KEY_TYPE_DERIVE 1
+#define PSA_WANT_KEY_TYPE_PASSWORD 1
+#define PSA_WANT_KEY_TYPE_PASSWORD_HASH 1
+#define PSA_WANT_KEY_TYPE_RAW_DATA 1
+
+/****************************************************************/
+/* De facto synonyms */
+/****************************************************************/
+
+#if defined(PSA_WANT_ALG_ECDSA_ANY) && !defined(PSA_WANT_ALG_ECDSA)
+#define PSA_WANT_ALG_ECDSA PSA_WANT_ALG_ECDSA_ANY
+#elif !defined(PSA_WANT_ALG_ECDSA_ANY) && defined(PSA_WANT_ALG_ECDSA)
+#define PSA_WANT_ALG_ECDSA_ANY PSA_WANT_ALG_ECDSA
+#endif
+
+#if defined(PSA_WANT_ALG_CCM_STAR_NO_TAG) && !defined(PSA_WANT_ALG_CCM)
+#define PSA_WANT_ALG_CCM PSA_WANT_ALG_CCM_STAR_NO_TAG
+#elif !defined(PSA_WANT_ALG_CCM_STAR_NO_TAG) && defined(PSA_WANT_ALG_CCM)
+#define PSA_WANT_ALG_CCM_STAR_NO_TAG PSA_WANT_ALG_CCM
+#endif
+
+#if defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW) && !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+#define PSA_WANT_ALG_RSA_PKCS1V15_SIGN PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW
+#elif !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW) && defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+#define PSA_WANT_ALG_RSA_PKCS1V15_SIGN_RAW PSA_WANT_ALG_RSA_PKCS1V15_SIGN
+#endif
+
+#if defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT) && !defined(PSA_WANT_ALG_RSA_PSS)
+#define PSA_WANT_ALG_RSA_PSS PSA_WANT_ALG_RSA_PSS_ANY_SALT
+#elif !defined(PSA_WANT_ALG_RSA_PSS_ANY_SALT) && defined(PSA_WANT_ALG_RSA_PSS)
+#define PSA_WANT_ALG_RSA_PSS_ANY_SALT PSA_WANT_ALG_RSA_PSS
+#endif
+
 #endif /* MBEDTLS_CONFIG_PSA_ADJUST_H */
