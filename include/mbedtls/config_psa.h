@@ -30,6 +30,12 @@
 #ifndef MBEDTLS_CONFIG_PSA_H
 #define MBEDTLS_CONFIG_PSA_H
 
+/* These features are always enabled. */
+#define PSA_WANT_KEY_TYPE_DERIVE 1
+#define PSA_WANT_KEY_TYPE_PASSWORD 1
+#define PSA_WANT_KEY_TYPE_PASSWORD_HASH 1
+#define PSA_WANT_KEY_TYPE_RAW_DATA 1
+
 /****************************************************************/
 /* De facto synonyms */
 /****************************************************************/
@@ -83,11 +89,5 @@
 #include "config_psa_from_mbedtls.h"
 
 #endif /* MBEDTLS_PSA_CRYPTO_CONFIG */
-
-/* These features are always enabled. */
-#define PSA_WANT_KEY_TYPE_DERIVE 1
-#define PSA_WANT_KEY_TYPE_PASSWORD 1
-#define PSA_WANT_KEY_TYPE_PASSWORD_HASH 1
-#define PSA_WANT_KEY_TYPE_RAW_DATA 1
 
 #endif /* MBEDTLS_CONFIG_PSA_H */
