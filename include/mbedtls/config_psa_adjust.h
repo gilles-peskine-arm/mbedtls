@@ -1,6 +1,7 @@
 /**
  * \file mbedtls/config_psa_adjust.h
- * \brief Adjust the PSA crypto configuration (PSA_WANT_xxx symbols)
+ * \brief Adjust the PSA crypto configuration (PSA_WANT_xxx and
+ *        MBEDTLS_PSA_CRYPTO_xxx symbols)
  *        to automatically enable certain features.
  *
  * Do not include this header directly! It is automatically included
@@ -31,6 +32,13 @@
 
 #ifndef MBEDTLS_CONFIG_PSA_ADJUST_H
 #define MBEDTLS_CONFIG_PSA_ADJUST_H
+
+/* If MBEDTLS_PSA_CRYPTO_C is defined, make sure MBEDTLS_PSA_CRYPTO_CLIENT
+ * is defined as well to include all PSA code.
+ */
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#define MBEDTLS_PSA_CRYPTO_CLIENT
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /* These features are always enabled. */
 #define PSA_WANT_KEY_TYPE_DERIVE 1
