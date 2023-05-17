@@ -88,11 +88,10 @@
 #else
 #include "psa/crypto_config.h"
 #endif
-#endif /* defined(MBEDTLS_PSA_CRYPTO_CONFIG) */
-
 #if defined(MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE)
 #include MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE
 #endif
+#endif /* defined(MBEDTLS_PSA_CRYPTO_CONFIG) */
 
 /* Auto-enable MBEDTLS_MD_C if needed by a module that didn't require it
  * in a previous release, to ensure backwards compatibility.
