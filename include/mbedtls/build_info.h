@@ -102,11 +102,27 @@
 /* Adjust TLS-related configuration options. */
 #include "config_tls_adjust.h"
 
-/* Make sure all configuration symbols are set before including check_config.h,
- * even the ones that are calculated programmatically. */
-#if defined(MBEDTLS_PSA_CRYPTO_CONFIG) /* PSA_WANT_xxx influences MBEDTLS_xxx */ || \
-    defined(MBEDTLS_PSA_CRYPTO_C) /* MBEDTLS_xxx influences PSA_WANT_xxx */
-#include "mbedtls/config_psa.h"
+/* Adjust the PSA crypto configuration. */
+#if defined(MBEDTLS_PSA_CRYPTO_C) || defined(MBEDTLS_PSA_CRYPTO_CONFIG)
+#include "config_psa_adjust.h"
+#endif
+
+/* Extend the PSA configuration based on the legacy crypto configuration
+ * to simplify the transition. */
+#if defined(MBEDTLS_PSA_CRYPTO_C) || defined(MBEDTLS_PSA_CRYPTO_CONFIG)
+#include "config_psa_extend_from_mbedtls.h"
+#endif
+
+/* Enable legacy crypto features necessary to implement the requested
+ * PSA crypto features. */
+#if defined(MBEDTLS_PSA_CRYPTO_CONFIG)
+#include "config_mbedtls_from_psa.h"
+#endif
+
+/* Enable PSA crypto features to provide functionality that is similar
+ * to the legacy crypto API. */
+#if defined(MBEDTLS_PSA_CRYPTO_C) && !defined(MBEDTLS_PSA_CRYPTO_CONFIG)
+#include "config_psa_from_mbedtls.h"
 #endif
 
 #include "mbedtls/check_config.h"
