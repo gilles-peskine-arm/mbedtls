@@ -9,6 +9,10 @@
 #include "bignum_mod_raw_invasive.h"
 #include "constant_time_internal.h"
 
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#include <psa/crypto.h>
+#endif
+
 #define ECP_PF_UNKNOWN     -1
 
 #define ECP_PT_RESET(x)           \
@@ -105,9 +109,10 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
-void mbedtls_ecp_curve_info(int id, int tls_id, int size, char *name)
+void mbedtls_ecp_curve_info(int id, int tls_id, int size, char *name,
+                            int psa_family, int psa_bits)
 {
-    const mbedtls_ecp_curve_info *by_id, *by_tls, *by_name;
+    const mbedtls_ecp_curve_info *by_id, *by_tls, *by_name, *by_psa;
 
     by_id   = mbedtls_ecp_curve_info_from_grp_id(id);
     by_tls  = mbedtls_ecp_curve_info_from_tls_id(tls_id);
@@ -115,13 +120,27 @@ void mbedtls_ecp_curve_info(int id, int tls_id, int size, char *name)
     TEST_ASSERT(by_id   != NULL);
     TEST_ASSERT(by_tls  != NULL);
     TEST_ASSERT(by_name != NULL);
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    by_psa = mbedtls_ecp_curve_info_from_psa(psa_family, psa_bits);
+    TEST_ASSERT(by_psa != NULL);
+#endif
 
     TEST_ASSERT(by_id == by_tls);
     TEST_ASSERT(by_id == by_name);
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    TEST_ASSERT(by_id == by_psa);
+#endif
 
     TEST_ASSERT(by_id->bit_size == size);
     TEST_ASSERT(size <= MBEDTLS_ECP_MAX_BITS);
     TEST_ASSERT(size <= MBEDTLS_ECP_MAX_BYTES * 8);
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+    TEST_EQUAL(by_id->psa_family, psa_family);
+    TEST_EQUAL(by_id->psa_bits, psa_bits);
+#else
+    (void) psa_family;
+    (void) psa_bits;
+#endif
 }
 /* END_CASE */
 

@@ -39,6 +39,11 @@
 
 #include "mbedtls/bignum.h"
 
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+#include <psa/crypto_types.h>
+#include <psa/crypto_values.h>
+#endif
+
 /*
  * ECP error codes
  */
@@ -159,6 +164,22 @@ typedef enum {
  */
 typedef struct mbedtls_ecp_curve_info {
     mbedtls_ecp_group_id grp_id;    /*!< An internal identifier. */
+    /** The #psa_ecc_family_t for this group.
+     * This means that in the PSA API, key pairs have the type
+     * `PSA_KEY_TYPE_ECC_KEY_PAIR(psa_family)`, and public keys have
+     * the type `PSA_KEY_TYPE_ECC_PUBLIC_KEY(psa_family)`.
+     * The value is 0 if the curve is not supported in the PSA API.
+     *
+     * \note If the PSA subsystem does not support the given curve,
+     * it is unspecified whether this value is correct.
+     */
+    psa_ecc_family_t psa_family;
+    /** The bit-size for this group according to the PSA API.
+     *
+     * \note If the PSA subsystem does not support the given curve,
+     * it is unspecified whether this value is correct.
+     */
+    uint16_t psa_bits;
     uint16_t tls_id;                /*!< The TLS NamedCurve identifier. */
     uint16_t bit_size;              /*!< The curve size in bits. */
     const char *name;               /*!< A human-friendly name. */
@@ -592,6 +613,30 @@ const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_tls_id(uint16_t tls_id
  * \return          NULL on failure.
  */
 const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_name(const char *name);
+
+#if defined(MBEDTLS_PSA_CRYPTO_C)
+/**
+ * \brief           Retrieve curve information given the PSA
+ *                  description of the curve.
+ *
+ * \param family    A \c PSA_ECC_FAMILY_xxx constant of type
+ *                  #psa_ecc_family_t.
+ * \param bits      The bit-size of the curve according to the definition
+ *                  used by the PSA API. This is the bit-size of a
+ *                  private value.
+ *
+ * \return          The associated curve information on success.
+ * \return          \c NULL on failure.
+ *
+ * \note            If the curve is not available in both the ECP module
+ *                  and the PSA subsystem in a given compile-time configuration
+ *                  of the library, it is unspecified whether this function
+ *                  returns a curve information structure with correct values,
+ *                  or \c NULL.
+ */
+const mbedtls_ecp_curve_info *mbedtls_ecp_curve_info_from_psa(
+    psa_ecc_family_t family, size_t bits);
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /**
  * \brief           This function initializes a point as zero.

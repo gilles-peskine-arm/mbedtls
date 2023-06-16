@@ -1,0 +1,5 @@
+Features
+   * You can convert between PSA and ECP encodings of an elliptic curve
+     using the new function mbedtls_ecp_curve_info_from_psa() and the
+     new fields psa_family and psa_bits in a mbedtls_ecp_curve_info
+     structure.
