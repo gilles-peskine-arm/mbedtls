@@ -356,58 +356,124 @@ static void mpi_free_many(mbedtls_mpi *arr, size_t size)
 static const mbedtls_ecp_curve_info ecp_supported_curves[] =
 {
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP521R1,    PSA_ECC_FAMILY_SECP_R1,          521,
+    { MBEDTLS_ECP_DP_SECP521R1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R1_521)
+      PSA_ECC_FAMILY_SECP_R1, 521,
+#else
+      0, 0,
+#endif
       25,     521,    "secp521r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
-    { MBEDTLS_ECP_DP_BP512R1,      PSA_ECC_FAMILY_BRAINPOOL_P_R1,   512,
+    { MBEDTLS_ECP_DP_BP512R1,
+#if defined(PSA_WANT_ECC_FAMILY_BRAINPOOL_P_R1_512)
+      PSA_ECC_FAMILY_BRAINPOOL_P_R1, 512,
+#else
+      0, 0,
+#endif
       28,     512,    "brainpoolP512r1"   },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP384R1,    PSA_ECC_FAMILY_SECP_R1,          384,
+    { MBEDTLS_ECP_DP_SECP384R1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R1_384)
+      PSA_ECC_FAMILY_SECP_R1, 384,
+#else
+      0, 0,
+#endif
       24,     384,    "secp384r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)
-    { MBEDTLS_ECP_DP_BP384R1,      PSA_ECC_FAMILY_BRAINPOOL_P_R1,   384,
+    { MBEDTLS_ECP_DP_BP384R1,
+#if defined(PSA_WANT_ECC_FAMILY_BRAINPOOL_P_R1_384)
+      PSA_ECC_FAMILY_BRAINPOOL_P_R1, 384,
+#else
+      0, 0,
+#endif
       27,     384,    "brainpoolP384r1"   },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP256R1,    PSA_ECC_FAMILY_SECP_R1,          256,
+    { MBEDTLS_ECP_DP_SECP256R1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R1_256)
+      PSA_ECC_FAMILY_SECP_R1, 256,
+#else
+      0, 0,
+#endif
       23,     256,    "secp256r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP256K1,    PSA_ECC_FAMILY_SECP_K1,          256,
+    { MBEDTLS_ECP_DP_SECP256K1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_K1_256)
+      PSA_ECC_FAMILY_SECP_K1, 256,
+#else
+      0, 0,
+#endif
       22,     256,    "secp256k1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
-    { MBEDTLS_ECP_DP_BP256R1,      PSA_ECC_FAMILY_BRAINPOOL_P_R1,   256,
+    { MBEDTLS_ECP_DP_BP256R1,
+#if defined(PSA_WANT_ECC_FAMILY_BRAINPOOL_P_R1_256)
+      PSA_ECC_FAMILY_BRAINPOOL_P_R1, 256,
+#else
+      0, 0,
+#endif
       26,     256,    "brainpoolP256r1"   },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP224R1,    PSA_ECC_FAMILY_SECP_R1,          224,
+    { MBEDTLS_ECP_DP_SECP224R1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R1_224)
+      PSA_ECC_FAMILY_SECP_R1, 224,
+#else
+      0, 0,
+#endif
       21,     224,    "secp224r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP224K1,    PSA_ECC_FAMILY_SECP_K1,          224,
+    { MBEDTLS_ECP_DP_SECP224K1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_K1_224)
+      PSA_ECC_FAMILY_SECP_K1, 224,
+#else
+      0, 0,
+#endif
       20,     224,    "secp224k1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP192R1,    PSA_ECC_FAMILY_SECP_R1,          192,
+    { MBEDTLS_ECP_DP_SECP192R1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_R1_192)
+      PSA_ECC_FAMILY_SECP_R1, 192,
+#else
+      0, 0,
+#endif
       19,     192,    "secp192r1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
-    { MBEDTLS_ECP_DP_SECP192K1,    PSA_ECC_FAMILY_SECP_K1,          192,
+    { MBEDTLS_ECP_DP_SECP192K1,
+#if defined(PSA_WANT_ECC_FAMILY_SECP_K1_192)
+      PSA_ECC_FAMILY_SECP_K1, 192,
+#else
+      0, 0,
+#endif
       18,     192,    "secp192k1"         },
 #endif
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
-    { MBEDTLS_ECP_DP_CURVE25519,   PSA_ECC_FAMILY_MONTGOMERY,       255,
+    { MBEDTLS_ECP_DP_CURVE25519,
+#if defined(PSA_WANT_ECC_FAMILY_MONTGOMERY_255)
+      PSA_ECC_FAMILY_MONTGOMERY, 255,
+#else
+      0, 0,
+#endif
       29,     256,    "x25519"            },
 #endif
 #if defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
-    { MBEDTLS_ECP_DP_CURVE448,     PSA_ECC_FAMILY_MONTGOMERY,       448,
+    { MBEDTLS_ECP_DP_CURVE448,
+#if defined(PSA_WANT_ECC_FAMILY_MONTGOMERY_448)
+      PSA_ECC_FAMILY_MONTGOMERY, 448,
+#else
+      0, 0,
+#endif
       30,     448,    "x448"              },
 #endif
-    { MBEDTLS_ECP_DP_NONE,         0,                               0,
+    { MBEDTLS_ECP_DP_NONE,
+      0, 0,
       0,      0,      NULL                },
 };
 
