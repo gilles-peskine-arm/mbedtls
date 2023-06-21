@@ -1,0 +1,3 @@
+Features
+   * Add utility functions to manipulate mbedtls_ecp_keypair objects, filling
+     gaps made by making its fields private. Fixes #5441.
