@@ -77,6 +77,9 @@ int main(int argc, char *argv[])
 
     mbedtls_pk_context pk;
     mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_point pt;
+#endif
 
     /*
      * Set to sane values
@@ -99,6 +102,9 @@ int main(int argc, char *argv[])
     mbedtls_mpi_init(&N); mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
     mbedtls_mpi_init(&D); mbedtls_mpi_init(&E); mbedtls_mpi_init(&DP);
     mbedtls_mpi_init(&DQ); mbedtls_mpi_init(&QP);
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_point_init(&pt);
+#endif
 
     if (argc < 2) {
 usage:
@@ -220,16 +226,20 @@ usage:
 #if defined(MBEDTLS_ECP_C)
         if (mbedtls_pk_get_type(&pk) == MBEDTLS_PK_ECKEY) {
             mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(pk);
+            if ((ret = mbedtls_ecp_export(ecp, NULL, &D, &pt)) != 0) {
+                mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+                goto cleanup;
+            }
             MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(X): ",
-                                                   &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), 16,
+                                                   &pt.MBEDTLS_PRIVATE(X), 16,
                                                    NULL));
             MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Y): ",
-                                                   &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 16,
+                                                   &pt.MBEDTLS_PRIVATE(Y), 16,
                                                    NULL));
             MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Z): ",
-                                                   &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Z), 16,
+                                                   &pt.MBEDTLS_PRIVATE(Z), 16,
                                                    NULL));
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("D   : ", &ecp->MBEDTLS_PRIVATE(d), 16, NULL));
+            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("D   : ", &D, 16, NULL));
         } else
 #endif
         {
@@ -270,14 +280,18 @@ usage:
 #if defined(MBEDTLS_ECP_C)
         if (mbedtls_pk_get_type(&pk) == MBEDTLS_PK_ECKEY) {
             mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(pk);
+            if ((ret = mbedtls_ecp_export(ecp, NULL, NULL, &pt)) != 0) {
+                mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+                goto cleanup;
+            }
             MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(X): ",
-                                                   &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), 16,
+                                                   &pt.MBEDTLS_PRIVATE(X), 16,
                                                    NULL));
             MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Y): ",
-                                                   &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 16,
+                                                   &pt.MBEDTLS_PRIVATE(Y), 16,
                                                    NULL));
             MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Z): ",
-                                                   &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Z), 16,
+                                                   &pt.MBEDTLS_PRIVATE(Z), 16,
                                                    NULL));
         } else
 #endif
@@ -309,6 +323,9 @@ cleanup:
     mbedtls_mpi_free(&N); mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
     mbedtls_mpi_free(&D); mbedtls_mpi_free(&E); mbedtls_mpi_free(&DP);
     mbedtls_mpi_free(&DQ); mbedtls_mpi_free(&QP);
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_point_free(&pt);
+#endif
 
     mbedtls_exit(exit_code);
 }
