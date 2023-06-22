@@ -763,6 +763,33 @@ int mbedtls_ecp_point_write_binary(const mbedtls_ecp_group *grp,
                                    unsigned char *buf, size_t buflen);
 
 /**
+ * \brief           This function exports a point's coordinates.
+ *
+ * \param grp       The group to which the point should belong.
+ *                  This must be initialized and have group parameters
+ *                  set, for example through mbedtls_ecp_group_load().
+ * \param P         The point to export. This must be initialized.
+ * \param X         An initialized MPI. On success, it will contain the
+ *                  X-coordinate of the point in the internal representation
+ *                  used by Mbed TLS.
+ * \param Y         An initialized MPI. On success, it will contain the
+ *                  X-coordinate of the point in the internal representation
+ *                  used by Mbed TLS.
+ * \param Z         An initialized MPI. On success, it will contain the
+ *                  X-coordinate of the point in the internal representation
+ *                  used by Mbed TLS.
+ *
+ * \return          \c 0 on success.
+ * \return          #MBEDTLS_ERR_MPI_ALLOC_FAILED on memory-allocation failure.
+ * \return          Another negative error code on other kinds of failure.
+ */
+int mbedtls_ecp_point_export_coordinates(const mbedtls_ecp_group *grp,
+                                         const mbedtls_ecp_point *P,
+                                         mbedtls_mpi *X,
+                                         mbedtls_mpi *Y,
+                                         mbedtls_mpi *Z);
+
+/**
  * \brief           This function imports a point from unsigned binary data.
  *
  * \note            This function does not check that the point actually

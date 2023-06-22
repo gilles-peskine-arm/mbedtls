@@ -763,6 +763,33 @@ cleanup:
     return ret;
 }
 
+/*
+ * Copy the coordinates out of a point.
+ */
+int mbedtls_ecp_point_export_coordinates(const mbedtls_ecp_group *grp,
+                                         const mbedtls_ecp_point *P,
+                                         mbedtls_mpi *X,
+                                         mbedtls_mpi *Y,
+                                         mbedtls_mpi *Z)
+{
+    int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+
+    /* We don't need grp. The function takes it as an argument in case
+     * we want to change the representation of a point in the future in
+     * a way that depends on the group, but want to preserve the output
+     * of this function.
+     */
+    (void) grp;
+
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(X, &P->X));
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(Y, &P->Y));
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(Z, &P->Z));
+    return 0;
+
+cleanup:
+    return ret;
+}
+
 #if defined(MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED)
 static int mbedtls_ecp_sw_derive_y(const mbedtls_ecp_group *grp,
                                    const mbedtls_mpi *X,
