@@ -181,6 +181,9 @@ int main(int argc, char *argv[])
     int i;
     char *p, *q;
     mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_point pt;
+#endif
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
     const char *pers = "gen_key";
@@ -195,6 +198,9 @@ int main(int argc, char *argv[])
     mbedtls_mpi_init(&N); mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
     mbedtls_mpi_init(&D); mbedtls_mpi_init(&E); mbedtls_mpi_init(&DP);
     mbedtls_mpi_init(&DQ); mbedtls_mpi_init(&QP);
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_point_init(&pt);
+#endif
 
     mbedtls_pk_init(&key);
     mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -375,11 +381,17 @@ usage:
 #if defined(MBEDTLS_ECP_C)
     if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
         mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(key);
-        mbedtls_printf("curve: %s\n",
-                       mbedtls_ecp_curve_info_from_grp_id(ecp->MBEDTLS_PRIVATE(grp).id)->name);
-        mbedtls_mpi_write_file("X_Q:   ", &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), 16, NULL);
-        mbedtls_mpi_write_file("Y_Q:   ", &ecp->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), 16, NULL);
-        mbedtls_mpi_write_file("D:     ", &ecp->MBEDTLS_PRIVATE(d), 16, NULL);
+        curve_info = mbedtls_ecp_curve_info_from_grp_id(
+            mbedtls_ecp_keypair_get_group_id(ecp));
+        mbedtls_printf("curve: %s\n", curve_info->name);
+
+        if ((ret = mbedtls_ecp_export(ecp, NULL, &D, &pt)) != 0) {
+            mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+            goto exit;
+        }
+        mbedtls_mpi_write_file("X_Q:   ", &pt.MBEDTLS_PRIVATE(X), 16, NULL);
+        mbedtls_mpi_write_file("Y_Q:   ", &pt.MBEDTLS_PRIVATE(Y), 16, NULL);
+        mbedtls_mpi_write_file("D:     ", &D, 16, NULL);
     } else
 #endif
     mbedtls_printf("  ! key type not supported\n");
@@ -412,6 +424,9 @@ exit:
     mbedtls_mpi_free(&N); mbedtls_mpi_free(&P); mbedtls_mpi_free(&Q);
     mbedtls_mpi_free(&D); mbedtls_mpi_free(&E); mbedtls_mpi_free(&DP);
     mbedtls_mpi_free(&DQ); mbedtls_mpi_free(&QP);
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_point_free(&pt);
+#endif
 
     mbedtls_pk_free(&key);
     mbedtls_ctr_drbg_free(&ctr_drbg);
