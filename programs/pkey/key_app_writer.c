@@ -205,7 +205,9 @@ int main(int argc, char *argv[])
     mbedtls_pk_context key;
     mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
 #if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_group grp;
     mbedtls_ecp_point pt;
+    mbedtls_mpi X, Y, Z;
 #endif
 
     /*
@@ -232,7 +234,9 @@ int main(int argc, char *argv[])
     mbedtls_mpi_init(&D); mbedtls_mpi_init(&E); mbedtls_mpi_init(&DP);
     mbedtls_mpi_init(&DQ); mbedtls_mpi_init(&QP);
 #if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_group_init(&grp);
     mbedtls_ecp_point_init(&pt);
+    mbedtls_mpi_init(&X); mbedtls_mpi_init(&Y); mbedtls_mpi_init(&Z);
 #endif
 
     if (argc < 2) {
@@ -353,13 +357,17 @@ usage:
 #if defined(MBEDTLS_ECP_C)
         if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
             mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(key);
-            if ((ret = mbedtls_ecp_export(ecp, NULL, &D, &pt)) != 0) {
+            if ((ret = mbedtls_ecp_export(ecp, &grp, &D, &pt)) != 0) {
                 mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
                 goto exit;
             }
-            mbedtls_mpi_write_file("Q(X): ", &pt.MBEDTLS_PRIVATE(X), 16, NULL);
-            mbedtls_mpi_write_file("Q(Y): ", &pt.MBEDTLS_PRIVATE(Y), 16, NULL);
-            mbedtls_mpi_write_file("Q(Z): ", &pt.MBEDTLS_PRIVATE(Z), 16, NULL);
+            if ((ret = mbedtls_ecp_point_export_coordinates(&grp, &pt, &X, &Y, &Z)) != 0) {
+                mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+                goto exit;
+            }
+            mbedtls_mpi_write_file("Q(X): ", &X, 16, NULL);
+            mbedtls_mpi_write_file("Q(Y): ", &Y, 16, NULL);
+            mbedtls_mpi_write_file("Q(Z): ", &Z, 16, NULL);
             mbedtls_mpi_write_file("D   : ", &D, 16, NULL);
         } else
 #endif
@@ -403,13 +411,17 @@ usage:
 #if defined(MBEDTLS_ECP_C)
         if (mbedtls_pk_get_type(&key) == MBEDTLS_PK_ECKEY) {
             mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(key);
-            if ((ret = mbedtls_ecp_export(ecp, NULL, NULL, &pt)) != 0) {
+            if ((ret = mbedtls_ecp_export(ecp, &grp, NULL, &pt)) != 0) {
                 mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
                 goto exit;
             }
-            mbedtls_mpi_write_file("Q(X): ", &pt.MBEDTLS_PRIVATE(X), 16, NULL);
-            mbedtls_mpi_write_file("Q(Y): ", &pt.MBEDTLS_PRIVATE(Y), 16, NULL);
-            mbedtls_mpi_write_file("Q(Z): ", &pt.MBEDTLS_PRIVATE(Z), 16, NULL);
+            if ((ret = mbedtls_ecp_point_export_coordinates(&grp, &pt, &X, &Y, &Z)) != 0) {
+                mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+                goto exit;
+            }
+            mbedtls_mpi_write_file("Q(X): ", &X, 16, NULL);
+            mbedtls_mpi_write_file("Q(Y): ", &Y, 16, NULL);
+            mbedtls_mpi_write_file("Q(Z): ", &Z, 16, NULL);
         } else
 #endif
         mbedtls_printf("key type not supported yet\n");
@@ -441,7 +453,9 @@ exit:
     mbedtls_mpi_free(&D); mbedtls_mpi_free(&E); mbedtls_mpi_free(&DP);
     mbedtls_mpi_free(&DQ); mbedtls_mpi_free(&QP);
 #if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_group_free(&grp);
     mbedtls_ecp_point_free(&pt);
+    mbedtls_mpi_free(&X); mbedtls_mpi_free(&Y); mbedtls_mpi_free(&Z);
 #endif
 
     mbedtls_pk_free(&key);

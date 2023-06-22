@@ -182,7 +182,9 @@ int main(int argc, char *argv[])
     char *p, *q;
     mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
 #if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_group grp;
     mbedtls_ecp_point pt;
+    mbedtls_mpi X, Y, Z;
 #endif
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
@@ -199,7 +201,9 @@ int main(int argc, char *argv[])
     mbedtls_mpi_init(&D); mbedtls_mpi_init(&E); mbedtls_mpi_init(&DP);
     mbedtls_mpi_init(&DQ); mbedtls_mpi_init(&QP);
 #if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_group_init(&grp);
     mbedtls_ecp_point_init(&pt);
+    mbedtls_mpi_init(&X); mbedtls_mpi_init(&Y); mbedtls_mpi_init(&Z);
 #endif
 
     mbedtls_pk_init(&key);
@@ -385,12 +389,17 @@ usage:
             mbedtls_ecp_keypair_get_group_id(ecp));
         mbedtls_printf("curve: %s\n", curve_info->name);
 
-        if ((ret = mbedtls_ecp_export(ecp, NULL, &D, &pt)) != 0) {
+        if ((ret = mbedtls_ecp_export(ecp, &grp, &D, &pt)) != 0) {
             mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
             goto exit;
         }
-        mbedtls_mpi_write_file("X_Q:   ", &pt.MBEDTLS_PRIVATE(X), 16, NULL);
-        mbedtls_mpi_write_file("Y_Q:   ", &pt.MBEDTLS_PRIVATE(Y), 16, NULL);
+        if ((ret = mbedtls_ecp_point_export_coordinates(&grp, &pt, &X, &Y, &Z)) != 0) {
+            mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+            goto exit;
+        }
+        mbedtls_mpi_write_file("X_Q:   ", &X, 16, NULL);
+        mbedtls_mpi_write_file("Y_Q:   ", &Y, 16, NULL);
+        mbedtls_mpi_write_file("Z_Q:   ", &Z, 16, NULL);
         mbedtls_mpi_write_file("D:     ", &D, 16, NULL);
     } else
 #endif
@@ -425,7 +434,9 @@ exit:
     mbedtls_mpi_free(&D); mbedtls_mpi_free(&E); mbedtls_mpi_free(&DP);
     mbedtls_mpi_free(&DQ); mbedtls_mpi_free(&QP);
 #if defined(MBEDTLS_ECP_C)
+    mbedtls_ecp_group_free(&grp);
     mbedtls_ecp_point_free(&pt);
+    mbedtls_mpi_free(&X); mbedtls_mpi_free(&Y); mbedtls_mpi_free(&Z);
 #endif
 
     mbedtls_pk_free(&key);
