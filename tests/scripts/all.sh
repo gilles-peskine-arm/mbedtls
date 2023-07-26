@@ -2916,7 +2916,7 @@ component_test_se_default () {
 }
 
 component_test_psa_crypto_drivers () {
-    msg "build: MBEDTLS_PSA_CRYPTO_DRIVERS w/ driver hooks"
+    msg "build: full + test drivers dispatching to builtins"
     scripts/config.py full
     scripts/config.py set MBEDTLS_PSA_CRYPTO_DRIVERS
     scripts/config.py set MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
@@ -2926,7 +2926,7 @@ component_test_psa_crypto_drivers () {
 
     make CC=gcc CFLAGS="${loc_cflags}" LDFLAGS="$ASAN_CFLAGS"
 
-    msg "test: full + MBEDTLS_PSA_CRYPTO_DRIVERS"
+    msg "test: full + test drivers dispatching to builtins"
     make test
 }
 
