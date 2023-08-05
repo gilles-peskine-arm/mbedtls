@@ -127,6 +127,10 @@ run_test()
     TEST_NAME="$1"
     RUN_CMD="$PROG_PATH -f $IN_DIR/$2"
 
+    if [ -n "${LD_PRELOAD:-}" ]; then
+        RUN_CMD="scripts/run-via.sh $RUN_CMD"
+    fi
+
     if [ "-arg" = "$3" ]; then
         RUN_CMD="$RUN_CMD $4"
         shift 4
