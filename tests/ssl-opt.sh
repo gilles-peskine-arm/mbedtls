@@ -51,6 +51,12 @@ fi
 : ${GNUTLS_SERV:=gnutls-serv}
 : ${PERL:=perl}
 
+if [ -n "${LD_PRELOAD:-}" ]; then
+    P_SRV="scripts/run-via.sh $P_SRV"
+    P_CLI="scripts/run-via.sh $P_CLI"
+    P_PXY="scripts/run-via.sh $P_PXY"
+fi
+
 # The OPENSSL variable used to be OPENSSL_CMD for historical reasons.
 # To help the migration, error out if the old variable is set,
 # but only if it has a different value than the new one.

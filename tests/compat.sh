@@ -43,6 +43,11 @@ SRVMEM=0
 : ${GNUTLS_CLI:=gnutls-cli}
 : ${GNUTLS_SERV:=gnutls-serv}
 
+if [ -n "${LD_PRELOAD:-}" ]; then
+    M_SRV="scripts/run-via.sh $M_SRV"
+    M_CLI="scripts/run-via.sh $M_CLI"
+fi
+
 # The OPENSSL variable used to be OPENSSL_CMD for historical reasons.
 # To help the migration, error out if the old variable is set,
 # but only if it has a different value than the new one.

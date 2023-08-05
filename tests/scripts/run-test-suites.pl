@@ -70,11 +70,15 @@ my $skip_re =
       } @skip_patterns) .
       ')(\z|\.)' );
 
+my $prefix = $^O eq "MSWin32" ? '' : './';
+
 # in case test suites are linked dynamically
 $ENV{'LD_LIBRARY_PATH'} = '../library';
 $ENV{'DYLD_LIBRARY_PATH'} = '../library';
 
-my $prefix = $^O eq "MSWin32" ? '' : './';
+if ($ENV{LD_PRELOAD}) {
+    $prefix = "scripts/run-via.sh $prefix";
+}
 
 my (@failed_suites, $total_tests_run, $failed, $suite_cases_passed,
     $suite_cases_failed, $suite_cases_skipped, $total_cases_passed,
