@@ -70,11 +70,23 @@ my $skip_re =
       } @skip_patterns) .
       ')(\z|\.)' );
 
+my $prefix = $^O eq "MSWin32" ? '' : './';
+
 # in case test suites are linked dynamically
 $ENV{'LD_LIBRARY_PATH'} = '../library';
 $ENV{'DYLD_LIBRARY_PATH'} = '../library';
 
-my $prefix = $^O eq "MSWin32" ? '' : './';
+if ($ENV{LD_PRELOAD}) {
+    # Sanitizers (Asan, UBsan, Msan) want to be loaded first (at least
+    # with GCC 11). This is incompatible with normal use of LD_PRELOAD,
+    # for example when running under faketime. So if the test are linked
+    # with a sanitizer, preload it explicitly before the rest.
+    my $ldd = `ldd $prefix$suites[0]`;
+    # Remove everything that's dynamically linked after libc
+    $ldd =~ s!\n[ \t]*libc\..*!!s;
+    my @libs = ($ldd =~ m!(?<= )/\S*/lib[a-z]+san\.so\.[^/\n]+(?= )!g);
+    $ENV{LD_PRELOAD} = join(':', @libs, $ENV{LD_PRELOAD});
+}
 
 my (@failed_suites, $total_tests_run, $failed, $suite_cases_passed,
     $suite_cases_failed, $suite_cases_skipped, $total_cases_passed,
