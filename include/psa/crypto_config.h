@@ -76,6 +76,7 @@
 #define PSA_WANT_ALG_MD5                        1
 #define PSA_WANT_ALG_OFB                        1
 #define PSA_WANT_ALG_PBKDF2_HMAC                1
+#define PSA_WANT_ALG_PBKDF2_AES_CMAC_PRF_128    1
 #define PSA_WANT_ALG_RIPEMD160                  1
 #define PSA_WANT_ALG_RSA_OAEP                   1
 #define PSA_WANT_ALG_RSA_PKCS1V15_CRYPT         1
@@ -91,7 +92,8 @@
 #define PSA_WANT_ALG_TLS12_PSK_TO_MS            1
 #define PSA_WANT_ALG_TLS12_ECJPAKE_TO_PMS       1
 
-/* Note: when adding support, also adjust include/mbedtls/config_psa.h */
+/* XTS is not yet supported via the PSA API in Mbed TLS.
+ * Note: when adding support, also adjust include/mbedtls/config_psa.h */
 //#define PSA_WANT_ALG_XTS                        1
 
 #define PSA_WANT_ECC_BRAINPOOL_P_R1_256         1
@@ -122,12 +124,36 @@
 #define PSA_WANT_KEY_TYPE_CAMELLIA              1
 #define PSA_WANT_KEY_TYPE_CHACHA20              1
 #define PSA_WANT_KEY_TYPE_DES                   1
-#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1
+//#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY        1
-#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR           1
 #define PSA_WANT_KEY_TYPE_DH_PUBLIC_KEY         1
 #define PSA_WANT_KEY_TYPE_RAW_DATA              1
-#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR          1 /* Deprecated */
 #define PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY        1
+
+/*
+ * The following symbols extend and deprecate the legacy
+ * PSA_WANT_KEY_TYPE_xxx_KEY_PAIR ones. They include the usage of that key in
+ * the name's suffix. "_USE" is the most generic and it can be used to describe
+ * a generic suport, whereas other ones add more features on top of that and
+ * they are more specific.
+ */
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC      1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_GENERATE 1
+#define PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_DERIVE   1
+
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC      1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_IMPORT   1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_EXPORT   1
+#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_GENERATE 1
+//#define PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_DERIVE   1 /* Not supported */
+
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_BASIC       1
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_IMPORT    1
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_EXPORT    1
+#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_GENERATE  1
+//#define PSA_WANT_KEY_TYPE_DH_KEY_PAIR_DERIVE    1 /* Not supported */
 
 #endif /* PSA_CRYPTO_CONFIG_H */

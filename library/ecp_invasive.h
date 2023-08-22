@@ -40,7 +40,20 @@ typedef enum {
     MBEDTLS_ECP_MOD_SCALAR
 } mbedtls_ecp_modulus_type;
 
+typedef enum {
+    MBEDTLS_ECP_VARIANT_NONE = 0,
+    MBEDTLS_ECP_VARIANT_WITH_MPI_STRUCT,
+    MBEDTLS_ECP_VARIANT_WITH_MPI_UINT
+} mbedtls_ecp_variant;
+
 #if defined(MBEDTLS_TEST_HOOKS) && defined(MBEDTLS_ECP_LIGHT)
+
+/** Queries the ecp variant.
+ *
+ * \return  The id of the ecp variant.
+ */
+MBEDTLS_STATIC_TESTABLE
+mbedtls_ecp_variant mbedtls_ecp_get_variant(void);
 
 #if defined(MBEDTLS_ECP_MONTGOMERY_ENABLED)
 /** Generate a private key on a Montgomery curve (Curve25519 or Curve448).
@@ -306,7 +319,7 @@ int mbedtls_ecp_mod_p448_raw(mbedtls_mpi_uint *X, size_t X_limbs);
  * \param[in,out] N The address of the modulus structure to populate.
  *                  Must be initialized.
  * \param[in] id    The mbedtls_ecp_group_id for which to initialise the modulus.
- * \param[in] ctype The mbedtls_ecp_curve_type identifier for a coordinate modulus (P)
+ * \param[in] ctype The mbedtls_ecp_modulus_type identifier for a coordinate modulus (P)
  *                  or a scalar modulus (N).
  *
  * \return          \c 0 if successful.
@@ -317,7 +330,7 @@ int mbedtls_ecp_mod_p448_raw(mbedtls_mpi_uint *X, size_t X_limbs);
 MBEDTLS_STATIC_TESTABLE
 int mbedtls_ecp_modulus_setup(mbedtls_mpi_mod_modulus *N,
                               const mbedtls_ecp_group_id id,
-                              const mbedtls_ecp_curve_type ctype);
+                              const mbedtls_ecp_modulus_type ctype);
 
 #endif /* MBEDTLS_TEST_HOOKS && MBEDTLS_ECP_C */
 
