@@ -1,0 +1,7 @@
+API changes
+   * The Connection ID (CID) DTLS extension is now compatible with
+     RFC 9146 by default. Define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT to 1
+     to use the extension identifier from drafts that was used in previous
+     versions of Mbed TLS. This replaces the configuration option
+     MBEDTLS_TLS_EXT_CID which is no longer supported.
+     This change was released in Mbed TLS 3.3.0, but not announced.
