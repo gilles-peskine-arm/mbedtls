@@ -56,11 +56,7 @@ option(ENABLE_PROGRAMS "Build mbed TLS programs." ON)
 
 option(UNSAFE_BUILD "Allow unsafe builds. These builds ARE NOT SECURE." OFF)
 option(MBEDTLS_FATAL_WARNINGS "Compiler warnings treated as errors" ON)
-if(CMAKE_HOST_WIN32)
-    option(GEN_FILES "Generate the auto-generated files as needed" OFF)
-else()
-    option(GEN_FILES "Generate the auto-generated files as needed" ON)
-endif()
+option(GEN_FILES "Generate the auto-generated files as needed" ON)
 
 option(DISABLE_PACKAGE_CONFIG_AND_INSTALL "Disable package configuration, target export and installation" ${MBEDTLS_AS_SUBPROJECT})
 
