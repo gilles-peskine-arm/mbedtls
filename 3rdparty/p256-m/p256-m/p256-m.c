@@ -1175,6 +1175,17 @@ static int scalar_from_bytes(uint32_t s[8], const uint8_t p[32])
     u256_set32(r, 1);
     uint32_t lt_1 = u256_sub(r, s, r);
 
+    /* GP:
+       This function is not constant-time as written, although I'd expect
+       typical optimizing compilers to produce constant-time code (though
+       we've had surprises from Clang using conditional instructions on arm).
+       That's ok: we care that this function doesn't leak the value if it's
+       in range, but not that it leaks out-of-range-ness.
+       But it's used with a CT_POISON input several times below, so
+       shouldn't it be constant-time to avoid a msan/valgrind complaint?
+       If it's made constant-time, should the return type be uint32_t rather
+       than int?
+    */
     if (lt_n && !lt_1)
         return 0;
 
