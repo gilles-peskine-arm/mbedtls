@@ -85,7 +85,7 @@ static void u256_set32(uint32_t z[8], uint32_t x)
  *      c = (x + y) div 2^256
  * That is, z + c * 2^256 = x + y
  *
- * Note: as a memory area, z must be either equal to x or y, or not overlap.
+ * Note: as a memory area, z must either be equal to x or y, or not overlap.
  */
 static uint32_t u256_add(uint32_t z[8],
                          const uint32_t x[8], const uint32_t y[8])
@@ -109,20 +109,20 @@ static uint32_t u256_add(uint32_t z[8],
  *      c = 0 if x >=y, 1 otherwise
  * That is, z = c * 2^256 + x - y
  *
- * Note: as a memory area, z must be either equal to x or y, or not overlap.
+ * Note: as a memory area, z must either be equal to x or y, or not overlap.
  */
 static uint32_t u256_sub(uint32_t z[8],
                          const uint32_t x[8], const uint32_t y[8])
 {
-    uint32_t carry = 0;
+    uint32_t borrow = 0;
 
     for (unsigned i = 0; i < 8; i++) {
-        uint64_t diff = (uint64_t) x[i] - y[i] - carry;
+        uint64_t diff = (uint64_t) x[i] - y[i] - borrow;
         z[i] = (uint32_t) diff;
-        carry = -(uint32_t) (diff >> 32);
+        borrow = -(uint32_t) (diff >> 32);
     }
 
-    return carry;
+    return borrow;
 }
 
 /*
@@ -132,7 +132,7 @@ static uint32_t u256_sub(uint32_t z[8],
  *     c in [0, 1]
  * out: z = x if c == 1, z unchanged otherwise
  *
- * Note: as a memory area, z must be either equal to x, or not overlap.
+ * Note: as a memory area, z must either be equal to x, or not overlap.
  */
 static void u256_cmov(uint32_t z[8], const uint32_t x[8], uint32_t c)
 {
@@ -344,7 +344,7 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
  *      c     = z_in + x * y div 2^288
  * That is, z_out + c * 2^288 = z_in + x * y
  *
- * Note: as a memory area, z must be either equal to y, or not overlap.
+ * Note: as a memory area, z must either be equal to y, or not overlap.
  *
  * This is a helper for Montgomery multiplication.
  */
@@ -471,7 +471,7 @@ typedef struct {
 m256_mod;
 
 /*
- * Data for Montgomery operations modulo the curve's p
+ * Data for Montgomery operations modulo the curve's p (field order)
  */
 static const m256_mod p256_p = {
     {   /* the curve's p */
@@ -486,7 +486,7 @@ static const m256_mod p256_p = {
 };
 
 /*
- * Data for Montgomery operations modulo the curve's n
+ * Data for Montgomery operations modulo the curve's n (curve order)
  */
 static const m256_mod p256_n = {
     {   /* the curve's n */
@@ -507,7 +507,7 @@ static const m256_mod p256_n = {
  *     mod must point to a valid m256_mod structure
  * out: z = (x + y) mod m, in [0, m)
  *
- * Note: as a memory area, z must be either equal to x or y, or not overlap.
+ * Note: as a memory area, z must either be equal to x or y, or not overlap.
  */
 static void m256_add(uint32_t z[8],
                      const uint32_t x[8], const uint32_t y[8],
@@ -529,7 +529,7 @@ static void m256_add(uint32_t z[8],
  * in: x, y in [0, p)
  * out: z = (x + y) mod p, in [0, p)
  *
- * Note: as a memory area, z must be either equal to x or y, or not overlap.
+ * Note: as a memory area, z must either be equal to x or y, or not overlap.
  */
 static void m256_add_p(uint32_t z[8],
                        const uint32_t x[8], const uint32_t y[8])
@@ -544,7 +544,7 @@ static void m256_add_p(uint32_t z[8],
  *     mod must point to a valid m256_mod structure
  * out: z = (x - y) mod m, in [0, m)
  *
- * Note: as a memory area, z must be either equal to x or y, or not overlap.
+ * Note: as a memory area, z must either be equal to x or y, or not overlap.
  */
 static void m256_sub(uint32_t z[8],
                      const uint32_t x[8], const uint32_t y[8],
@@ -565,7 +565,7 @@ static void m256_sub(uint32_t z[8],
  * in: x, y in [0, p)
  * out: z = (x + y) mod p, in [0, p)
  *
- * Note: as a memory area, z must be either equal to x or y, or not overlap.
+ * Note: as a memory area, z must either be equal to x or y, or not overlap.
  */
 static void m256_sub_p(uint32_t z[8],
                        const uint32_t x[8], const uint32_t y[8])
@@ -876,16 +876,18 @@ static void point_double(uint32_t x[8], uint32_t y[8], uint32_t z[8])
     uint32_t m[8], s[8], u[8];
 
     /* m = 3 * x^2 + a * z^4 = 3 * (x + z^2) * (x - z^2) */
-    m256_mul_p(s, z, z);
-    m256_add_p(m, x, s);
-    m256_sub_p(u, x, s);
-    m256_mul_p(s, m, u);
-    m256_add_p(m, s, s);
-    m256_add_p(m, m, s);
+    // [GECC] 3.21 A
+    m256_mul_p(s, z, z);        /* s := z^2 */
+    m256_add_p(m, x, s);        /* m := x + z^2 */
+    m256_sub_p(u, x, s);        /* u := x - z^2 */
+    m256_mul_p(s, m, u);        /* s := (x+z^2)*(x-z^2) */
+    m256_add_p(m, s, s);        /* m := 2*(x+z^2)*(x-z^2) */
+    m256_add_p(m, m, s);        /* m := 3*(x+z^2)*(x-z^2) */
 
     /* s = 4 * x * y^2 */
+    // [GECC] 3.21 D
     m256_mul_p(u, y, y);
-    m256_add_p(u, u, u); /* u = 2 * y^2 (used below) */
+    m256_add_p(u, u, u); /* u = 2 * y^2 (used below) */ // [GECC] 3.21 C
     m256_mul_p(s, x, u);
     m256_add_p(s, s, s);
 
@@ -928,7 +930,7 @@ static void point_add(uint32_t x1[8], uint32_t y1[8], uint32_t z1[8],
 
     /* t1 = u2 = x2 z1^2 */
     m256_mul_p(t1, z1, z1);
-    m256_mul_p(t2, t1, z1);
+    m256_mul_p(t2, t1, z1);     /* t2 = z1^3 */
     m256_mul_p(t1, t1, x2);
 
     /* t2 = s2 = y2 z1^3 */
@@ -944,7 +946,7 @@ static void point_add(uint32_t x1[8], uint32_t y1[8], uint32_t z1[8],
     m256_mul_p(z1, z1, t1);
 
     /* t1 = h^3 */
-    m256_mul_p(t3, t1, t1);
+    m256_mul_p(t3, t1, t1);     /* t3 = h^2 */
     m256_mul_p(t1, t3, t1);
 
     /* t3 = x1 * h^2 */
@@ -1065,6 +1067,8 @@ static void scalar_mult(uint32_t rx[8], uint32_t ry[8],
      * implicit recoding, and a different loop initialisation to avoid feeding
      * 0 to our addition formulas, as they don't support it.
      */
+    /* R is calculated in Jacobi form (rx, ry, rz) and converted to affine
+     * at the end. */
     uint32_t s_odd[8], py_neg[8], py_use[8], rz[8];
 
     /*
@@ -1093,7 +1097,7 @@ static void scalar_mult(uint32_t rx[8], uint32_t ry[8],
      * For any odd number s_odd = b255 ... b1 1, we have
      *      s_odd = 2^255 + 2^254 sbit(b255) + ... + 2 sbit(b2) + sbit(b1)
      * writing
-     *      sbit(b) = 2 * b - 1 = b ? 1 : -1
+     *      sbit(b) = 2 * b - 1 = (b ? 1 : -1)
      *
      * Use that to compute s_odd * P' by repeating R = 2 * R +- P':
      *      s_odd * P' = 2 * ( ... (2 * P' + sbit(b255) P') ... ) + sbit(b1) P'
@@ -1287,12 +1291,13 @@ static void ecdsa_m256_mod_n(uint32_t x[8])
 /*
  * Import integer mod n (Montgomery domain) from hash
  *
- * in: h = h0, ..., h_hlen
+ * in: h = h0, ..., h_{hlen-1}
  *     hlen the length of h in bytes
  * out: z = (h0 * 2^l-8 + ... + h_l) * 2^256 mod n
  *      with l = min(32, hlen)
  *
  * Note: in [SEC1] this is step 5 of 4.1.3 (sign) or step 3 or 4.1.4 (verify),
+ * followed in either case by a reduction modulo the curve order,
  * with obvious simplications since n's bit-length is a multiple of 8.
  */
 static void ecdsa_m256_from_hash(uint32_t z[8],
@@ -1340,7 +1345,7 @@ int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
     /* 1. Set ephemeral keypair */
     uint8_t *kb = (uint8_t *) t4;
     /* kb will be erased by re-using t4 for dU - if we exit before that, we
-     * haven't read the private key yet so we kb isn't sensitive yet */
+     * haven't read the private key yet so kb isn't sensitive yet */
     ret = scalar_gen_with_pub(kb, k, xr, t3);   /* xr = x_coord(k * G) */
     if (ret != 0)
         return P256_RANDOM_FAILED;
@@ -1450,7 +1455,7 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
         /* (u1, u2) = R = R1 + R2 */
         point_add_or_double_leaky(u1, u2, px, py, e, s);
         /* No need to check if R == 0 here: if that's the case, it will be
-         * caught when comparating rx (which will be 0) to r (which isn't). */
+         * caught when comparing rx (which will be 0) to r (which isn't). */
     }
 
     /* 6. Convert xR to an integer */
