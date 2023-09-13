@@ -321,6 +321,7 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
     const uint16_t xh = x >> 16;
     const uint16_t yh = y >> 16;
 
+    //GP: how about Karatsuba multiplication? How would it affect code size and performance? (goes both for C and assembly)
     /* x*y = xl*yl + 2**16 (xh*yl + yl*yh) + 2**32 xh*yh
      *     = lo    + 2**16 (m1    + m2   ) + 2**32 hi    */
     const uint32_t lo = (uint32_t) xl * yl;
