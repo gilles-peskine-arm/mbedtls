@@ -1195,6 +1195,7 @@ static int scalar_from_bytes(uint32_t s[8], const uint8_t p[32])
 /* Using RNG functions from Mbed TLS as p256-m does not come with a
  * cryptographically secure RNG function.
  */
+//GP: why is this function not static?
 int p256_generate_random(uint8_t *output, unsigned output_size)
 {
     int ret;
