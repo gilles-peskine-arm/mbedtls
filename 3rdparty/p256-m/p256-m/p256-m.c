@@ -197,6 +197,7 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t);
  * code size (ie, it can be inlined even in an unrolled loop) */
 #undef MULADD64_SMALL
 
+//GP: I have not fully reviewed the feature detection. I consider it settled after https://github.com/Mbed-TLS/mbedtls/pull/8126.
 /*
  * Currently assembly optimisations are only supported with GCC/Clang for
  * Arm's Cortex-A and Cortex-M lines of CPUs, which start with the v6-M and
@@ -303,6 +304,7 @@ static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
 
 #endif /* GCC/Clang with Cortex-M/A CPU */
 
+//GP: should MUL64_IS_CONSTANT_TIME be forced on on recognized 64-bit architectures? (defined by ULONG_MAX >= 2^64-1?)
 #if !defined(MULADD64_ASM)
 #if defined(MUL64_IS_CONSTANT_TIME)
 static uint64_t u32_muladd64(uint32_t x, uint32_t y, uint32_t z, uint32_t t)
