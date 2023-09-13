@@ -591,6 +591,7 @@ static void m256_mul(uint32_t z[8],
      * b = 2^32, n = 8, R = 2^256
      */
     uint32_t m_prime = mod->ni;
+    //GP: I'd prefer to write uint32_t a[9] = {0} for clarity. Do common compilers generate worse code for that?
     uint32_t a[9];
 
     for (unsigned i = 0; i < 9; i++) {
@@ -701,6 +702,7 @@ static void m256_inv(uint32_t z[8], const uint32_t x[8],
 
     unsigned i = 0;
     uint32_t limb = mod->m[i] - 2;
+    //GP: this would really be clearer as a for loop
     while (1) {
         for (unsigned j = 0; j < 32; j++) {
             if ((limb & 1) != 0) {
@@ -852,6 +854,17 @@ static void point_to_affine(uint32_t x[8], uint32_t y[8], uint32_t z[8])
 {
     uint32_t t[8];
 
+    /* GP:
+       Comments a bit confusing in how the variables refer to either
+       the initial value or the current value. I can tell that
+       everything on the RHS is the initial value, but it gets hard to
+       read with e.g. "x_new = x_old * z_initial^-2". Even just
+       writing `:=` instead of `=` could improve readability by hinting
+       that the LHS and the RHS are different beasts. Subscripting the LHS
+       would help more, e.g. "x_final = x * z^-2" (with the unsubscripted
+       variable always referring to the original value, so one can think
+       of it as a mathematical object rather than a mutable variable).
+    */
     m256_inv(z, z, &p256_p);    /* z = z^-1 */
 
     m256_mul_p(t, z, z);        /* t = z^-2 */
@@ -891,6 +904,7 @@ static void point_double(uint32_t x[8], uint32_t y[8], uint32_t z[8])
     m256_mul_p(s, x, u);
     m256_add_p(s, s, s);
 
+    //GP: this would be easier to read if u was calculated where it's needed rather than in the middle of calculating x_final
     /* u = 8 * y^4 (not named in the paper, first term of y3) */
     m256_mul_p(u, u, u);
     m256_add_p(u, u, u);
@@ -904,6 +918,7 @@ static void point_double(uint32_t x[8], uint32_t y[8], uint32_t z[8])
     m256_mul_p(z, y, z);
     m256_add_p(z, z, z);
 
+    //GP: would be more clearly expressed with x3 instead of t
     /* y3 = -u + m * (s - t) */
     m256_sub_p(y, s, x);
     m256_mul_p(y, y, m);
@@ -1087,6 +1102,7 @@ static void scalar_mult(uint32_t rx[8], uint32_t ry[8],
     u256_set32(py_use, 0);
     m256_sub_p(py_neg, py_use, py);
 
+    //GP: I don't understand the notation `:` in the next comment
     /* Initialize R = P' = (x:(-1)^negate * y:1) */
     u256_cmov(rx, px, 1);
     u256_cmov(ry, py, 1);
@@ -1343,6 +1359,7 @@ int p256_ecdsa_sign(uint8_t sig[64], const uint8_t priv[32],
     uint32_t xr[8], k[8], t3[8], t4[8];
 
     /* 1. Set ephemeral keypair */
+    //GP: kb should have a name that indicates that its contents are unused
     uint8_t *kb = (uint8_t *) t4;
     /* kb will be erased by re-using t4 for dU - if we exit before that, we
      * haven't read the private key yet so kb isn't sensitive yet */
@@ -1438,11 +1455,13 @@ int p256_ecdsa_verify(const uint8_t sig[64], const uint8_t pub[64],
     m256_done(u2, &p256_n);          /* u2 out of Montgomery domain */
 
     /* 5. Compute R (and re-use (u1, u2) to store its coordinates */
+    //GP: since the public key is called Q, px/py should be named Qx/Qy or at least qx/qy
     uint32_t px[8], py[8];
     ret = point_from_bytes(px, py, pub);
     if (ret != 0)
         return P256_INVALID_PUBKEY;
 
+    //GP: e and s are reused for a different purpose. That's ok to save memory but a comment should highlight it.
     scalar_mult(e, s, px, py, u2);      /* (e, s) = R2 = u2 * Qu */
 
     if (u256_diff0(u1) == 0) {
