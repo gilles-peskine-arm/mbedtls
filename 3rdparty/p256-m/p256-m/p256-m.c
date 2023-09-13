@@ -7,6 +7,7 @@
 
 #include "p256-m.h"
 #include "psa/crypto.h"
+//GP: stdio.h, stdlib.h and string.h are not used (although I argue to use memcpy)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -142,6 +143,7 @@ static void u256_cmov(uint32_t z[8], const uint32_t x[8], uint32_t c)
     }
 }
 
+//GP: this function's result is always used to branch, so why not implement it in a non-constant-time way with memcmp?
 /*
  * 256-bit compare for equality
  *
@@ -158,6 +160,7 @@ static uint32_t u256_diff(const uint32_t x[8], const uint32_t y[8])
     return diff;
 }
 
+//GP: this function's result is always used to branch, so why not implement it in a non-constant-time way?
 /*
  * 256-bit compare to zero
  *
@@ -696,6 +699,7 @@ static void m256_inv(uint32_t z[8], const uint32_t x[8],
      * branches are OK as the exponent is not a secret.
      */
     uint32_t bitval[8];
+    //GP: why call cmov for a non-conditional copy? Wouldn't memcpy be the same code size and faster?
     u256_cmov(bitval, x, 1);    /* copy x before writing to z */
 
     m256_set32(z, 1, mod);
