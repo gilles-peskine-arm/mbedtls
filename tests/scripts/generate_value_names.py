@@ -17,7 +17,7 @@
 # limitations under the License.
 
 import argparse
-import glob
+import pathlib
 import re
 from typing import Dict, Set
 
@@ -130,9 +130,11 @@ def main() -> None:
     options = parser.parse_args()
     build_tree.chdir_to_root()
     constant_names = ConstantNames()
-    for filename in glob.glob('include/*/*.h'):
-        constant_names.register_include(filename[filename.find('/')+1:])
-        constant_names.collect_from_file(filename)
+    for path in pathlib.Path('include').glob('*/*.h'):
+        # Remove "include/" for use in #include directives.
+        # On Windows, make sure we get a path with slashes.
+        constant_names.register_include(path.parts[-2] + '/' + path.parts[-1])
+        constant_names.collect_from_file(str(path))
     constant_names.write_code(options.output)
 
 if __name__ == '__main__':
