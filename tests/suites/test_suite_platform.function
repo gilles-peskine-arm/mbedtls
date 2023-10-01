@@ -6,6 +6,7 @@
  */
 
 #include <limits.h>
+#include <stdlib.h>
 
 #if defined(MBEDTLS_HAVE_TIME)
 #include "mbedtls/platform_time.h"
@@ -33,6 +34,84 @@ void sleep_ms(int milliseconds)
 #endif
 }
 #endif
+
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define MBEDTLS_HAS_ASAN
+#endif
+#endif
+
+static char *mbedtls_test_asan_override(const char *override)
+{
+#ifdef MBEDTLS_HAS_ASAN
+    const char *const name = "ASAN_OPTIONS";
+    char *old = getenv(name);
+    if (old == NULL) {
+        int ret = setenv(name, override, 1);
+        if (ret != 0) {
+            mbedtls_fprintf(stderr,
+                            "%s: preserved: setenv(\"%s\", \"%s\", 1) failed (errno=%d)!\n",
+                            __func__, name, override, errno);
+            abort();
+        }
+        return NULL;
+    } else {
+        size_t size_old = strlen(old) + 1;
+        char *preserved = mbedtls_calloc(1, size_old);
+        if (preserved == NULL) {
+            mbedtls_fprintf(stderr,
+                            "%s: preserved = mbedtls_calloc(1, %zu) failed!\n",
+                            __func__, size_old);
+            abort();
+        }
+        memcpy(preserved, old, size_old);
+        size_t size_new = size_old + strlen(override) + 1;
+        char *new = mbedtls_calloc(1, size_new);
+        if (new == NULL) {
+            mbedtls_fprintf(stderr,
+                            "%s: new = mbedtls_calloc(1, %zu) failed!\n",
+                            __func__, size_new);
+            abort();
+        }
+        memcpy(new, old, size_old);
+        new[size_old - 1] = ':';
+        strcpy(new + size_old, override);
+        int ret = setenv(name, new, 1);
+        if (ret != 0) {
+            mbedtls_fprintf(stderr,
+                            "%s: setenv(\"%s\", \"%s\", 1) failed (errno=%d)!\n",
+                            __func__, name, new, errno);
+            abort();
+        }
+        mbedtls_free(new);
+        return preserved;
+    }
+#else /* MBEDTLS_HAS_ASAN */
+    (void) override;
+    return NULL;
+#endif /* MBEDTLS_HAS_ASAN */
+}
+
+static void mbedtls_test_asan_restore(char *preserved)
+{
+#ifdef MBEDTLS_HAS_ASAN
+    const char *const name = "ASAN_OPTIONS";
+    if (preserved == NULL) {
+        unsetenv(name);
+        return;
+    }
+    int ret = setenv(name, preserved, 1);
+    if (ret != 0) {
+        mbedtls_fprintf(stderr,
+                        "%s: setenv(\"%s\", \"%s\", 1) failed (errno=%d)!\n",
+                        __func__, name, preserved, errno);
+        abort();
+        mbedtls_free(preserved);
+    }
+#else /* MBEDTLS_HAS_ASAN */
+    (void) preserved;
+#endif /* MBEDTLS_HAS_ASAN */
+}
 
 /* END_HEADER */
 
@@ -125,12 +204,14 @@ void time_delay_seconds(int delay_secs)
 void check_mbedtls_calloc_overallocation(intmax_t num, intmax_t size)
 {
     unsigned char *buf;
+    char *asan_preserve = mbedtls_test_asan_override("allocator_may_return_null=1");
     buf = mbedtls_calloc((size_t) num, (size_t) size);
     /* Dummy usage of the pointer to prevent optimizing it */
     mbedtls_printf("calloc pointer : %p\n", buf);
     TEST_ASSERT(buf == NULL);
 
 exit:
+    mbedtls_test_asan_restore(asan_preserve);
     mbedtls_free(buf);
 }
 /* END_CASE */
