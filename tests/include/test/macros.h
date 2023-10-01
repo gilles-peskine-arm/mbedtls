@@ -26,6 +26,12 @@
 
 #include "mbedtls/build_info.h"
 
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define MBEDTLS_HAS_ASAN
+#endif
+#endif
+
 #include <stdlib.h>
 
 #include "mbedtls/platform.h"
