@@ -445,6 +445,11 @@ static void write_outcome_result(FILE *outcome_file,
  */
 static void try_chdir(const char *argv0) {
     const char *slash = strrchr(argv0, '/');
+#if defined(_WIN32) ||  defined(__CYGWIN__)
+    if (slash == NULL) {
+        slash = strrchr(argv0, '\\');
+    }
+#endif
     if (slash == NULL) {
         return;
     }
