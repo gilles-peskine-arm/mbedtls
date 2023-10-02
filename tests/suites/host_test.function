@@ -315,6 +315,34 @@ static int run_test_snprintf(void)
            test_snprintf(5, "123",         3) != 0;
 }
 
+/** Construct a path for basename in the directory of argv0.
+ *
+ * Return the path allocated on the heap, to be freed with mbedtls_free().
+ *
+ * Return NULL if argv0 is empty or a path without an explicit directory part.
+ * Return NULL on memory allocation failure.
+ */
+static char *sibling_filename(const char *argv0, const char *basename)
+{
+    const char *const end = strrchr(argv0, '/');
+    if (end == NULL) {
+        return NULL;
+    }
+    size_t const basename_size = strlen(basename) + 1;
+    size_t const path_size = (end - argv0) + 1 + basename_size;
+    char *const path = mbedtls_calloc(1, path_size);
+    if (path == NULL) {
+        mbedtls_fprintf(stderr,
+                        "%s: alloc(%lu) failed",
+                        __func__, (unsigned long) path_size);
+        return NULL;
+    }
+    memcpy(path, argv0, end - argv0);
+    path[end - argv0] = '/';
+    memcpy(path + (end - argv0) + 1, basename, basename_size);
+    return path;
+}
+
 /** \brief Write the description of the test case to the outcome CSV file.
  *
  * \param outcome_file  The file to write to.
@@ -446,6 +474,7 @@ int execute_tests(int argc, const char **argv)
 {
     /* Local Configurations and options */
     const char *default_filename = "DATA_FILE";
+    char *constructed_test_filename = NULL;
     const char *test_filename = NULL;
     const char **test_files = NULL;
     size_t testfile_count = 0;
@@ -531,6 +560,15 @@ int execute_tests(int argc, const char **argv)
     /* If no files were specified, assume a default */
     if (test_files == NULL || testfile_count == 0) {
         test_files = &default_filename;
+        file = fopen(default_filename, "r");
+        if (file != NULL) {
+            fclose(file);
+        } else {
+            constructed_test_filename = sibling_filename(argv[0], default_filename);
+            if (constructed_test_filename != NULL) {
+                test_files = (const char **) &constructed_test_filename;
+            }
+        }
         testfile_count = 1;
     }
 
@@ -712,6 +750,9 @@ int execute_tests(int argc, const char **argv)
         }
         fclose(file);
     }
+
+    mbedtls_free(constructed_test_filename);
+    constructed_test_filename = NULL;
 
     if (outcome_file != NULL) {
         fclose(outcome_file);
