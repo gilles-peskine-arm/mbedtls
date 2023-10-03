@@ -461,10 +461,14 @@ static void try_chdir(const char *argv0) {
     memcpy(path, argv0, path_size - 1);
     path[path_size - 1] = 0;
 #if defined(_WIN32)
-    (void) _chdir(path);
+    int ret = _chdir(path);
 #else
-    (void) chdir(path);
+    int ret = chdir(path);
 #endif
+    if (ret != 0) {
+        mbedtls_fprintf(stderr, "%s: note: chdir(\"%s\") failed.\n",
+                        __func__, path);
+    }
     mbedtls_free(path);
 }
 #endif /* MBEDTLS_HAVE_CHDIR */
