@@ -416,7 +416,7 @@ endif
 
 test/metatest$(EXEXT): test/metatest.c $(DEP) $(MBEDTLS_TEST_OBJS)
 	echo "  CC    test/metatest.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/metatest.c    $(MBEDTLS_TEST_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) -I ../library test/metatest.c    $(MBEDTLS_TEST_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 test/query_config.o: test/query_config.c test/query_config.h $(DEP)
 	echo "  CC    test/query_config.c"
