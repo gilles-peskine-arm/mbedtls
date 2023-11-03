@@ -261,6 +261,53 @@ int write_certificate(mbedtls_x509write_cert *crt, const char *output_file,
     return 0;
 }
 
+int ascii2uc(const char c, unsigned char *uc)
+{
+    if ((c >= '0') && (c <= '9')) {
+        *uc = c - '0';
+    } else if ((c >= 'a') && (c <= 'f')) {
+        *uc = c - 'a' + 10;
+    } else if ((c >= 'A') && (c <= 'F')) {
+        *uc = c - 'A' + 10;
+    } else {
+        return -1;
+    }
+
+    return 0;
+}
+
+int unhexify(unsigned char *obuf, size_t obufmax,
+             const char *ibuf, size_t *len)
+{
+    unsigned char uc, uc2;
+
+    *len = strlen(ibuf);
+
+    /* Must be even number of bytes. */
+    if ((*len) & 1) {
+        return -1;
+    }
+    *len /= 2;
+
+    if ((*len) > obufmax) {
+        return -1;
+    }
+
+    while (*ibuf != 0) {
+        if (ascii2uc(*(ibuf++), &uc) != 0) {
+            return -1;
+        }
+
+        if (ascii2uc(*(ibuf++), &uc2) != 0) {
+            return -1;
+        }
+
+        *(obuf++) = (uc << 4) | uc2;
+    }
+
+    return 0;
+}
+
 int parse_serial_decimal_format(unsigned char *obuf, size_t obufmax,
                                 const char *ibuf, size_t *len)
 {
@@ -705,8 +752,8 @@ usage:
     fflush(stdout);
 
     if (serial_frmt == SERIAL_FRMT_HEX) {
-        ret = mbedtls_test_unhexify(serial, sizeof(serial),
-                                    opt.serial_hex, &serial_len);
+        ret = unhexify(serial, sizeof(serial),
+                       opt.serial_hex, &serial_len);
     } else { // SERIAL_FRMT_DEC || SERIAL_FRMT_UNSPEC
         ret = parse_serial_decimal_format(serial, sizeof(serial),
                                           opt.serial, &serial_len);
