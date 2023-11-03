@@ -25,6 +25,7 @@ set(executables_with_common_c
 
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
+    # TODO: we only want the certs, not the rest of the tests
     set(exe_sources ${exe}.c $<TARGET_OBJECTS:mbedtls_test>)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)

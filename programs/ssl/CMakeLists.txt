@@ -37,6 +37,8 @@ foreach(exe IN LISTS executables)
             ${CMAKE_CURRENT_SOURCE_DIR}/../test/query_config.h
             ${CMAKE_CURRENT_BINARY_DIR}/../test/query_config.c)
     endif()
+    # TODO: for the sample programs, we only want certs.o, not the rest
+    # of the test code.
     add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>
         ${extra_sources})
     target_link_libraries(${exe} ${libs})

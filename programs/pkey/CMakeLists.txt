@@ -4,7 +4,7 @@ set(executables_mbedtls
 )
 
 foreach(exe IN LISTS executables_mbedtls)
-    add_executable(${exe} ${exe}.c $<TARGET_OBJECTS:mbedtls_test>)
+    add_executable(${exe} ${exe}.c)
     target_link_libraries(${exe} ${mbedtls_target})
     target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 endforeach()

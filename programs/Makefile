@@ -8,11 +8,11 @@ LDFLAGS ?=
 
 MBEDTLS_TEST_PATH:=../tests/src
 MBEDTLS_TEST_OBJS:=$(patsubst %.c,%.o,$(wildcard ${MBEDTLS_TEST_PATH}/*.c ${MBEDTLS_TEST_PATH}/drivers/*.c))
+MBEDTLS_TEST_CERTS_OBJS := ${MBEDTLS_TEST_PATH}/certs.o
 
 LOCAL_CFLAGS = $(WARNING_CFLAGS) -I../tests/include -I../include -D_FILE_OFFSET_BITS=64
 LOCAL_CXXFLAGS = $(WARNING_CXXFLAGS) -I../include -I../tests/include -D_FILE_OFFSET_BITS=64
-LOCAL_LDFLAGS = ${MBEDTLS_TEST_OBJS} 		\
-		-L../library 			\
+LOCAL_LDFLAGS = -L../library 			\
 		-lmbedtls$(SHARED_SUFFIX)	\
 		-lmbedx509$(SHARED_SUFFIX)	\
 		-lmbedcrypto$(SHARED_SUFFIX)
@@ -31,7 +31,7 @@ MBEDLIBS=../library/libmbedcrypto.a ../library/libmbedx509.a ../library/libmbedt
 else
 MBEDLIBS=../library/libmbedcrypto.$(DLEXT) ../library/libmbedx509.$(DLEXT) ../library/libmbedtls.$(DLEXT)
 endif
-DEP=${MBEDLIBS} ${MBEDTLS_TEST_OBJS}
+DEP=${MBEDLIBS}
 
 ifdef DEBUG
 LOCAL_CFLAGS += -g3
@@ -165,7 +165,7 @@ ifndef WINDOWS
 all: fuzz
 endif
 
-fuzz: ${MBEDTLS_TEST_OBJS}
+fuzz: $(MBEDTLS_TEST_CERTS_OBJS)
 	$(MAKE) -C fuzz THIRDPARTY_INCLUDES=$(THIRDPARTY_INCLUDES)
 
 $(MBEDLIBS):
@@ -338,19 +338,19 @@ random/gen_random_ctr_drbg$(EXEXT): random/gen_random_ctr_drbg.c $(DEP)
 	echo "  CC    random/gen_random_ctr_drbg.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) random/gen_random_ctr_drbg.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/dtls_client$(EXEXT): ssl/dtls_client.c $(DEP)
+ssl/dtls_client$(EXEXT): ssl/dtls_client.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/dtls_client.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/dtls_client.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/dtls_client.c  $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/dtls_server$(EXEXT): ssl/dtls_server.c $(DEP)
+ssl/dtls_server$(EXEXT): ssl/dtls_server.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/dtls_server.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/dtls_server.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/dtls_server.c  $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_client1$(EXEXT): ssl/ssl_client1.c $(DEP)
+ssl/ssl_client1$(EXEXT): ssl/ssl_client1.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/ssl_client1.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client1.c  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client1.c  $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-SSL_TEST_OBJECTS = test/query_config.o ssl/ssl_test_lib.o
+SSL_TEST_OBJECTS = test/query_config.o ssl/ssl_test_lib.o $(MBEDTLS_TEST_OBJS)
 SSL_TEST_DEPS = $(SSL_TEST_OBJECTS) \
 		test/query_config.h \
 		ssl/ssl_test_lib.h \
@@ -365,9 +365,9 @@ ssl/ssl_client2$(EXEXT): ssl/ssl_client2.c $(SSL_TEST_DEPS)
 	echo "  CC    ssl/ssl_client2.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_client2.c $(SSL_TEST_OBJECTS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_server$(EXEXT): ssl/ssl_server.c $(DEP)
+ssl/ssl_server$(EXEXT): ssl/ssl_server.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/ssl_server.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_server.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_server.c   $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 ssl/ssl_server2$(EXEXT): ssl/ssl_server2.c $(SSL_TEST_DEPS)
 	echo "  CC    ssl/ssl_server2.c"
@@ -377,21 +377,21 @@ ssl/ssl_context_info$(EXEXT): ssl/ssl_context_info.c test/query_config.o test/qu
 	echo "  CC    ssl/ssl_context_info.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_context_info.c test/query_config.o $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_fork_server$(EXEXT): ssl/ssl_fork_server.c $(DEP)
+ssl/ssl_fork_server$(EXEXT): ssl/ssl_fork_server.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/ssl_fork_server.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_fork_server.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_fork_server.c   $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/ssl_pthread_server$(EXEXT): ssl/ssl_pthread_server.c $(DEP)
+ssl/ssl_pthread_server$(EXEXT): ssl/ssl_pthread_server.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/ssl_pthread_server.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_pthread_server.c   $(LOCAL_LDFLAGS) -lpthread  $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_pthread_server.c   $(LOCAL_LDFLAGS) -lpthread  $(LDFLAGS) $(MBEDTLS_TEST_CERTS_OBJS) -o $@
 
-ssl/ssl_mail_client$(EXEXT): ssl/ssl_mail_client.c $(DEP)
+ssl/ssl_mail_client$(EXEXT): ssl/ssl_mail_client.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/ssl_mail_client.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_mail_client.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/ssl_mail_client.c   $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-ssl/mini_client$(EXEXT): ssl/mini_client.c $(DEP)
+ssl/mini_client$(EXEXT): ssl/mini_client.c $(DEP) $(MBEDTLS_TEST_CERTS_OBJS)
 	echo "  CC    ssl/mini_client.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/mini_client.c   $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) ssl/mini_client.c   $(MBEDTLS_TEST_CERTS_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 test/benchmark$(EXEXT): test/benchmark.c $(DEP)
 	echo "  CC    test/benchmark.c"
@@ -414,9 +414,9 @@ test/dlopen$(EXEXT): test/dlopen.c $(DEP)
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/dlopen.c $(LDFLAGS) $(DLOPEN_LDFLAGS) -o $@
 endif
 
-test/metatest$(EXEXT): test/metatest.c $(DEP)
+test/metatest$(EXEXT): test/metatest.c $(DEP) $(MBEDTLS_TEST_OBJS)
 	echo "  CC    test/metatest.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/metatest.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/metatest.c    $(MBEDTLS_TEST_OBJS) $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 test/query_config.o: test/query_config.c test/query_config.h $(DEP)
 	echo "  CC    test/query_config.c"
