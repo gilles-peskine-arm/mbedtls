@@ -17,7 +17,7 @@ import argparse
 import re
 import subprocess
 import sys
-from typing import Dict, Set
+from typing import Dict, Set, Tuple
 
 DEFAULT_PSA_CONSTANT_NAMES = 'programs/psa/psa_constant_names'
 
@@ -25,8 +25,9 @@ class Statuses:
     """Information about observed return statues of API functions."""
 
     def __init__(self) -> None:
-        self.functions = {} #type: Dict[str, Set[int]]
-        self.codes = set() #type: Set[int]
+        # Set of (function_name, status_value)
+        self.seen = set() #type: Set[Tuple[str, int]]
+        # Mapping of status value to status name
         self.status_names = {} #type: Dict[int, str]
 
     _LOG_LINE_RE = re.compile(r'(?:[^;]*;){5}' # test case identification
@@ -46,17 +47,14 @@ class Statuses:
                     continue
                 function = m.group(1)
                 value = int(m.group(2), 0)
-                if function not in self.functions:
-                    self.functions[function] = set()
-                self.functions[function].add(value)
-                self.codes.add(value)
+                self.seen.add((function, value))
 
     def get_constant_names(self, psa_constant_names: str) -> None:
         """Run psa_constant_names to obtain names for observed numerical values."""
-        values = [str(value) for value in self.codes]
-        cmd = [psa_constant_names, 'status'] + values
+        values = [value for _function, value in self.seen]
+        cmd = [psa_constant_names, 'status'] + [str(value) for value in values]
         output = subprocess.check_output(cmd).decode('ascii')
-        for value, name in zip(self.codes, output.rstrip().split('\n')):
+        for value, name in zip(values, output.rstrip().split('\n')):
             self.status_names[value] = name
 
     def report(self) -> None:
@@ -64,11 +62,8 @@ class Statuses:
 
         The report is a series of line of the form "psa_foo PSA_ERROR_XXX".
         """
-        for function in sorted(self.functions.keys()):
-            fdata = self.functions[function]
-            names = [self.status_names[value] for value in fdata]
-            for name in sorted(names):
-                sys.stdout.write('{} {}\n'.format(function, name))
+        for function, value in sorted(self.seen):
+            sys.stdout.write('{} {}\n'.format(function, self.status_names[value]))
 
 def collect_status_logs(options) -> Statuses:
     """Report observed function return statuses by reading call logs.
