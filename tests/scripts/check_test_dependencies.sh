@@ -32,6 +32,8 @@ fi
 found="check-test-deps-found-$$"
 expected="check-test-deps-expected-$$"
 
+trap 'rm -f $found $expected' EXIT HUP INT TERM
+
 # Find legacy dependencies in PSA tests
 grep 'depends_on' \
     tests/suites/test_suite_psa*.data tests/suites/test_suite_psa*.function |
@@ -69,5 +71,3 @@ echo "MBEDTLS_PEM_PARSE_C" >> $expected
 # - Each '-' line is a macro that was expected but not found; it means the
 # exceptions list above should be updated by removing that macro.
 diff -U0 $expected $found
-
-rm $found $expected
