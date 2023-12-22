@@ -785,10 +785,10 @@ int mbedtls_ecp_point_write_binary(const mbedtls_ecp_group *grp,
  *                  X-coordinate of the point in the internal representation
  *                  used by Mbed TLS.
  * \param Y         An initialized MPI. On success, it will contain the
- *                  X-coordinate of the point in the internal representation
+ *                  Y-coordinate of the point in the internal representation
  *                  used by Mbed TLS.
  * \param Z         An initialized MPI. On success, it will contain the
- *                  X-coordinate of the point in the internal representation
+ *                  Z-coordinate of the point in the internal representation
  *                  used by Mbed TLS.
  *
  * \return          \c 0 on success.
