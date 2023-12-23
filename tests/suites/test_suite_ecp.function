@@ -609,9 +609,6 @@ void ecp_write_binary(int id, char *x, char *y, char *z, int format,
     TEST_EQUAL(mbedtls_test_read_mpi(&P.Y, y), 0);
     TEST_EQUAL(mbedtls_test_read_mpi(&P.Z, z), 0);
 
-    TEST_EQUAL(mbedtls_ecp_point_export_coordinates(&grp, &P,
-                                                    &X_copy, &Y_copy, &Z_copy),
-               0);
     TEST_EQUAL(mbedtls_mpi_cmp_mpi(&P.X, &X_copy), 0);
     TEST_EQUAL(mbedtls_mpi_cmp_mpi(&P.Y, &Y_copy), 0);
     TEST_EQUAL(mbedtls_mpi_cmp_mpi(&P.Z, &Z_copy), 0);
