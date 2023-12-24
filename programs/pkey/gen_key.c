@@ -204,7 +204,8 @@ static int show_ecp_key(const mbedtls_ecp_keypair *ecp, int has_private)
             mbedtls_mpi_write_file("X_Q:   ", &X, 16, NULL);
             break;
         default:
-            mbedtls_printf("This program does not yet support listing coordinates for this curve type.\n");
+            mbedtls_printf(
+                "This program does not yet support listing coordinates for this curve type.\n");
             break;
     }
 
