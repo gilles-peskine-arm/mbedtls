@@ -479,6 +479,14 @@ void mbedtls_rsa_set_padding(mbedtls_rsa_context *ctx, int padding,
 }
 
 /*
+ * Get length in bits of RSA modulus
+ */
+size_t mbedtls_rsa_get_bitlen(const mbedtls_rsa_context *ctx)
+{
+    return mbedtls_mpi_bitlen(&ctx->N);
+}
+
+/*
  * Get length in bytes of RSA modulus
  */
 
