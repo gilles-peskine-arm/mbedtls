@@ -1757,6 +1757,7 @@ void pk_get_psa_attributes(int pk_type, int from_pair,
     mbedtls_pk_init(&pk);
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_key_usage_t usage = usage_arg;
+    mbedtls_svc_key_id_t new_key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     PSA_INIT();
 
@@ -1797,9 +1798,13 @@ void pk_get_psa_attributes(int pk_type, int from_pair,
     TEST_EQUAL(psa_get_key_algorithm(&attributes), expected_alg);
     TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
 
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id),
+               expected_ret);
+
 exit:
     mbedtls_pk_free(&pk);
     psa_reset_key_attributes(&attributes);
+    psa_destroy_key(new_key_id);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1813,6 +1818,7 @@ void pk_rsa_v21_get_psa_attributes(int md_type, int from_pair,
     mbedtls_pk_init(&pk);
     psa_key_usage_t usage = usage_arg;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    mbedtls_svc_key_id_t new_key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     PSA_INIT();
 
@@ -1838,9 +1844,13 @@ void pk_rsa_v21_get_psa_attributes(int md_type, int from_pair,
     TEST_EQUAL(psa_get_key_algorithm(&attributes), expected_alg);
     TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
 
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id),
+               expected_ret);
+
 exit:
     mbedtls_pk_free(&pk);
     psa_reset_key_attributes(&attributes);
+    psa_destroy_key(new_key_id);
     PSA_DONE();
 }
 /* END_CASE */
@@ -1881,13 +1891,14 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
     mbedtls_pk_context pk;
     mbedtls_pk_init(&pk);
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t old_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_type_t from_type = from_type_arg;
     size_t bits = from_bits_arg;
     psa_key_usage_t from_usage = from_usage_arg;
     psa_algorithm_t alg = from_alg_arg;
     psa_key_usage_t usage = usage_arg;
     psa_key_usage_t expected_usage = expected_usage_arg;
+    mbedtls_svc_key_id_t new_key_id = MBEDTLS_SVC_KEY_ID_INIT;
 
     PSA_INIT();
 
@@ -1897,8 +1908,8 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
     psa_set_key_algorithm(&attributes, alg);
     psa_set_key_enrollment_algorithm(&attributes, 42);
     //TODO: test with persistent key
-    PSA_ASSERT(psa_generate_key(&attributes, &key_id));
-    TEST_EQUAL(mbedtls_pk_setup_opaque(&pk, key_id), 0);
+    PSA_ASSERT(psa_generate_key(&attributes, &old_key_id));
+    TEST_EQUAL(mbedtls_pk_setup_opaque(&pk, old_key_id), 0);
 
     psa_key_type_t expected_psa_type =
         to_pair ? from_type : PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(from_type);
@@ -1915,11 +1926,44 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
         TEST_EQUAL(psa_get_key_usage_flags(&attributes), expected_usage);
         TEST_EQUAL(psa_get_key_algorithm(&attributes), alg);
         TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
+
+        TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id),
+                   expected_ret);
     }
 
 exit:
     mbedtls_pk_free(&pk);
+    psa_destroy_key(old_key_id);
+    psa_destroy_key(new_key_id);
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C */
+void pk_import_into_psa_fail(int pk_type, int from_pair,
+                             int type_arg, int usage_arg, int alg_arg,
+                             int expected_ret)
+{
+    mbedtls_pk_context pk;
+    mbedtls_pk_init(&pk);
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_usage_t usage = usage_arg;
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+    PSA_INIT();
+
+    psa_key_type_t expected_psa_type;
+    TEST_EQUAL(pk_setup_for_type(pk_type, from_pair,
+                                 &pk, &expected_psa_type), 0);
+
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &key_id),
+               expected_ret);
+    TEST_ASSERT(mbedtls_svc_key_id_equal(key_id, MBEDTLS_SVC_KEY_ID_INIT));
+
+exit:
     psa_destroy_key(key_id);
+    mbedtls_pk_free(&pk);
     psa_reset_key_attributes(&attributes);
     PSA_DONE();
 }

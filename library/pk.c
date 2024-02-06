@@ -579,6 +579,87 @@ int mbedtls_pk_get_psa_attributes(const mbedtls_pk_context *pk,
 
     return 0;
 }
+
+int mbedtls_pk_import_into_psa(const mbedtls_pk_context *pk,
+                               const psa_key_attributes_t *attributes,
+                               mbedtls_svc_key_id_t *key_id)
+{
+    /* Set the output immediately so that it won't contain garbage even
+     * if we error out before calling psa_import_key(). */
+    *key_id = MBEDTLS_SVC_KEY_ID_INIT;
+
+#if PSA_EXPORT_KEY_PAIR_MAX_SIZE > PSA_EXPORT_PUBLIC_KEY_MAX_SIZE
+    unsigned char key_data[PSA_EXPORT_KEY_PAIR_MAX_SIZE];
+#else
+    unsigned char key_data[PSA_EXPORT_PUBLIC_KEY_MAX_SIZE];
+#endif
+
+    mbedtls_pk_type_t pk_type = mbedtls_pk_get_type(pk);
+    psa_key_type_t psa_type = psa_get_key_type(attributes);
+
+    switch (pk_type) {
+#if defined(MBEDTLS_RSA_C)
+        case MBEDTLS_PK_RSA:
+            if (psa_type == PSA_KEY_TYPE_RSA_KEY_PAIR) {
+            } else if (psa_type == PSA_KEY_TYPE_RSA_PUBLIC_KEY) {
+            } else {
+                return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+            }
+            break;
+#endif /* MBEDTLS_RSA_C */
+
+#if defined(MBEDTLS_PK_HAVE_ECC_KEYS)
+        case MBEDTLS_PK_ECKEY:
+        case MBEDTLS_PK_ECKEY_DH:
+        case MBEDTLS_PK_ECDSA:
+            if (PSA_KEY_TYPE_IS_ECC_KEY_PAIR(psa_type)) {
+            } else if (PSA_KEY_TYPE_IS_ECC_PUBLIC_KEY(psa_type)) {
+            } else {
+                return MBEDTLS_ERR_PK_TYPE_MISMATCH;
+            }
+            break;
+#endif /* MBEDTLS_PK_HAVE_ECC_KEYS */
+
+#if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
+        case MBEDTLS_PK_RSA_ALT:
+            return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
+#endif /* MBEDTLS_PK_RSA_ALT_SUPPORT */
+
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+        case MBEDTLS_PK_OPAQUE:
+        {
+            psa_key_attributes_t old_attributes = PSA_KEY_ATTRIBUTES_INIT;
+            psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+            status = psa_get_key_attributes(pk->priv_id, &old_attributes);
+            if (status != PSA_SUCCESS) {
+                return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+            }
+            psa_key_type_t old_type = psa_get_key_type(&old_attributes);
+            psa_reset_key_attributes(&old_attributes);
+            if (new_type == PSA_KEY_TYPE_PUBLIC_KEY_OF_KEY_PAIR(old_type) &&
+                new_type != old_type) {
+                
+            } else {
+                /* Same key type: call psa_copy_key() rather than
+                 * import-export, so that this function works even with
+                 * a non-exportable key. This code path also works for
+                 * non-matching key types. */
+                status = psa_copy_key(pk->priv_id, attributes, key_id);
+                return PSA_PK_RSA_TO_MBEDTLS_ERR(status);
+            }
+            break;
+        }
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
+
+        default:
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
+    }
+
+    psa_set_key_usage_flags(attributes, more_usage);
+    psa_set_key_enrollment_algorithm(attributes, PSA_ALG_NONE);
+
+    return 0;
+}
 #endif /* MBEDTLS_PSA_CRYPTO_C */
 
 /*
