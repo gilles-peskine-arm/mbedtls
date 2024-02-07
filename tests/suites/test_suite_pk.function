@@ -214,35 +214,47 @@ size_t mbedtls_rsa_key_len_func(void *ctx)
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PK_HAVE_ECC_KEYS)
 static mbedtls_ecp_group_id ecc_pick_grp_id(void)
 {
-#if defined(MBEDTLS_ECP_LIGHT)
-    return mbedtls_ecp_grp_id_list()[0];
-#elif defined(PSA_WANT_ECC_SECP_R1_192)
+#if defined(PSA_WANT_ECC_SECP_R1_192)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_R1
     return MBEDTLS_ECP_DP_SECP192R1;
 #elif defined(PSA_WANT_ECC_SECP_R1_224)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_R1
     return MBEDTLS_ECP_DP_SECP224R1;
 #elif defined(PSA_WANT_ECC_SECP_R1_256)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_R1
     return MBEDTLS_ECP_DP_SECP256R1;
 #elif defined(PSA_WANT_ECC_SECP_R1_384)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_R1
     return MBEDTLS_ECP_DP_SECP384R1;
 #elif defined(PSA_WANT_ECC_SECP_R1_521)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_R1
     return MBEDTLS_ECP_DP_SECP521R1;
 #elif defined(PSA_WANT_ECC_SECP_K1_192)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_K1
     return MBEDTLS_ECP_DP_SECP192K1;
 #elif defined(PSA_WANT_ECC_SECP_K1_224)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_K1
     return MBEDTLS_ECP_DP_SECP224K1;
 #elif defined(PSA_WANT_ECC_SECP_K1_256)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_SECP_K1
     return MBEDTLS_ECP_DP_SECP256K1;
 #elif defined(PSA_WANT_ECC_BRAINPOOL_P_R1_256)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_BRAINPOOL_P_R1
     return MBEDTLS_ECP_DP_BP256R1;
 #elif defined(PSA_WANT_ECC_BRAINPOOL_P_R1_384)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_BRAINPOOL_P_R1
     return MBEDTLS_ECP_DP_BP384R1;
 #elif defined(PSA_WANT_ECC_BRAINPOOL_P_R1_512)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_BRAINPOOL_P_R1
     return MBEDTLS_ECP_DP_BP512R1;
 #elif defined(PSA_WANT_ECC_MONTGOMERY_255)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_MONTGOMERY
     return MBEDTLS_ECP_DP_CURVE25519;
 #elif defined(PSA_WANT_ECC_MONTGOMERY_448)
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY PSA_ECC_FAMILY_MONTGOMERY
     return MBEDTLS_ECP_DP_CURVE448;
 #else
+#define MBEDTLS_TEST_PSA_ECC_ONE_FAMILY 0
     return 0;
 #endif
 }
@@ -1798,8 +1810,7 @@ void pk_get_psa_attributes(int pk_type, int from_pair,
     TEST_EQUAL(psa_get_key_algorithm(&attributes), expected_alg);
     TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
 
-    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id),
-               expected_ret);
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id), 0);
 
 exit:
     mbedtls_pk_free(&pk);
@@ -1844,8 +1855,7 @@ void pk_rsa_v21_get_psa_attributes(int md_type, int from_pair,
     TEST_EQUAL(psa_get_key_algorithm(&attributes), expected_alg);
     TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
 
-    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id),
-               expected_ret);
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id), 0);
 
 exit:
     mbedtls_pk_free(&pk);
@@ -1927,8 +1937,13 @@ void pk_get_psa_attributes_opaque(int from_type_arg, int from_bits_arg,
         TEST_EQUAL(psa_get_key_algorithm(&attributes), alg);
         TEST_EQUAL(psa_get_key_enrollment_algorithm(&attributes), PSA_ALG_NONE);
 
+        int expected_import_ret = 0;
+        if (to_pair &&
+            !(from_usage & (PSA_KEY_USAGE_COPY | PSA_KEY_USAGE_EXPORT))) {
+            expected_import_ret = MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
+        }
         TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &new_key_id),
-                   expected_ret);
+                   expected_import_ret);
     }
 
 exit:
@@ -1942,20 +1957,22 @@ exit:
 
 /* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C */
 void pk_import_into_psa_fail(int pk_type, int from_pair,
-                             int type_arg, int usage_arg, int alg_arg,
+                             int type_arg,
                              int expected_ret)
 {
     mbedtls_pk_context pk;
     mbedtls_pk_init(&pk);
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    psa_key_usage_t usage = usage_arg;
-    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_type_t type = type_arg;
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(0, 42);
 
     PSA_INIT();
 
     psa_key_type_t expected_psa_type;
     TEST_EQUAL(pk_setup_for_type(pk_type, from_pair,
                                  &pk, &expected_psa_type), 0);
+
+    psa_set_key_type(&attributes, type);
 
     TEST_EQUAL(mbedtls_pk_import_into_psa(&pk, &attributes, &key_id),
                expected_ret);
