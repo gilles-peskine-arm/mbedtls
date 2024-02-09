@@ -27,7 +27,7 @@
 #include "mbedtls/ecdsa.h"
 #endif
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+#if defined(MBEDTLS_PSA_CRYPTO_C)
 #include "psa_util_internal.h"
 #include "mbedtls/psa_util.h"
 #endif
@@ -1361,7 +1361,7 @@ mbedtls_pk_type_t mbedtls_pk_get_type(const mbedtls_pk_context *ctx)
     return ctx->pk_info->type;
 }
 
-#if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
+#if defined(MBEDTLS_PSA_CRYPTO_C)
 int mbedtls_pk_copy_from_psa(mbedtls_svc_key_id_t key_id, mbedtls_pk_context *pk)
 {
     psa_status_t status;
@@ -1485,7 +1485,7 @@ exit:
 
     return ret;
 }
-#endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
+#endif /* MBEDTLS_PSA_CRYPTO_C */
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 /*
