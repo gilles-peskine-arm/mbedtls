@@ -15,6 +15,46 @@
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_FS_IO)
+static int can_exercise_psa_algorithm(psa_algorithm_t alg)
+{
+    /* Reject algorithms that we know are not supported. Default to
+     * attempting exercise, so that if an algorithm is missing from this
+     * function, the result will be a test failure and not silently
+     * omitting exercise. */
+#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_CRYPT)
+    if (alg == PSA_ALG_RSA_PKCS1V15_CRYPT) {
+        return 0;
+    }
+#endif
+#if !defined(PSA_WANT_ALG_RSA_PKCS1V15_SIGN)
+    if (PSA_ALG_IS_RSA_PKCS1V15_SIGN(alg)) {
+        return 0;
+    }
+#endif
+#if !defined(PSA_WANT_ALG_RSA_PSS)
+    if (PSA_ALG_IS_RSA_PSS(alg)) {
+        return 0;
+    }
+#endif
+#if !defined(PSA_WANT_ALG_ECDSA)
+    if (PSA_ALG_IS_ECDSA(alg)) {
+        return 0;
+    }
+#endif
+#if !defined(PSA_WANT_ALG_DETERMINISTIC_ECDSA)
+    if (PSA_ALG_IS_DETERMINISTIC_ECDSA(alg)) {
+        return 0;
+    }
+#endif
+#if !defined(PSA_WANT_ALG_ECDH)
+    if (PSA_ALG_IS_ECDH(alg)) {
+        return 0;
+    }
+#endif
+    (void) alg;
+    return 1;
+}
+
 static int test_psa_bridge(const mbedtls_pk_context *ctx,
                            psa_key_usage_t usage_flag)
 {
@@ -48,10 +88,14 @@ static int test_psa_bridge(const mbedtls_pk_context *ctx,
 
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(ctx, usage_flag, &attributes), 0);
     TEST_EQUAL(mbedtls_pk_import_into_psa(ctx, &attributes, &psa_key), 0);
+
     psa_algorithm_t exercise_usage = psa_get_key_usage_flags(&attributes);
     psa_algorithm_t exercise_alg = psa_get_key_algorithm(&attributes);
-    TEST_ASSERT(mbedtls_test_psa_exercise_key(psa_key,
-                                              exercise_usage, exercise_alg));
+    if (can_exercise_psa_algorithm(exercise_alg)) {
+        TEST_ASSERT(mbedtls_test_psa_exercise_key(psa_key,
+                                                  exercise_usage,
+                                                  exercise_alg));
+    }
 
     mbedtls_test_set_step((unsigned long) -1);
     ok = 1;
