@@ -534,7 +534,8 @@ def parse_function_arguments(line):
         indexes = parse_function_argument(arg, arg_idx,
                                           args, local_vars, args_dispatch)
         if indexes is None:
-            raise ValueError("Test function arguments can only be 'int', "
+            raise ValueError("Test function arguments can only be "
+                             "a known signed integer type, "
                              "'char *' or 'data_t'\n%s" % line)
         arg_idx += indexes
 
