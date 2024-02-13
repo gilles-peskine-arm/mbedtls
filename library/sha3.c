@@ -222,11 +222,11 @@ static void keccak_f1600(mbedtls_sha3_context *ctx)
         s[0] ^= (rc[round] & 0x0200ull) << 54;
         s[0] ^= (rc[round] & 0x0100ull) << 23;
         s[0] ^= rc[round] & 0x80ff;
-#else
-        s[0] ^= (rc[round] & 0x40ull) << 57;
-        s[0] ^= (rc[round] & 0x20ull) << 26;
-        s[0] ^= (rc[round] & 0x10ull) << 11;
-        s[0] ^= rc[round] & 0x8f;
+#else // 6
+        s[0] ^= ((rc[round] & 0x40ull) << 57 |
+                 (rc[round] & 0x20ull) << 26 |
+                 (rc[round] & 0x10ull) << 11 |
+                 (rc[round] & 0x8f));
 #endif
     }
 }
