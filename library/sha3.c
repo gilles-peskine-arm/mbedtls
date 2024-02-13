@@ -26,7 +26,7 @@
 
 #define XOR_BYTE 0x6
 
-#define RC_SIZE 4
+#define RC_SIZE 5
 #if RC_SIZE <= 3
 static const uint32_t rc63 = 0xbbe0cc;
 #endif
@@ -61,7 +61,7 @@ static const uint32_t rc0_31[24] = {
     0x00008002, 0x00000080, 0x0000800a, 0x8000000a,
     0x80008081, 0x00008080, 0x80000001, 0x80008008,
 };
-#else
+#elif RC_SIZE == 4
 static const uint64_t rc[24] = {
     0x0000000000000001, 0x0000000000008082, 0x800000000000808a, 0x8000000080008000,
     0x000000000000808b, 0x0000000080000001, 0x8000000080008081, 0x8000000000008009,
@@ -70,6 +70,22 @@ static const uint64_t rc[24] = {
     0x8000000000008002, 0x8000000000000080, 0x000000000000800a, 0x800000008000000a,
     0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 };
+#else
+/* Compact encoding, which both saves code size and improves performance:
+ * rc[round] is a 64-bit mask, but only bits whose position is 2^k-1 can
+ * be set. To save both static data size and memory bandwidth, we pack
+ * bits 63 and 31 into unused positions in the lower 16 bits.
+ */
+#define H(b63, b31) (b63 << 9 | b31 << 8)
+static const uint16_t rc[24] = {
+    H(0, 0) | 0x0001, H(0, 0) | 0x8082, H(1, 0) | 0x808a, H(1, 1) | 0x8000,
+    H(0, 0) | 0x808b, H(0, 1) | 0x0001, H(1, 1) | 0x8081, H(1, 0) | 0x8009,
+    H(0, 0) | 0x008a, H(0, 0) | 0x0088, H(0, 1) | 0x8009, H(0, 1) | 0x000a,
+    H(0, 1) | 0x808b, H(1, 0) | 0x008b, H(1, 0) | 0x8089, H(1, 0) | 0x8003,
+    H(1, 0) | 0x8002, H(1, 0) | 0x0080, H(0, 0) | 0x800a, H(1, 1) | 0x000a,
+    H(1, 1) | 0x8081, H(1, 0) | 0x8080, H(0, 1) | 0x0001, H(1, 1) | 0x8008,
+};
+#undef H
 #endif
 
 static const uint8_t rho[24] = {
@@ -184,8 +200,12 @@ static void keccak_f1600(mbedtls_sha3_context *ctx)
         s[0] ^= rc0_15[round];
 #elif RC_SIZE == 3
         s[0] ^= rc0_31[round];
-#else
+#elif RC_SIZE == 4
         s[0] ^= rc[round];
+#else
+        s[0] ^= (rc[round] & 0x0200ull) << 54;
+        s[0] ^= (rc[round] & 0x0100ull) << 23;
+        s[0] ^= rc[round] & 0x80ff;
 #endif
     }
 }
