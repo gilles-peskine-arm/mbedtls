@@ -800,9 +800,9 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_RSA_C */
-void pk_rsa_verify_test_vec(data_t *message_str, int digest, int mod,
-                            char *input_N, char *input_E,
-                            data_t *result_str, int result)
+void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
+                            int mod, char *input_N, char *input_E,
+                            data_t *result_str, int expected_result)
 {
     mbedtls_rsa_context *rsa;
     mbedtls_pk_context pk;
@@ -822,16 +822,41 @@ void pk_rsa_verify_test_vec(data_t *message_str, int digest, int mod,
     TEST_ASSERT(mbedtls_pk_setup(&pk, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA)) == 0);
     rsa = mbedtls_pk_rsa(pk);
 
+    if (padding >= 0) {
+        TEST_EQUAL(mbedtls_rsa_set_padding(rsa, padding, MBEDTLS_MD_NONE), 0);
+    }
     rsa->len = mod / 8;
     TEST_ASSERT(mbedtls_test_read_mpi(&rsa->N, input_N) == 0);
     TEST_ASSERT(mbedtls_test_read_mpi(&rsa->E, input_E) == 0);
 
-    TEST_ASSERT(mbedtls_pk_verify(&pk, digest, message_str->x, 0,
-                                  result_str->x, mbedtls_pk_get_len(&pk)) == result);
+    int actual_result;
+    actual_result = mbedtls_pk_verify(&pk, digest, message_str->x, 0,
+                                      result_str->x, mbedtls_pk_get_len(&pk));
+#if !defined(MBEDTLS_USE_PSA_CRYPTO)
+    if (actual_result == MBEDTLS_ERR_RSA_INVALID_PADDING &&
+        expected_result == MBEDTLS_ERR_RSA_VERIFY_FAILED) {
+        /* Tolerate VERIFY_FAILED error for an invalid signature with
+         * the legacy API (but not with PSA). */
+    } else
+#endif
+    {
+        TEST_EQUAL(actual_result, expected_result);
+    }
 
-    TEST_ASSERT(mbedtls_pk_verify_restartable(&pk, digest, message_str->x, 0,
-                                              result_str->x, mbedtls_pk_get_len(
-                                                  &pk), rs_ctx) == result);
+    actual_result = mbedtls_pk_verify_restartable(&pk, digest, message_str->x, 0,
+                                                  result_str->x,
+                                                  mbedtls_pk_get_len(&pk),
+                                                  rs_ctx);
+#if !defined(MBEDTLS_USE_PSA_CRYPTO)
+    if (actual_result == MBEDTLS_ERR_RSA_INVALID_PADDING &&
+        expected_result == MBEDTLS_ERR_RSA_VERIFY_FAILED) {
+        /* Tolerate VERIFY_FAILED error for an invalid signature with
+         * the legacy API (but not with PSA). */
+    } else
+#endif
+    {
+        TEST_EQUAL(actual_result, expected_result);
+    }
 
 exit:
 #if defined(MBEDTLS_ECDSA_C) && defined(MBEDTLS_ECP_RESTARTABLE)
