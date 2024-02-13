@@ -26,6 +26,42 @@
 
 #define XOR_BYTE 0x6
 
+#define RC_SIZE 4
+#if RC_SIZE <= 3
+static const uint32_t rc63 = 0xbbe0cc;
+#endif
+#if RC_SIZE <= 2
+static const uint32_t rc31 = 0xd81c68;
+#endif
+#if RC_SIZE == 1
+static const uint32_t rc15 = 0xb5d4de;
+static const uint8_t rc0_7[24] = {
+    0x01, 0x82, 0x8a, 0x00,
+    0x8b, 0x01, 0x81, 0x09,
+    0x8a, 0x88, 0x09, 0x0a,
+    0x8b, 0x8b, 0x89, 0x03,
+    0x02, 0x80, 0x0a, 0x0a,
+    0x81, 0x80, 0x01, 0x08,
+};
+#elif RC_SIZE == 2
+static const uint16_t rc0_15[24] = {
+    0x0001, 0x8082, 0x808a, 0x8000,
+    0x808b, 0x0001, 0x8081, 0x8009,
+    0x008a, 0x0088, 0x8009, 0x000a,
+    0x808b, 0x008b, 0x8089, 0x8003,
+    0x8002, 0x0080, 0x800a, 0x000a,
+    0x8081, 0x8080, 0x0001, 0x8008,
+};
+#elif RC_SIZE == 3
+static const uint32_t rc0_31[24] = {
+    0x00000001, 0x00008082, 0x0000808a, 0x80008000,
+    0x0000808b, 0x80000001, 0x80008081, 0x00008009,
+    0x0000008a, 0x00000088, 0x80008009, 0x8000000a,
+    0x8000808b, 0x0000008b, 0x00008089, 0x00008003,
+    0x00008002, 0x00000080, 0x0000800a, 0x8000000a,
+    0x80008081, 0x00008080, 0x80000001, 0x80008008,
+};
+#else
 static const uint64_t rc[24] = {
     0x0000000000000001, 0x0000000000008082, 0x800000000000808a, 0x8000000080008000,
     0x000000000000808b, 0x0000000080000001, 0x8000000080008081, 0x8000000000008009,
@@ -34,6 +70,7 @@ static const uint64_t rc[24] = {
     0x8000000000008002, 0x8000000000000080, 0x000000000000800a, 0x800000008000000a,
     0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 };
+#endif
 
 static const uint8_t rho[24] = {
     1, 62, 28, 27, 36, 44,  6, 55, 20,
@@ -132,7 +169,24 @@ static void keccak_f1600(mbedtls_sha3_context *ctx)
         s[24] ^= (~lane[0]) & lane[1];
 
         /* Iota */
+#if RC_SIZE <= 3
+        s[0] ^= ((rc63 >> round) & 1ull) << 63;
+#endif
+#if RC_SIZE <= 2
+        s[0] ^= ((rc31 >> round) & 1ull) << 31;
+#endif
+#if RC_SIZE <= 1
+        s[0] ^= ((rc15 >> round) & 1ull) << 15;
+#endif
+#if RC_SIZE == 1
+        s[0] ^= rc0_7[round];
+#elif RC_SIZE == 2
+        s[0] ^= rc0_15[round];
+#elif RC_SIZE == 3
+        s[0] ^= rc0_31[round];
+#else
         s[0] ^= rc[round];
+#endif
     }
 }
 
