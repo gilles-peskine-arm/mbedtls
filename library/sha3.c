@@ -26,7 +26,7 @@
 
 #define XOR_BYTE 0x6
 
-#define RC_SIZE 5
+#define RC_SIZE 6
 #if RC_SIZE <= 3
 static const uint32_t rc63 = 0xbbe0cc;
 #endif
@@ -70,7 +70,7 @@ static const uint64_t rc[24] = {
     0x8000000000008002, 0x8000000000000080, 0x000000000000800a, 0x800000008000000a,
     0x8000000080008081, 0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
 };
-#else
+#elif RC_SIZE == 5
 /* Compact encoding, which both saves code size and improves performance:
  * rc[round] is a 64-bit mask, but only bits whose position is 2^k-1 can
  * be set. To save both static data size and memory bandwidth, we pack
@@ -84,6 +84,22 @@ static const uint16_t rc[24] = {
     H(0, 1) | 0x808b, H(1, 0) | 0x008b, H(1, 0) | 0x8089, H(1, 0) | 0x8003,
     H(1, 0) | 0x8002, H(1, 0) | 0x0080, H(0, 0) | 0x800a, H(1, 1) | 0x000a,
     H(1, 1) | 0x8081, H(1, 0) | 0x8080, H(0, 1) | 0x0001, H(1, 1) | 0x8008,
+};
+#undef H
+#else
+/* Compact encoding, which both saves code size and improves performance:
+ * rc[round] is a 64-bit mask, but only bits whose position is 2^k-1 can
+ * be set. To save both static data size and memory bandwidth, we pack
+ * bits 63 and 31 into unused positions in the lower 16 bits.
+ */
+#define H(b63, b31, b15) (b63 << 6 | b31 << 5 | b15 << 4)
+static const uint8_t rc[24] = {
+    H(0, 0, 0) | 0x01, H(0, 0, 1) | 0x82, H(1, 0, 1) | 0x8a, H(1, 1, 1) | 0x00,
+    H(0, 0, 1) | 0x8b, H(0, 1, 0) | 0x01, H(1, 1, 1) | 0x81, H(1, 0, 1) | 0x09,
+    H(0, 0, 0) | 0x8a, H(0, 0, 0) | 0x88, H(0, 1, 1) | 0x09, H(0, 1, 0) | 0x0a,
+    H(0, 1, 1) | 0x8b, H(1, 0, 0) | 0x8b, H(1, 0, 1) | 0x89, H(1, 0, 1) | 0x03,
+    H(1, 0, 1) | 0x02, H(1, 0, 0) | 0x80, H(0, 0, 1) | 0x0a, H(1, 1, 0) | 0x0a,
+    H(1, 1, 1) | 0x81, H(1, 0, 1) | 0x80, H(0, 1, 0) | 0x01, H(1, 1, 1) | 0x08,
 };
 #undef H
 #endif
@@ -202,10 +218,15 @@ static void keccak_f1600(mbedtls_sha3_context *ctx)
         s[0] ^= rc0_31[round];
 #elif RC_SIZE == 4
         s[0] ^= rc[round];
-#else
+#elif RC_SIZE == 5
         s[0] ^= (rc[round] & 0x0200ull) << 54;
         s[0] ^= (rc[round] & 0x0100ull) << 23;
         s[0] ^= rc[round] & 0x80ff;
+#else
+        s[0] ^= (rc[round] & 0x40ull) << 57;
+        s[0] ^= (rc[round] & 0x20ull) << 26;
+        s[0] ^= (rc[round] & 0x10ull) << 11;
+        s[0] ^= rc[round] & 0x8f;
 #endif
     }
 }
