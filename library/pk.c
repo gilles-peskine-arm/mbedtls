@@ -1027,7 +1027,7 @@ int mbedtls_pk_verify_ext(mbedtls_pk_type_t type, const void *options,
         psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
         psa_algorithm_t psa_sig_alg = PSA_ALG_RSA_PSS_ANY_SALT(psa_md_alg);
         p = buf + sizeof(buf);
-        key_len = mbedtls_pk_write_pubkey(&p, buf, ctx);
+        key_len = mbedtls_rsa_write_pubkey(mbedtls_pk_rsa(*ctx), buf, &p);
 
         if (key_len < 0) {
             return key_len;
@@ -1566,12 +1566,13 @@ int mbedtls_pk_wrap_as_opaque(mbedtls_pk_context *pk,
 #if defined(MBEDTLS_RSA_C)
     if (mbedtls_pk_get_type(pk) == MBEDTLS_PK_RSA) {
         unsigned char buf[MBEDTLS_PK_RSA_PRV_DER_MAX_BYTES];
+        unsigned char *p = buf + sizeof(buf);
         psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
         int key_len;
         psa_status_t status;
 
         /* export the private key material in the format PSA wants */
-        key_len = mbedtls_pk_write_key_der(pk, buf, sizeof(buf));
+        key_len = mbedtls_rsa_write_key(mbedtls_pk_rsa(*pk), buf, &p);
         if (key_len <= 0) {
             return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
         }
