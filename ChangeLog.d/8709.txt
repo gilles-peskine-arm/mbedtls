@@ -3,3 +3,5 @@ Features
      a PK context starting from a PSA key. In contrast to
      mbedtls_pk_setup_opaque() the resulting PK context is a normal context
      that's independent from the original PSA key.
+     mbedtls_pk_copy_public_from_psa() is similar but only exports the
+     public key.
