@@ -2292,14 +2292,14 @@ run_test    "Opaque key for server authentication: ECDH- (no USE_PSA_CRYPTO)" \
             -s "key types: Opaque, none" \
             -s "Internal error"
 
-requires_config_enabled MBEDTLS_PSA_CRYPTO_C
+requires_config_enabled MBEDTLS_USE_PSA_CRYPTO
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
 requires_config_disabled MBEDTLS_SSL_ASYNC_PRIVATE
 requires_hash_alg SHA_256
-run_test    "Opaque key for server authentication: invalid key: decrypt with ECC key, no async" \
+run_test    "Opaque key for server authentication: invalid key: decrypt with ECC key, no async, USE_PSA_CRYPTO" \
             "$P_SRV key_opaque=1 crt_file=data_files/server5.crt \
              key_file=data_files/server5.key key_opaque_algs=rsa-decrypt,none \
-             debug_level=1" \
+             debug_level=3" \
             "$P_CLI force_version=tls12" \
             1 \
             -s "key types: Opaque, none" \
@@ -2307,13 +2307,30 @@ run_test    "Opaque key for server authentication: invalid key: decrypt with ECC
             -c "error" \
             -c "Public key type mismatch"
 
+# Same as previous, but different errors (the server doesn't get as far)
 requires_config_enabled MBEDTLS_PSA_CRYPTO_C
+requires_config_disabled MBEDTLS_USE_PSA_CRYPTO
+requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
+requires_config_disabled MBEDTLS_SSL_ASYNC_PRIVATE
+requires_hash_alg SHA_256
+run_test    "Opaque key for server authentication: invalid key: decrypt with ECC key, no async" \
+            "$P_SRV key_opaque=1 crt_file=data_files/server5.crt \
+             key_file=data_files/server5.key key_opaque_algs=rsa-decrypt,none \
+             debug_level=3" \
+            "$P_CLI force_version=tls12" \
+            1 \
+            -s "key types: Opaque, none" \
+            -s "error" \
+            -c "error" \
+            -s "Bad input parameters to function"
+
+requires_config_enabled MBEDTLS_USE_PSA_CRYPTO
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
 requires_config_enabled MBEDTLS_ECDSA_C
 requires_config_enabled MBEDTLS_RSA_C
 requires_config_disabled MBEDTLS_SSL_ASYNC_PRIVATE
 requires_hash_alg SHA_256
-run_test    "Opaque key for server authentication: invalid key: ecdh with RSA key, no async" \
+run_test    "Opaque key for server authentication: invalid key: ecdh with RSA key, no async, USE_PSA_CRYPTO" \
             "$P_SRV key_opaque=1 crt_file=data_files/server2-sha256.crt \
              key_file=data_files/server2.key key_opaque_algs=ecdh,none \
              debug_level=1" \
@@ -2323,6 +2340,25 @@ run_test    "Opaque key for server authentication: invalid key: ecdh with RSA ke
             -s "error" \
             -c "error" \
             -c "Public key type mismatch"
+
+# Same as previous, but different errors (the server doesn't get as far)
+requires_config_enabled MBEDTLS_PSA_CRYPTO_C
+requires_config_disabled MBEDTLS_USE_PSA_CRYPTO
+requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
+requires_config_enabled MBEDTLS_ECDSA_C
+requires_config_enabled MBEDTLS_RSA_C
+requires_config_disabled MBEDTLS_SSL_ASYNC_PRIVATE
+requires_hash_alg SHA_256
+run_test    "Opaque key for server authentication: invalid key: ecdh with RSA key, no async, no USE_PSA_CRYPTO" \
+            "$P_SRV key_opaque=1 crt_file=data_files/server2-sha256.crt \
+             key_file=data_files/server2.key key_opaque_algs=ecdh,none \
+             debug_level=1" \
+            "$P_CLI force_version=tls12" \
+            1 \
+            -s "key types: Opaque, none" \
+            -s "error" \
+            -c "error" \
+            -s "Bad input parameters to function"
 
 requires_config_enabled MBEDTLS_PSA_CRYPTO_C
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
@@ -2355,6 +2391,8 @@ run_test    "Opaque key for server authentication: invalid alg: ecdh with RSA ke
             -s "error" \
             -c "error"
 
+# The server fails at different points depending on whether
+# MBEDTLS_USE_PSA_CRYPTO is enabled.
 requires_config_enabled MBEDTLS_PSA_CRYPTO_C
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
 requires_hash_alg SHA_256
@@ -2365,7 +2403,7 @@ run_test    "Opaque key for server authentication: invalid alg: ECDHE-ECDSA with
             "$P_CLI force_version=tls12 force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-256-CCM" \
             1 \
             -s "key types: Opaque, none" \
-            -s "got ciphersuites in common, but none of them usable" \
+            -s "got ciphersuites in common, but none of them usable\|mbedtls_pk_sign() returned -" \
             -s "error" \
             -c "error"
 
@@ -2550,6 +2588,8 @@ run_test    "Opaque key for server authentication: RSA-" \
             -S "error" \
             -C "error"
 
+# The server fails at different points depending on whether
+# MBEDTLS_USE_PSA_CRYPTO is enabled.
 requires_config_enabled MBEDTLS_PSA_CRYPTO_C
 requires_config_enabled MBEDTLS_X509_CRT_PARSE_C
 requires_config_enabled MBEDTLS_RSA_C
@@ -2561,7 +2601,7 @@ run_test    "Opaque key for server authentication: DHE-RSA, PSS instead of PKCS1
              key_file=data_files/server2.key force_ciphersuite=TLS-DHE-RSA-WITH-AES-128-CBC-SHA" \
             1 \
             -s "key types: Opaque, none" \
-            -s "got ciphersuites in common, but none of them usable" \
+            -s "got ciphersuites in common, but none of them usable\|mbedtls_pk_sign() returned -" \
             -s "error" \
             -c "error"
 
