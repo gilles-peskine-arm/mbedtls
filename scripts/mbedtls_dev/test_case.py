@@ -27,6 +27,7 @@ class TestCase:
 
     def __init__(self, description: Optional[str] = None):
         self.comments = [] #type: List[str]
+        self.reason_to_omit = None #type: Optional[str]
         self.description = description #type: Optional[str]
         self.dependencies = [] #type: List[str]
         self.function = None #type: Optional[str]
@@ -34,6 +35,18 @@ class TestCase:
 
     def add_comment(self, *lines: str) -> None:
         self.comments += lines
+
+    def omit_because(self, reason: Optional[str]) -> None:
+        """Give a reason to omit this test case.
+
+        The test will be emitted but commented out, with the given reason text
+        placed in a comment.
+
+        If reason is None, the test will be emitted normally (this is the default).
+        """
+        if reason == '':
+            raise ValueError('You must specify a reason to omit the test case')
+        self.reason_to_omit = reason
 
     def set_description(self, description: str) -> None:
         self.description = description
@@ -67,10 +80,14 @@ class TestCase:
         out.write('\n')
         for line in self.comments:
             out.write('# ' + line + '\n')
-        out.write(self.description + '\n')
+        prefix = ''
+        if self.reason_to_omit is not None:
+            prefix = '#'
+            out.write('## Omitting test case: ' + self.reason_to_omit)
+        out.write(prefix + self.description + '\n')
         if self.dependencies:
-            out.write('depends_on:' + ':'.join(self.dependencies) + '\n')
-        out.write(self.function + ':' + ':'.join(self.arguments) + '\n')
+            out.write(prefix + 'depends_on:' + ':'.join(self.dependencies) + '\n')
+        out.write(prefix + self.function + ':' + ':'.join(self.arguments) + '\n')
 
 def write_data_file(filename: str,
                     test_cases: Iterable[TestCase],

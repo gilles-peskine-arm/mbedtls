@@ -9,6 +9,7 @@ import re
 from typing import Dict, FrozenSet, List, Optional
 
 from . import macro_collector
+from . import test_case
 
 
 def psa_want_symbol(name: str) -> str:
@@ -53,26 +54,6 @@ def automatic_dependencies(*expressions: str) -> List[str]:
     used.difference_update(SYMBOLS_WITHOUT_DEPENDENCY)
     return sorted(psa_want_symbol(name) for name in used)
 
-# A temporary hack: at the time of writing, not all dependency symbols
-# are implemented yet. Skip test cases for which the dependency symbols are
-# not available. Once all dependency symbols are available, this hack must
-# be removed so that a bug in the dependency symbols properly leads to a test
-# failure.
-def read_implemented_dependencies(filename: str) -> FrozenSet[str]:
-    return frozenset(symbol
-                     for line in open(filename)
-                     for symbol in re.findall(r'\bPSA_WANT_\w+\b', line))
-_implemented_dependencies = None #type: Optional[FrozenSet[str]] #pylint: disable=invalid-name
-
-def hack_dependencies_not_implemented(dependencies: List[str]) -> None:
-    global _implemented_dependencies #pylint: disable=global-statement,invalid-name
-    if _implemented_dependencies is None:
-        _implemented_dependencies = \
-            read_implemented_dependencies('include/psa/crypto_config.h')
-    if not all((dep.lstrip('!') in _implemented_dependencies or
-                not dep.lstrip('!').startswith('PSA_WANT'))
-               for dep in dependencies):
-        dependencies.append('DEPENDENCY_NOT_IMPLEMENTED_YET')
 
 class Information:
     """Gather information about PSA constructors."""
@@ -104,3 +85,57 @@ class Information:
         self.remove_unwanted_macros(constructors)
         constructors.gather_arguments()
         return constructors
+
+
+class PSATestCase(test_case.TestCase):
+    """A PSA test case with automatically inferred dependencies."""
+
+    _implemented_dependencies = None #type: FrozenSet[str]
+    DEPENDENCIES_FILENAME = 'include/psa/crypto_config.h'
+    WANT_SYMBOL_RE = re.compile(r'\bPSA_WANT_\w+\b')
+    @classmethod
+    def read_implemented_dependencies(cls) -> FrozenSet[str]:
+        with open(cls.DEPENDENCIES_FILENAME) as dependencies_file:
+            cls._implemented_dependencies = frozenset(
+                symbol
+                for line in dependencies_file
+                for symbol in cls.WANT_SYMBOL_RE.findall(line))
+
+    WANT_DEPENDENCY_RE = re.compile(r'!?(PSA_WANT_\w+)\Z')
+    def is_dependency_implemented(self, dependency: str) -> bool:
+        self.read_implemented_dependencies()
+        m = self.WANT_DEPENDENCY_RE.match(dependency)
+        if not m:
+            # Not a PSA_WANT_xxx dependency, so assume that it's implemented.
+            return True
+        want_symbol = m.group(1)
+        return want_symbol in self._implemented_dependencies
+
+    def __init__(self) -> None:
+        super().__init__()
+        if self._implemented_dependencies is None:
+            self.read_implemented_dependencies()
+        self.key_bits = None #type: Optional[int]
+
+    def set_key_bits(self, key_bits: Optional[int]) -> None:
+        """Use the given key size for automatic dependency generation.
+
+        This is only relevant for ECC and DH keys. For other key types,
+        this information is ignored.
+        """
+        self.key_bits = key_bits
+
+    def set_arguments(self, arguments: List[str]) -> None:
+        self.arguments = arguments
+        dependencies = automatic_dependencies(*arguments)
+        if self.key_bits is not None:
+            dependencies = finish_family_dependencies(dependencies, self.key_bits)
+        self.dependencies += dependencies
+        not_implemented = [dep
+                           for dep in dependencies
+                           if (dep.startswith('PSA_WANT_') and
+                               dep not in self._implemented_dependencies)]
+        if not_implemented:
+            #self.omit_because('not implemented: ' + ' '.join(not_implemented))
+            self.add_comment('not implemented: ' + ' '.join(not_implemented))
+            self.dependencies.append('DEPENDENCY_NOT_IMPLEMENTED_YET')
