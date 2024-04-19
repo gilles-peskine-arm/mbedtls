@@ -258,6 +258,9 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # "PSA test case generation: dependency inference class: operation fail"
             # from https://github.com/Mbed-TLS/mbedtls/pull/9025 .
             re.compile(r'.* with (?:DH|ECC)_(?:KEY_PAIR|PUBLIC_KEY)\(.*'),
+            # We don't test this unusual, but sensible configuration.
+            # https://github.com/Mbed-TLS/mbedtls/issues/9592
+            re.compile(r'.*: !ECDSA but DETERMINISTIC_ECDSA with ECC_.*'),
             # PBKDF2_HMAC is not in the default configuration, so we don't
             # enable it in depends.py where we remove hashes.
             # https://github.com/Mbed-TLS/mbedtls/issues/9576
@@ -271,6 +274,11 @@ class CoverageTask(outcome_analysis.CoverageTask):
             # differing from PSA_WANT_ALG_RSA_PSS.
             # https://github.com/Mbed-TLS/mbedtls/issues/9578
             re.compile(r'PSA sign RSA_PSS_ANY_SALT.*!(?:MD|RIPEMD|SHA).*'),
+        ],
+        'test_suite_psa_crypto_op_fail.misc': [
+            # We don't test this unusual, but sensible configuration.
+            # https://github.com/Mbed-TLS/mbedtls/issues/9592
+            'PSA sign DETERMINISTIC_ECDSA(SHA_256): !ECDSA but DETERMINISTIC_ECDSA with ECC_KEY_PAIR(SECP_R1)', #pylint: disable=line-too-long
         ],
         'test_suite_psa_crypto_storage_format.current': [
             PSA_MECHANISM_NOT_IMPLEMENTED_SEARCH_RE,
