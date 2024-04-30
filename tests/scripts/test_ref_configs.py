@@ -161,12 +161,12 @@ def test_configuration(options: TestOptions, config: str) -> int:
     spec = CONFIGS.get(config_name, Spec())
     success = test_configuration_variant(options, config_name, config_file, spec)
     if spec.psa:
-        success = success and \
-            test_configuration_variant(options,
-                                       config_name + '+PSA',
-                                       config_file,
-                                       spec,
-                                       psa=True)
+        success2 = test_configuration_variant(options,
+                                              config_name + '+PSA',
+                                              config_file,
+                                              spec,
+                                              psa=True)
+        success = success and success2
     return success
 
 def test_configurations(options: TestOptions, configs: Iterable[str]) -> List[str]:
