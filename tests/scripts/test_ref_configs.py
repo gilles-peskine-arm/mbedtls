@@ -169,17 +169,17 @@ def test_configuration(options: TestOptions, config: str) -> int:
                                        psa=True)
     return success
 
-def test_configurations(options: TestOptions, configs: Iterable[str]) -> int:
+def test_configurations(options: TestOptions, configs: Iterable[str]) -> List[str]:
     """Test the specified configurations.
 
-    If `options.keep_going` is true, return the number of failing
-    configuration variants (so 0 means success).
+    If `options.keep_going` is true, return the list of failing
+    configuration variants (so an empty list means success).
     Otherwise raise an exception as soon as a failure occurs.
     """
-    failures = 0
+    failures = []
     for config in configs:
         if not test_configuration(options, config):
-            failures += 1
+            failures.append(config)
     return failures
 
 def prepare_for_testing() -> None:
@@ -197,7 +197,7 @@ def final_cleanup() -> None:
     shutil.move(BACKUP_CONFIG, LIVE_CONFIG)
     subprocess.check_call(['make', 'clean'])
 
-def run_tests(options: TestOptions, configs: Iterable[str]) -> int:
+def run_tests(options: TestOptions, configs: List[str]) -> List[str]:
     """Test the specified configurations, then clean up.
 
     If `options.keep_going` is true, return the number of failing variants
@@ -209,6 +209,24 @@ def run_tests(options: TestOptions, configs: Iterable[str]) -> int:
         return test_configurations(options, configs)
     finally:
         final_cleanup()
+
+def report_tests(options: TestOptions, configs: List[str]) -> int:
+    """Test the specified configurations, then clean up.
+
+    If `options.keep_going` is true, return the number of failing variants
+    (so 0 means success).
+    Otherwise raise an exception as soon as a failure occurs.
+    """
+    failures = run_tests(options, configs)
+    if failures:
+        # The number of failures counts configuration variants:
+        # foo.h and foo.h+PSA together count as 2.
+        print('{}: FAILED: {}'.format(sys.argv[0], ' '.join(failures)))
+    else:
+        # The number of passes counts configurations:
+        # foo.h and foo.h+PSA together count as 1.
+        print('{}: {} PASSED'.format(sys.argv[0], len(configs)))
+    return len(failures)
 
 def main() -> None:
     """Command line entry point."""
@@ -225,7 +243,7 @@ def main() -> None:
                               ' default: all in configs/)'))
     options = parser.parse_args()
     configs = options.configs if options.configs else all_configurations()
-    sys.exit(run_tests(typing.cast(TestOptions, options), configs))
+    sys.exit(report_tests(typing.cast(TestOptions, options), configs))
 
 if __name__ == '__main__':
     main()
