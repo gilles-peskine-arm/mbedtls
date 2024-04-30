@@ -27,7 +27,9 @@ import glob
 import os
 import shutil
 import subprocess
-from typing import Iterable, List
+import sys
+import typing
+from typing import Dict, Iterable, List
 
 CONFIGS_DIR = 'configs'
 LIVE_CONFIG = 'include/mbedtls/mbedtls_config.h'
@@ -73,56 +75,82 @@ CONFIGS = {
     ),
 }
 
+class TestOptions:
+    """Runtime options for `test_configuration`."""
+    #pylint: disable=too-few-public-methods
+
+    keep_going = False #type: bool
+
 def tweak_config(symbols_to_set: Iterable[str]) -> None:
     """Additionally set the given configuration options."""
     for symbol in symbols_to_set:
         subprocess.check_call(['scripts/config.py', 'set', symbol])
 
-def test_configuration_variant(config_name: str,
+def test_configuration_variant(options: TestOptions,
+                               config_name: str,
                                config_file: str,
                                spec: Spec = Spec(),
-                               psa: bool = False) -> None:
+                               psa: bool = False) -> bool:
     """Test the specified configuration variant.
 
     Assume that `prepare_for_testing` has run.
     Running `final_cleanup` may be necessary afterwards.
+
+    If `options.keep_going` is true, return True on success, False on failure.
+    Otherwise raise an exception as soon as a failure occurs.
     """
     env = os.environ.copy()
     env['MBEDTLS_TEST_CONFIGURATION'] = config_name
+    failures = [] #type: List[List[str]]
+    def run(cmd: List[str], #pylint: disable=dangerous-default-value
+            env: Dict[str, str] = env,
+            **kwargs) -> bool:
+        cp = subprocess.run(cmd,
+                            env=env,
+                            check=not options.keep_going,
+                            **kwargs)
+        if cp.returncode != 0:
+            failures.append(cmd)
+            return False
+        return True
     # 1. Prepare
     print("""
 ******************************************
 * Testing configuration: {}
 ******************************************
 """.format(config_name))
-    subprocess.check_call(['make', 'clean'])
+    if not run(['make', 'clean']):
+        return False
     shutil.copy(config_file, LIVE_CONFIG)
     if psa:
         tweak_config(['MBEDTLS_PSA_CRYPTO_C', 'MBEDTLS_USE_PSA_CRYPTO'])
     # 2. Build and run unit tests
-    subprocess.check_call(['make'],
-                          env=env)
-    subprocess.check_call(['make', 'test'],
-                          env=env)
+    if not run(['make']):
+        return False
+    run(['make', 'test'])
     # 3. Run TLS tests
     for args in spec.compat:
         print("\nRunning compat.sh", *args)
-        subprocess.check_call(['tests/compat.sh'] + args,
-                              env=env)
+        run(['tests/compat.sh'] + args)
     for args in spec.opt:
         print("\nRunning ssl-opt.sh", *args)
-        subprocess.check_call(['tests/ssl-opt.sh'] + args,
-                              env=env)
+        run(['tests/ssl-opt.sh'] + args)
+    # 4. In keep-going mode, report the failures
+    return not failures
 
 def all_configurations() -> List[str]:
     """List the available configurations."""
     return glob.glob(os.path.join(CONFIGS_DIR, '*.h'))
 
-def test_configuration(config: str) -> None:
+def test_configuration(options: TestOptions, config: str) -> int:
     """Test the given configuration.
 
     Assume that `prepare_for_testing` has run.
     Running `final_cleanup` may be necessary afterwards.
+
+    If `options.keep_going` is true, return the number of failing variants
+    (so 0 means success).
+    Otherwise raise an exception as soon as a failure occurs.
     """
     if '/' in config:
         config_file = config
@@ -131,15 +159,28 @@ def test_configuration(config: str) -> None:
         config_file = os.path.join(CONFIGS_DIR, config)
         config_name = config
     spec = CONFIGS.get(config_name, Spec())
-    test_configuration_variant(config_name, config_file, spec)
+    success = test_configuration_variant(options, config_name, config_file, spec)
     if spec.psa:
-        test_configuration_variant(config_name + '+PSA', config_file, spec,
-                                   psa=True)
+        success = success and \
+            test_configuration_variant(options,
+                                       config_name + '+PSA',
+                                       config_file,
+                                       spec,
+                                       psa=True)
+    return success
 
-def test_configurations(options) -> None:
-    """Test the specified configurations."""
-    for config in options.configs:
-        test_configuration(config)
+def test_configurations(options: TestOptions, configs: Iterable[str]) -> int:
+    """Test the specified configurations.
+
+    If `options.keep_going` is true, return the number of failing
+    configuration variants (so 0 means success).
+    Otherwise raise an exception as soon as a failure occurs.
+    """
+    failures = 0
+    for config in configs:
+        if not test_configuration(options, config):
+            failures += 1
+    return failures
 
 def prepare_for_testing() -> None:
     """Initial setup before running any tests."""
@@ -156,25 +197,35 @@ def final_cleanup() -> None:
     shutil.move(BACKUP_CONFIG, LIVE_CONFIG)
     subprocess.check_call(['make', 'clean'])
 
-def run_tests(options) -> None:
-    """Test the specified configurations, then clean up."""
+def run_tests(options: TestOptions, configs: Iterable[str]) -> int:
+    """Test the specified configurations, then clean up.
+
+    If `options.keep_going` is true, return the number of failing variants
+    (so 0 means success).
+    Otherwise raise an exception as soon as a failure occurs.
+    """
     prepare_for_testing()
     try:
-        test_configurations(options)
+        return test_configurations(options, configs)
     finally:
         final_cleanup()
 
 def main() -> None:
     """Command line entry point."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--keep-going', '-k',
+                        action='store_true', default=False,
+                        help='Keep going after an error')
+    parser.add_argument('--stop', '-S',
+                        action='store_false', dest='keep_going',
+                        help='Stop on error (opposite of --keep-going)')
     parser.add_argument('configs', nargs='*', metavar='CONFIGS',
                         help=('Configurations to test'
                               ' (files; relative to configs/ if no slash;'
                               ' default: all in configs/)'))
     options = parser.parse_args()
-    if not options.configs:
-        options.configs = all_configurations()
-    run_tests(options)
+    configs = options.configs if options.configs else all_configurations()
+    sys.exit(run_tests(typing.cast(TestOptions, options), configs))
 
 if __name__ == '__main__':
     main()
