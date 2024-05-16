@@ -15,6 +15,13 @@
 #ifndef PSA_CRYPTO_ADJUST_AUTO_ENABLED_H
 #define PSA_CRYPTO_ADJUST_AUTO_ENABLED_H
 
+#if !defined(MBEDTLS_CONFIG_FILES_READ)
+#error "Do not include psa/crypto_adjust_*.h manually! This can lead to problems, " \
+    "up to and including runtime errors such as buffer overflows. " \
+    "Since Mbed TLS 3.0, including mbedtls/check_config.h manually is " \
+    "unnecessary and can cause spurious compile-time errors."
+#endif /* !MBEDTLS_CONFIG_FILES_READ */
+
 #define PSA_WANT_KEY_TYPE_DERIVE 1
 #define PSA_WANT_KEY_TYPE_PASSWORD 1
 #define PSA_WANT_KEY_TYPE_PASSWORD_HASH 1

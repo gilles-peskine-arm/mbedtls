@@ -24,4 +24,11 @@
 #ifndef MBEDTLS_CONFIG_ADJUST_X509_H
 #define MBEDTLS_CONFIG_ADJUST_X509_H
 
+#if !defined(MBEDTLS_CONFIG_FILES_READ)
+#error "Do not include mbedtls/config_adjust_*.h manually! This can lead to problems, " \
+    "up to and including runtime errors such as buffer overflows. " \
+    "Since Mbed TLS 3.0, including mbedtls/check_config.h manually is " \
+    "unnecessary and can cause spurious compile-time errors."
+#endif /* !MBEDTLS_CONFIG_FILES_READ */
+
 #endif /* MBEDTLS_CONFIG_ADJUST_X509_H */
