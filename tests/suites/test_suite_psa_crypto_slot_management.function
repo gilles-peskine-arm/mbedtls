@@ -816,15 +816,26 @@ void many_transient_keys(int max_keys_arg)
         status = psa_import_key(&attributes,
                                 (uint8_t *) &i, sizeof(i),
                                 &keys[i]);
+#if !defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
         if (status == PSA_ERROR_INSUFFICIENT_MEMORY) {
             break;
         }
+#endif
         PSA_ASSERT(status);
         TEST_ASSERT(!mbedtls_svc_key_id_is_null(keys[i]));
         for (j = 0; j < i; j++) {
             TEST_ASSERT(!mbedtls_svc_key_id_equal(keys[i], keys[j]));
         }
     }
+
+#if !defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    if (max_keys >= MBEDTLS_PSA_KEY_SLOT_COUNT) {
+        TEST_EQUAL(i, MBEDTLS_PSA_KEY_SLOT_COUNT);
+    } else {
+        TEST_EQUAL(i, max_keys);
+    }
+#endif
+
     max_keys = i;
 
     for (i = 1; i < max_keys; i++) {
