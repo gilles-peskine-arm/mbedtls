@@ -214,8 +214,22 @@ invalid_handle:INVALID_HANDLE_CLOSED:PSA_ERROR_INVALID_HANDLE
 invalid handle: huge
 invalid_handle:INVALID_HANDLE_HUGE:PSA_ERROR_INVALID_HANDLE
 
-Open many transient keys
-many_transient_keys:42
+Key slot count: fill up
+depends_on:!MBEDTLS_PSA_KEY_SLOT_DYNAMIC
+many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT
+
+Key slot count: almost fill up
+depends_on:!MBEDTLS_PSA_KEY_SLOT_DYNAMIC
+many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT - 1
+
+Key slot count: try to overfill
+depends_on:!MBEDTLS_PSA_KEY_SLOT_DYNAMIC
+many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT + 1
+
+Key slot count: dynamic
+depends_on:MBEDTLS_PSA_KEY_SLOT_DYNAMIC
+# Check that MBEDTLS_PSA_KEY_SLOT_COUNT doesn't apply to volatile keys.
+many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT + 1
 
 # Eviction from a key slot to be able to import a new persistent key.
 Key slot eviction to import a new persistent key
@@ -223,6 +237,7 @@ key_slot_eviction_to_import_new_key:PSA_KEY_LIFETIME_PERSISTENT
 
 # Eviction from a key slot to be able to import a new volatile key.
 Key slot eviction to import a new volatile key
+depends_on:!MBEDTLS_PSA_KEY_SLOT_DYNAMIC
 key_slot_eviction_to_import_new_key:PSA_KEY_LIFETIME_VOLATILE
 
 # Check that non reusable key slots are not deleted/overwritten in case of key
