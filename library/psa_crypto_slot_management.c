@@ -28,7 +28,13 @@
 #endif
 
 typedef struct {
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    psa_key_slot_t persistent_key_cache[MBEDTLS_PSA_KEY_SLOT_COUNT];
+    psa_key_slot_t *volatile_keys;
+    size_t volatile_keys_array_length;
+#else
     psa_key_slot_t key_slots[MBEDTLS_PSA_KEY_SLOT_COUNT];
+#endif
     uint8_t key_slots_initialized;
 } psa_global_data_t;
 
@@ -50,6 +56,51 @@ static uint8_t psa_get_key_slots_initialized(void)
 
     return initialized;
 }
+
+
+
+static inline size_t volatile_keys_array_length(void)
+{
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    return MBEDTLS_PSA_KEY_SLOT_COUNT;
+#else
+    return global_data.volatile_keys_array_length;
+#endif
+}
+
+/** Get the key slot for the given volatile key.
+ *
+ * This function works whether a volatile key with this id exists or not,
+ * so you can also call it when creating a volatile key.
+ *
+ * Return NULL if there is no slot for the given key id.
+ */
+static inline psa_key_slot_t *get_volatile_slot(psa_key_id_t key_id)
+{
+    if (key_id < PSA_KEY_ID_VOLATILE_MIN) {
+        return NULL;
+    }
+    if (key_id > PSA_KEY_ID_VOLATILE_MIN + volatile_keys_array_length()) {
+        return NULL;
+    }
+    return &global_data.key_slots[key_id - PSA_KEY_ID_VOLATILE_MIN];
+}
+
+static inline size_t persistent_keys_cache_length(void)
+{
+    return MBEDTLS_PSA_KEY_SLOT_COUNT;
+}
+
+static inline psa_key_slot_t *get_persistent_keys_cache_slot(size_t slot_idx)
+{
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    return &global_data.persistent_key_cache[slot_idx];
+#else
+    return &gloal_data.key_slots[slot_idx];
+#endif
+}
+
+
 
 int psa_is_valid_key_id(mbedtls_svc_key_id_t key, int vendor_ok)
 {
@@ -112,7 +163,10 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(
     psa_key_slot_t *slot = NULL;
 
     if (psa_key_id_is_volatile(key_id)) {
-        slot = &global_data.key_slots[key_id - PSA_KEY_ID_VOLATILE_MIN];
+        slot = get_volatile_slot(key_id);
+        if (slot == NULL) {
+            return PSA_ERROR_DOES_NOT_EXIST;
+        }
 
         /* Check if both the PSA key identifier key_id and the owner
          * identifier of key match those of the key slot. */
@@ -127,15 +181,15 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(
             return PSA_ERROR_INVALID_HANDLE;
         }
 
-        for (slot_idx = 0; slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT; slot_idx++) {
-            slot = &global_data.key_slots[slot_idx];
+        for (slot_idx = 0; slot_idx < persistent_keys_cache_length(); slot_idx++) {
+            slot = get_persistent_keys_cache_slot(slot_idx);
             /* Only consider slots which are in a full state. */
             if ((slot->state == PSA_SLOT_FULL) &&
                 (mbedtls_svc_key_id_equal(key, slot->attr.id))) {
                 break;
             }
         }
-        status = (slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT) ?
+        status = (slot_idx < persistent_keys_cache_length()) ?
                  PSA_SUCCESS : PSA_ERROR_DOES_NOT_EXIST;
     }
 
@@ -164,12 +218,30 @@ void psa_wipe_all_key_slots(void)
 {
     size_t slot_idx;
 
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    for (slot_idx = 0; slot_idx < persistent_keys_cache_length(); slot_idx++) {
+        psa_key_slot_t *slot = get_persistent_keys_cache_slot(slot_idx);
+        slot->registered_readers = 1;
+        slot->state = PSA_SLOT_PENDING_DELETION;
+        (void) psa_wipe_key_slot(slot);
+    }
+    for (psa_key_id_t key_id = PSA_KEY_ID_VOLATILE_MIN;
+         key_id < PSA_KEY_ID_VOLATILE_MIN + volatile_keys_array_length();
+         key_id++) {
+        psa_key_slot_t *slot = get_volatile_slot(key_id);
+        slot->registered_readers = 1;
+        slot->state = PSA_SLOT_PENDING_DELETION;
+        (void) psa_wipe_key_slot(slot);
+    }
+#else /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
     for (slot_idx = 0; slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT; slot_idx++) {
         psa_key_slot_t *slot = &global_data.key_slots[slot_idx];
         slot->registered_readers = 1;
         slot->state = PSA_SLOT_PENDING_DELETION;
         (void) psa_wipe_key_slot(slot);
     }
+#endif /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
+
     /* The global data mutex is already held when calling this function. */
     global_data.key_slots_initialized = 0;
 }
@@ -178,7 +250,7 @@ psa_status_t psa_reserve_free_key_slot(psa_key_id_t *volatile_key_id,
                                        psa_key_slot_t **p_slot)
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
-    size_t slot_idx;
+    psa_key_id_t key_id;
     psa_key_slot_t *selected_slot, *unused_persistent_key_slot;
 
     if (!psa_get_key_slots_initialized()) {
@@ -187,21 +259,28 @@ psa_status_t psa_reserve_free_key_slot(psa_key_id_t *volatile_key_id,
     }
 
     selected_slot = unused_persistent_key_slot = NULL;
-    for (slot_idx = 0; slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT; slot_idx++) {
-        psa_key_slot_t *slot = &global_data.key_slots[slot_idx];
+    for (key_id = PSA_KEY_ID_VOLATILE_MIN;
+         key_id < PSA_KEY_ID_VOLATILE_MIN + volatile_keys_array_length();
+         key_id++) {
+        psa_key_slot_t *slot = get_volatile_slot(key_id);
         if (slot->state == PSA_SLOT_EMPTY) {
             selected_slot = slot;
             break;
         }
 
+#if !defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+        /* The volatile keys share their space with persistent keys,
+         * so look for a persistent key that we can evict. */
         if ((unused_persistent_key_slot == NULL) &&
             (slot->state == PSA_SLOT_FULL) &&
             (!psa_key_slot_has_readers(slot)) &&
             (!PSA_KEY_LIFETIME_IS_VOLATILE(slot->attr.lifetime))) {
             unused_persistent_key_slot = slot;
         }
+#endif
     }
 
+#if !defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
     /*
      * If there is no unused key slot and there is at least one unlocked key
      * slot containing the description of a persistent key, recycle the first
@@ -218,6 +297,7 @@ psa_status_t psa_reserve_free_key_slot(psa_key_id_t *volatile_key_id,
             goto error;
         }
     }
+#endif
 
     if (selected_slot != NULL) {
         status = psa_key_slot_state_transition(selected_slot, PSA_SLOT_EMPTY,
@@ -226,8 +306,7 @@ psa_status_t psa_reserve_free_key_slot(psa_key_id_t *volatile_key_id,
             goto error;
         }
 
-        *volatile_key_id = PSA_KEY_ID_VOLATILE_MIN +
-                           ((psa_key_id_t) (selected_slot - global_data.key_slots));
+        *volatile_key_id = key_id;
         *p_slot = selected_slot;
 
         return PSA_SUCCESS;

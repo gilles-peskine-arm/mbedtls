@@ -23,8 +23,12 @@
 
 /** The minimum value for a volatile key identifier.
  */
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+#define PSA_KEY_ID_VOLATILE_MIN  PSA_KEY_ID_VENDOR_MIN
+#else
 #define PSA_KEY_ID_VOLATILE_MIN  (PSA_KEY_ID_VENDOR_MAX - \
                                   MBEDTLS_PSA_KEY_SLOT_COUNT + 1)
+#endif
 
 /** The maximum value for a volatile key identifier.
  */
