@@ -27,8 +27,18 @@
 #include "mbedtls/threading.h"
 #endif
 
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+#define KEY_SLOT_PAGE_LENGTH 32
+#define KEY_SLOT_SLICE_COUNT 20
+#define KEY_SLOT_MAX_LENGTH (KEY_SLOT_PAGE_LENGTH << KEY_SLOT_SLICE_COUNT)
+#endif
+
 typedef struct {
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    psa_key_slot_t *key_slot_slices[KEY_SLOT_SLICE_COUNT];
+#else
     psa_key_slot_t key_slots[MBEDTLS_PSA_KEY_SLOT_COUNT];
+#endif
     uint8_t key_slots_initialized;
 } psa_global_data_t;
 
@@ -50,6 +60,34 @@ static uint8_t psa_get_key_slots_initialized(void)
 
     return initialized;
 }
+
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+static inline size_t key_slot_slice_length(size_t slice_number) {
+    if (slice_number == 0) {
+        return KEY_SLOT_PAGE_LENGTH;
+    } else {
+        return KEY_SLOT_PAGE_LENGTH << (slice_number - 1);
+    }
+}
+
+static inline psa_key_slot_t *key_slot_from_index(size_t slot_index) {
+    if (slot_index < KEY_SLOT_PAGE_LENGTH) {
+        return &global_data.key_slot_slices[0][slot_index];
+    }
+    size_t slice_number = 1;
+    size_t slice_start = KEY_SLOT_PAGE_LENGTH;
+    while (slot_index > 2 * slice_start) {
+        ++slice_number;
+        slice_start *= 2;
+    }
+    return &global_data.key_slot_slices[slice_number][slot_index - slice_start];
+}
+#else /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
+static inline psa_key_slot_t *key_slot_from_index(size_t slot_index) {
+    return &global_data.key_slots[slot_index];
+}
+#endif /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
+
 
 int psa_is_valid_key_id(mbedtls_svc_key_id_t key, int vendor_ok)
 {
@@ -112,7 +150,7 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(
     psa_key_slot_t *slot = NULL;
 
     if (psa_key_id_is_volatile(key_id)) {
-        slot = &global_data.key_slots[key_id - PSA_KEY_ID_VOLATILE_MIN];
+        slot = key_slot_from_index(key_id - PSA_KEY_ID_VOLATILE_MIN);
 
         /* Check if both the PSA key identifier key_id and the owner
          * identifier of key match those of the key slot. */
@@ -128,7 +166,7 @@ static psa_status_t psa_get_and_lock_key_slot_in_memory(
         }
 
         for (slot_idx = 0; slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT; slot_idx++) {
-            slot = &global_data.key_slots[slot_idx];
+            slot = key_slot_from_index(slot_idx);
             /* Only consider slots which are in a full state. */
             if ((slot->state == PSA_SLOT_FULL) &&
                 (mbedtls_svc_key_id_equal(key, slot->attr.id))) {
@@ -165,7 +203,7 @@ void psa_wipe_all_key_slots(void)
     size_t slot_idx;
 
     for (slot_idx = 0; slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT; slot_idx++) {
-        psa_key_slot_t *slot = &global_data.key_slots[slot_idx];
+        psa_key_slot_t *slot = key_slot_from_index(slot_idx);
         slot->registered_readers = 1;
         slot->state = PSA_SLOT_PENDING_DELETION;
         (void) psa_wipe_key_slot(slot);
@@ -188,7 +226,7 @@ psa_status_t psa_reserve_free_key_slot(psa_key_id_t *volatile_key_id,
 
     selected_slot = unused_persistent_key_slot = NULL;
     for (slot_idx = 0; slot_idx < MBEDTLS_PSA_KEY_SLOT_COUNT; slot_idx++) {
-        psa_key_slot_t *slot = &global_data.key_slots[slot_idx];
+        psa_key_slot_t *slot = key_slots_from_index(slot_idx);
         if (slot->state == PSA_SLOT_EMPTY) {
             selected_slot = slot;
             break;
