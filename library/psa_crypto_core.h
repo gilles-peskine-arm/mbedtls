@@ -78,8 +78,17 @@ typedef struct {
      * slots that are in a suitable state for the function.
      * For example, psa_get_and_lock_key_slot_in_memory, which finds a slot
      * containing a given key ID, will only check slots whose state variable is
-     * PSA_SLOT_FULL. */
+     * PSA_SLOT_FULL.
+     */
     psa_key_slot_state_t state;
+
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+    /* The index of the slice containing this slot.
+     * This field must be filled if the slot contains a key
+     * (including keys being created or destroyed), and can be either
+     * filled or 0 when the slot is free. */
+    uint8_t slice_index;
+#endif /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
 
     /*
      * Number of functions registered as reading the material in the key slot.
@@ -107,6 +116,8 @@ typedef struct {
      *   or purge or destroy a key while it is in use by the library through
      *   another thread. */
     size_t registered_readers;
+
+    psa_key_attributes_t attr;
 
     /* Dynamically allocated key data buffer.
      * Format as specified in psa_export_key(). */
