@@ -170,6 +170,10 @@ Key registration: key id min vendor
 register_key_smoke_test:TEST_SE_PERSISTENT_LIFETIME:7:PSA_KEY_ID_VENDOR_MIN:1:PSA_ERROR_INVALID_ARGUMENT
 
 Key registration: key id max vendor except volatile
+# When MBEDTLS_PSA_KEY_SLOT_DYNAMIC is enabled,
+# PSA_KEY_ID_VOLATILE_MIN == PSA_KEY_ID_VENDOR_MIN and
+# PSA_KEY_ID_VOLATILE_MIN - 1 is a valid key identifier.
+depends_on:!MBEDTLS_PSA_KEY_SLOT_DYNAMIC
 register_key_smoke_test:TEST_SE_PERSISTENT_LIFETIME:7:PSA_KEY_ID_VOLATILE_MIN-1:1:PSA_ERROR_INVALID_ARGUMENT
 
 Key registration: key id min volatile
