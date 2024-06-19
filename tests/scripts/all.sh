@@ -5259,7 +5259,7 @@ support_test_clang_latest_opt () {
 
 component_test_clang_earliest_opt () {
     scripts/config.py full
-    test_build_opt 'full config' "$CLANG_EARLIEST" -O0
+    test_build_opt 'full config' "$CLANG_EARLIEST" -O2
 }
 support_test_clang_earliest_opt () {
     type "$CLANG_EARLIEST" >/dev/null 2>/dev/null
@@ -5275,7 +5275,7 @@ support_test_gcc_latest_opt () {
 
 component_test_gcc_earliest_opt () {
     scripts/config.py full
-    test_build_opt 'full config' "$GCC_EARLIEST" -O0
+    test_build_opt 'full config' "$GCC_EARLIEST" -O2
 }
 support_test_gcc_earliest_opt () {
     type "$GCC_EARLIEST" >/dev/null 2>/dev/null
