@@ -220,6 +220,11 @@ many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT - 1
 Key slot count: maximum
 many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT
 
+Key slot count: dynamic: more than MBEDTLS_PSA_KEY_SLOT_COUNT
+depends_on:MBEDTLS_PSA_KEY_SLOT_DYNAMIC
+# Check that MBEDTLS_PSA_KEY_SLOT_COUNT doesn't apply to volatile keys.
+many_transient_keys:MBEDTLS_PSA_KEY_SLOT_COUNT + 1
+
 Key slot count: try to overfill, destroy first
 fill_key_store:0
 
