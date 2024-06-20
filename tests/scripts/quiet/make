@@ -35,6 +35,7 @@ if [ -n "${MBEDTLS_TEST_OUTCOME_FILE}" ] &&
                 skip=1; continue;;
             -*) continue;; # Option
             *=*) continue;; # Variable assignment
+            cmTC_*) continue;; # Weirdness from CMake
             *[!-+./0-9@A-Z_a-z]*) # Target with problematic character
                 targets="$targets ${arg%%[!-+./0-9@A-Z_a-z]*}...";;
             *) # Normal target
