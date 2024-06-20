@@ -4054,6 +4054,11 @@
  * a multipart operation is in progress, only while the operation is being
  * set up. This may change in future versions of the library.
  *
+ * As of Mbed TLS 3.6.1, when #MBEDTLS_PSA_KEY_SLOT_DYNAMIC is disabled,
+ * the maximum value is 4096.
+ * When #MBEDTLS_PSA_KEY_SLOT_DYNAMIC is enabled, higher values are possible,
+ * but performance is poor.
+ *
  * This option has no effect when #MBEDTLS_PSA_CRYPTO_C is disabled.
  */
 //#define MBEDTLS_PSA_KEY_SLOT_COUNT 32
