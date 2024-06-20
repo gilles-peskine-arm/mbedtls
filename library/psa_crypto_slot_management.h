@@ -21,18 +21,20 @@
  *  index of the key slot containing the volatile key definition.
  */
 
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
 /** The minimum value for a volatile key identifier.
  */
-#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
 #define PSA_KEY_ID_VOLATILE_MIN  PSA_KEY_ID_VENDOR_MIN
-#else /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
-#define PSA_KEY_ID_VOLATILE_MIN  (PSA_KEY_ID_VENDOR_MAX - \
-                                  MBEDTLS_PSA_KEY_SLOT_COUNT + 1)
-#endif /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
-
 /** The maximum value for a volatile key identifier.
  */
+#define PSA_KEY_ID_VOLATILE_MAX  (MBEDTLS_PSA_KEY_ID_BUILTIN_MIN - 1)
+
+#else /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
+
+#define PSA_KEY_ID_VOLATILE_MIN  (PSA_KEY_ID_VENDOR_MAX -               \
+                                  MBEDTLS_PSA_KEY_SLOT_COUNT + 1)
 #define PSA_KEY_ID_VOLATILE_MAX  PSA_KEY_ID_VENDOR_MAX
+#endif /* MBEDTLS_PSA_KEY_SLOT_DYNAMIC */
 
 /** Test whether a key identifier is a volatile key identifier.
  *
