@@ -101,7 +101,11 @@ exit:
 /* Currently, there is always a maximum number of volatile keys that can
  * realistically be reached in tests. When we add configurations where this
  * is not true, undefine the macro in such configurations. */
+#if defined(MBEDTLS_PSA_KEY_SLOT_DYNAMIC)
+#undef MAX_VOLATILE_KEYS
+#else  /* Static key store */
 #define MAX_VOLATILE_KEYS MBEDTLS_PSA_KEY_SLOT_COUNT
+#endif
 
 /* END_HEADER */
 
