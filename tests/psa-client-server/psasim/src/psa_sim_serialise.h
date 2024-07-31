@@ -421,8 +421,8 @@ int psasim_deserialise_buffer(uint8_t **pos, size_t *remaining,
 int psasim_deserialise_return_buffer(uint8_t **pos, size_t *remaining,
                                      uint8_t *buffer, size_t buffer_length);
 
-/** Return how much space is needed by \c psasim_serialise_psa_key_production_parameters_t()
- *  to serialise a psa_key_production_parameters_t (a structure with a flexible array member).
+/** Return how much space is needed by \c psasim_serialise_psa_custom_key_parameters_t()
+ *  to serialise a psa_custom_key_parameters_t (a structure with a flexible array member).
  *
  * \param params             Pointer to the struct to be serialised
  *                           (needed in case some serialisations are value-
@@ -430,14 +430,14 @@ int psasim_deserialise_return_buffer(uint8_t **pos, size_t *remaining,
  * \param data_length        Number of bytes in the data[] of the struct to be serialised.
  *
  * \return                   The number of bytes needed in the serialisation buffer by
- *                           \c psasim_serialise_psa_key_production_parameters_t() to serialise
+ *                           \c psasim_serialise_psa_custom_key_parameters_t() to serialise
  *                           the specified structure.
  */
-size_t psasim_serialise_psa_key_production_parameters_t_needs(
-    const psa_key_production_parameters_t *params,
+size_t psasim_serialise_psa_custom_key_parameters_t_needs(
+    const psa_custom_key_parameters_t *params,
     size_t buffer_size);
 
-/** Serialise a psa_key_production_parameters_t.
+/** Serialise a psa_custom_key_parameters_t.
  *
  * \param pos[in,out]        Pointer to a `uint8_t *` holding current position
  *                           in the buffer.
@@ -448,18 +448,18 @@ size_t psasim_serialise_psa_key_production_parameters_t_needs(
  *
  * \return                   \c 1 on success ("okay"), \c 0 on error.
  */
-int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
+int psasim_serialise_psa_custom_key_parameters_t(uint8_t **pos,
                                                      size_t *remaining,
-                                                     const psa_key_production_parameters_t *params,
+                                                     const psa_custom_key_parameters_t *params,
                                                      size_t data_length);
 
-/** Deserialise a psa_key_production_parameters_t.
+/** Deserialise a psa_custom_key_parameters_t.
  *
  * \param pos[in,out]        Pointer to a `uint8_t *` holding current position
  *                           in the serialisation buffer.
  * \param remaining[in,out]  Pointer to a `size_t` holding number of bytes
  *                           remaining in the serialisation buffer.
- * \param params             Pointer to a `psa_key_production_parameters_t *` to
+ * \param params             Pointer to a `psa_custom_key_parameters_t *` to
  *                           receive the address of a newly-allocated structure,
  *                           which the caller must `free()`.
  * \param data_length        Pointer to a `size_t` to receive the number of
@@ -467,8 +467,8 @@ int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
  *
  * \return                   \c 1 on success ("okay"), \c 0 on error.
  */
-int psasim_deserialise_psa_key_production_parameters_t(uint8_t **pos, size_t *remaining,
-                                                       psa_key_production_parameters_t **params,
+int psasim_deserialise_psa_custom_key_parameters_t(uint8_t **pos, size_t *remaining,
+                                                       psa_custom_key_parameters_t **params,
                                                        size_t *buffer_length);
 
 /** Return how much buffer space is needed by \c psasim_serialise_psa_status_t()

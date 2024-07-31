@@ -737,8 +737,8 @@ int psasim_deserialise_return_buffer(uint8_t **pos,
 
 #define SER_TAG_SIZE        4
 
-size_t psasim_serialise_psa_key_production_parameters_t_needs(
-    const psa_key_production_parameters_t *params,
+size_t psasim_serialise_psa_custom_key_parameters_t_needs(
+    const psa_custom_key_parameters_t *params,
     size_t data_length)
 {
     /* We will serialise with 4-byte tag = "PKPP" + 4-byte overall length at the beginning,
@@ -747,9 +747,9 @@ size_t psasim_serialise_psa_key_production_parameters_t_needs(
     return SER_TAG_SIZE + sizeof(uint32_t) + sizeof(data_length) + sizeof(*params) + data_length;
 }
 
-int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
+int psasim_serialise_psa_custom_key_parameters_t(uint8_t **pos,
                                                      size_t *remaining,
-                                                     const psa_key_production_parameters_t *params,
+                                                     const psa_custom_key_parameters_t *params,
                                                      size_t data_length)
 {
     if (data_length > UINT32_MAX / 2) {       /* arbitrary limit */
@@ -778,9 +778,9 @@ int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
     return 1;
 }
 
-int psasim_deserialise_psa_key_production_parameters_t(uint8_t **pos,
+int psasim_deserialise_psa_custom_key_parameters_t(uint8_t **pos,
                                                        size_t *remaining,
-                                                       psa_key_production_parameters_t **params,
+                                                       psa_custom_key_parameters_t **params,
                                                        size_t *data_length)
 {
     if (*remaining < SER_TAG_SIZE + sizeof(uint32_t)) {
@@ -815,7 +815,7 @@ int psasim_deserialise_psa_key_production_parameters_t(uint8_t **pos,
     *pos += sizeof(data_length);
     *remaining -= sizeof(data_length);
 
-    psa_key_production_parameters_t *out = malloc(sizeof(**params) + *data_length);
+    psa_custom_key_parameters_t *out = malloc(sizeof(**params) + *data_length);
     if (out == NULL) {
         return 0;       /* allocation failure */
     }
