@@ -559,10 +559,10 @@ EOF
     size_t $n2;
 EOF
             push(@buffers, $n1);        # Add to the list to be free()d at end
-        } elsif ($argtype =~ /^(const )?psa_key_production_parameters_t$/) {
+        } elsif ($argtype =~ /^(const )?psa_custom_key_parameters_t$/) {
             my ($n1, $n2) = split(/,\s*/, $argname);
             print $fh <<EOF;
-    psa_key_production_parameters_t *$n1 = NULL;
+    psa_custom_key_parameters_t *$n1 = NULL;
     size_t $n2;
 EOF
             push(@buffers, $n1);        # Add to the list to be free()d at end
@@ -621,7 +621,7 @@ EOF
         goto fail;
     }
 EOF
-        } elsif ($argtype =~ /^(const )?psa_key_production_parameters_t$/) {
+        } elsif ($argtype =~ /^(const )?psa_custom_key_parameters_t$/) {
             my ($n1, $n2) = split(/,\s*/, $argname);
             print $fh <<EOF;
 
@@ -734,10 +734,10 @@ EOF
         goto fail;
     }
 EOF
-        } elsif ($argtype eq "psa_key_production_parameters_t") {
+        } elsif ($argtype eq "psa_custom_key_parameters_t") {
             print $fh <<EOF;
 
-    ok = psasim_serialise_psa_key_production_parameters_t(
+    ok = psasim_serialise_psa_custom_key_parameters_t(
         &rpos, &rremain,
         $argname);
     if (!ok) {
@@ -1026,7 +1026,7 @@ sub output_call
         if ($argtype =~ /^(const )?buffer$/) {
             my ($n1, $n2) = split(/,\s*/, $argname);
             print $fh "        $n1, $n2";
-        } elsif ($argtype =~ /^(const )?psa_key_production_parameters_t$/) {
+        } elsif ($argtype =~ /^(const )?psa_custom_key_parameters_t$/) {
             my ($n1, $n2) = split(/,\s*/, $argname);
             print $fh "        $n1, $n2";
         } else {
@@ -1064,10 +1064,10 @@ sub output_signature
             my $const = length($1) ? "const " : "";
             my ($n1, $n2) = split(/,/, $argname);
             print $fh "    ${const}uint8_t *$n1, size_t $n2";
-        } elsif ($argtype =~ /^(const )?psa_key_production_parameters_t$/) {
+        } elsif ($argtype =~ /^(const )?psa_custom_key_parameters_t$/) {
             my $const = length($1) ? "const " : "";
             my ($n1, $n2) = split(/,/, $argname);
-            print $fh "    ${const}psa_key_production_parameters_t *$n1, size_t $n2";
+            print $fh "    ${const}psa_custom_key_parameters_t *$n1, size_t $n2";
         } else {
             print $fh "    $ctypename$argname";
         }
@@ -1199,19 +1199,6 @@ sub get_functions
                             $next = "size_t expected_output_length";    # doesn't follow naming convention, so override
                         }
                         die("$arg: not a buffer 2!\n") if $next !~ /^size_t\s+(${name}_\w+)$/;
-                        $i++;                   # We're using the next param here
-                        my $nname = $1;
-                        $name .= ", " . $nname;
-                    } elsif ($arg =~ /^((const)\s+)?psa_key_production_parameters_t\s*\*\s*(\w+)$/) {
-                        $type = "psa_key_production_parameters_t";
-                        $is_output = (length($1) == 0) ? 1 : 0;
-                        $type = "const psa_key_production_parameters_t" if !$is_output;
-                        $ctype = "";
-                        $name = $3;
-                        #print("$arg: $name: might be a psa_key_production_parameters_t?\n");
-                        die("$arg: not a psa_key_production_parameters_t 1!\n") if $i == $#args;
-                        my $next = $args[$i + 1];
-                        die("$arg: $func: $name: $next: not a psa_key_production_parameters_t 2!\n") if $next !~ /^size_t\s+(${name}_\w+)$/;
                         $i++;                   # We're using the next param here
                         my $nname = $1;
                         $name .= ", " . $nname;

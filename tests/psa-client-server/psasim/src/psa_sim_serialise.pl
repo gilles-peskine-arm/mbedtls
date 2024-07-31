@@ -38,7 +38,7 @@ die($usage) unless $which eq "c" || $which eq "h";
 my @types = qw(unsigned-int int size_t
                uint16_t uint32_t uint64_t
                buffer
-               psa_key_production_parameters_t
+               psa_custom_key_parameters_t
                psa_status_t psa_algorithm_t psa_key_derivation_step_t
                psa_hash_operation_t
                psa_aead_operation_t
@@ -66,8 +66,8 @@ if ($which eq "h") {
     for my $type (@types) {
         if ($type eq "buffer") {
             print declare_buffer_functions();
-        } elsif ($type eq "psa_key_production_parameters_t") {
-            print declare_psa_key_production_parameters_t_functions();
+        } elsif ($type eq "psa_custom_key_parameters_t") {
+            print declare_psa_custom_key_parameters_t_functions();
         } else {
             print declare_needs($type, "");
             print declare_serialise($type, "");
@@ -98,8 +98,8 @@ if ($which eq "h") {
     for my $type (@types) {
         if ($type eq "buffer") {
             print define_buffer_functions();
-        } elsif ($type eq "psa_key_production_parameters_t") {
-            print define_psa_key_production_parameters_t_functions();
+        } elsif ($type eq "psa_custom_key_parameters_t") {
+            print define_psa_custom_key_parameters_t_functions();
         } elsif (exists($isa{$type})) {
             print define_needs_isa($type, $isa{$type});
             print define_serialise_isa($type, $isa{$type});
@@ -304,12 +304,12 @@ int psasim_deserialise_return_buffer(uint8_t **pos, size_t *remaining,
 EOF
 }
 
-sub declare_psa_key_production_parameters_t_functions
+sub declare_psa_custom_key_parameters_t_functions
 {
     return <<'EOF';
 
-/** Return how much space is needed by \c psasim_serialise_psa_key_production_parameters_t()
- *  to serialise a psa_key_production_parameters_t (a structure with a flexible array member).
+/** Return how much space is needed by \c psasim_serialise_psa_custom_key_parameters_t()
+ *  to serialise a psa_custom_key_parameters_t (a structure with a flexible array member).
  *
  * \param params             Pointer to the struct to be serialised
  *                           (needed in case some serialisations are value-
@@ -317,14 +317,14 @@ sub declare_psa_key_production_parameters_t_functions
  * \param data_length        Number of bytes in the data[] of the struct to be serialised.
  *
  * \return                   The number of bytes needed in the serialisation buffer by
- *                           \c psasim_serialise_psa_key_production_parameters_t() to serialise
+ *                           \c psasim_serialise_psa_custom_key_parameters_t() to serialise
  *                           the specified structure.
  */
-size_t psasim_serialise_psa_key_production_parameters_t_needs(
-    const psa_key_production_parameters_t *params,
+size_t psasim_serialise_psa_custom_key_parameters_t_needs(
+    const psa_custom_key_parameters_t *params,
     size_t buffer_size);
 
-/** Serialise a psa_key_production_parameters_t.
+/** Serialise a psa_custom_key_parameters_t.
  *
  * \param pos[in,out]        Pointer to a `uint8_t *` holding current position
  *                           in the buffer.
@@ -335,18 +335,18 @@ size_t psasim_serialise_psa_key_production_parameters_t_needs(
  *
  * \return                   \c 1 on success ("okay"), \c 0 on error.
  */
-int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
+int psasim_serialise_psa_custom_key_parameters_t(uint8_t **pos,
                                                      size_t *remaining,
-                                                     const psa_key_production_parameters_t *params,
+                                                     const psa_custom_key_parameters_t *params,
                                                      size_t data_length);
 
-/** Deserialise a psa_key_production_parameters_t.
+/** Deserialise a psa_custom_key_parameters_t.
  *
  * \param pos[in,out]        Pointer to a `uint8_t *` holding current position
  *                           in the serialisation buffer.
  * \param remaining[in,out]  Pointer to a `size_t` holding number of bytes
  *                           remaining in the serialisation buffer.
- * \param params             Pointer to a `psa_key_production_parameters_t *` to
+ * \param params             Pointer to a `psa_custom_key_parameters_t *` to
  *                           receive the address of a newly-allocated structure,
  *                           which the caller must `free()`.
  * \param data_length        Pointer to a `size_t` to receive the number of
@@ -354,8 +354,8 @@ int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
  *
  * \return                   \c 1 on success ("okay"), \c 0 on error.
  */
-int psasim_deserialise_psa_key_production_parameters_t(uint8_t **pos, size_t *remaining,
-                                                       psa_key_production_parameters_t **params,
+int psasim_deserialise_psa_custom_key_parameters_t(uint8_t **pos, size_t *remaining,
+                                                       psa_custom_key_parameters_t **params,
                                                        size_t *buffer_length);
 EOF
 }
@@ -816,14 +816,14 @@ int psasim_deserialise_return_buffer(uint8_t **pos,
 EOF
 }
 
-sub define_psa_key_production_parameters_t_functions
+sub define_psa_custom_key_parameters_t_functions
 {
     return <<'EOF';
 
 #define SER_TAG_SIZE        4
 
-size_t psasim_serialise_psa_key_production_parameters_t_needs(
-    const psa_key_production_parameters_t *params,
+size_t psasim_serialise_psa_custom_key_parameters_t_needs(
+    const psa_custom_key_parameters_t *params,
     size_t data_length)
 {
     /* We will serialise with 4-byte tag = "PKPP" + 4-byte overall length at the beginning,
@@ -832,9 +832,9 @@ size_t psasim_serialise_psa_key_production_parameters_t_needs(
     return SER_TAG_SIZE + sizeof(uint32_t) + sizeof(data_length) + sizeof(*params) + data_length;
 }
 
-int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
+int psasim_serialise_psa_custom_key_parameters_t(uint8_t **pos,
                                                      size_t *remaining,
-                                                     const psa_key_production_parameters_t *params,
+                                                     const psa_custom_key_parameters_t *params,
                                                      size_t data_length)
 {
     if (data_length > UINT32_MAX / 2) {       /* arbitrary limit */
@@ -863,9 +863,9 @@ int psasim_serialise_psa_key_production_parameters_t(uint8_t **pos,
     return 1;
 }
 
-int psasim_deserialise_psa_key_production_parameters_t(uint8_t **pos,
+int psasim_deserialise_psa_custom_key_parameters_t(uint8_t **pos,
                                                        size_t *remaining,
-                                                       psa_key_production_parameters_t **params,
+                                                       psa_custom_key_parameters_t **params,
                                                        size_t *data_length)
 {
     if (*remaining < SER_TAG_SIZE + sizeof(uint32_t)) {
@@ -900,7 +900,7 @@ int psasim_deserialise_psa_key_production_parameters_t(uint8_t **pos,
     *pos += sizeof(data_length);
     *remaining -= sizeof(data_length);
 
-    psa_key_production_parameters_t *out = malloc(sizeof(**params) + *data_length);
+    psa_custom_key_parameters_t *out = malloc(sizeof(**params) + *data_length);
     if (out == NULL) {
         return 0;       /* allocation failure */
     }
