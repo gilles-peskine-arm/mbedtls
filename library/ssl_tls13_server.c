@@ -2008,6 +2008,12 @@ static int ssl_tls13_prepare_server_hello(mbedtls_ssl_context *ssl)
     unsigned char *server_randbytes =
         ssl->handshake->randbytes + MBEDTLS_CLIENT_HELLO_RANDOM_LEN;
 
+
+    ret = mbedtls_ssl_tls13_crypto_init(ssl);
+    if (ret != 0) {
+        return ret;
+    }
+
     if ((ret = ssl->conf->f_rng(ssl->conf->p_rng, server_randbytes,
                                 MBEDTLS_SERVER_HELLO_RANDOM_LEN)) != 0) {
         MBEDTLS_SSL_DEBUG_RET(1, "f_rng", ret);
