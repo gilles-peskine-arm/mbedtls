@@ -1948,6 +1948,11 @@ static int ssl_tls13_process_client_hello(mbedtls_ssl_context *ssl)
 
     MBEDTLS_SSL_DEBUG_MSG(2, ("=> parse client hello"));
 
+    ret = mbedtls_ssl_tls13_crypto_init(ssl);
+    if (ret != 0) {
+        return ret;
+    }
+
     MBEDTLS_SSL_PROC_CHK(mbedtls_ssl_tls13_fetch_handshake_msg(
                              ssl, MBEDTLS_SSL_HS_CLIENT_HELLO,
                              &buf, &buflen));
@@ -2007,12 +2012,6 @@ static int ssl_tls13_prepare_server_hello(mbedtls_ssl_context *ssl)
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     unsigned char *server_randbytes =
         ssl->handshake->randbytes + MBEDTLS_CLIENT_HELLO_RANDOM_LEN;
-
-
-    ret = mbedtls_ssl_tls13_crypto_init(ssl);
-    if (ret != 0) {
-        return ret;
-    }
 
     if ((ret = ssl->conf->f_rng(ssl->conf->p_rng, server_randbytes,
                                 MBEDTLS_SERVER_HELLO_RANDOM_LEN)) != 0) {
