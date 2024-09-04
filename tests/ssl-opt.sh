@@ -507,6 +507,7 @@ detect_required_features() {
                                              PSA_WANT_ECC_SECP_R1_384
             fi
             ;;
+        *"programs/ssl/ssl_pthread_server "*|\
         *"programs/ssl/ssl_server "*)
             requires_config_enabled MBEDTLS_CTR_DRBG_C
             requires_config_enabled MBEDTLS_ENTROPY_C
@@ -514,6 +515,11 @@ detect_required_features() {
             requires_config_enabled MBEDTLS_SSL_SRV_C
             requires_certificate_authentication
             ;;
+    esac
+
+    case " $CMD_LINE " in
+        *"programs/ssl/ssl_pthread_server "*)
+            requires_config_enabled MBEDTLS_THREADING_PTHREAD;;
     esac
 
     case "$CMD_LINE" in
