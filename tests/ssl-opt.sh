@@ -488,6 +488,16 @@ detect_required_features() {
             requires_certificate_authentication;;
     esac
 
+    case " $CMD_LINE " in
+        *"programs/ssl/ssl_client1 "*)
+            requires_config_enabled MBEDTLS_CTR_DRBG_C
+            requires_config_enabled MBEDTLS_ENTROPY_C
+            requires_config_enabled MBEDTLS_PEM_PARSE_C
+            requires_config_enabled MBEDTLS_SSL_CLI_C
+            requires_certificate_authentication
+            ;;
+    esac
+
     case "$CMD_LINE" in
         *[-_\ =]psk*|*[-_\ =]PSK*) :;; # No certificate requirement with PSK
         */server5*|\
@@ -1760,9 +1770,13 @@ run_test() {
     CLI_EXPECT="$3"
     shift 3
 
-    # Check if test uses files
-    case "$SRV_CMD $CLI_CMD" in
-        *$DATA_FILES_PATH/*)
+    # Check if our test programs use files.
+    case "$CLI_CMD" in
+        *programs/ssl/*"$DATA_FILES_PATH/"*)
+            requires_config_enabled MBEDTLS_FS_IO;;
+    esac
+    case "$SRV_CMD" in
+        *programs/ssl/*"$DATA_FILES_PATH/"*)
             requires_config_enabled MBEDTLS_FS_IO;;
     esac
 
