@@ -494,6 +494,7 @@ detect_required_features() {
                                               PSA_WANT_ECC_SECP_R1_384"
             fi
             ;;
+        *"programs/ssl/dtls_server "*|\
         *"programs/ssl/ssl_fork_server "*|\
         *"programs/ssl/ssl_pthread_server "*|\
         *"programs/ssl/ssl_server "*)
@@ -1255,7 +1256,7 @@ wait_client_done() {
 # check if the given command uses dtls and sets global variable DTLS
 detect_dtls() {
     case "$1" in
-        *dtls=1*|*-dtls*|*-u*) DTLS=1;;
+        *dtls=1*|*-dtls*|*-u*|*/dtls_*) DTLS=1;;
         *) DTLS=0;;
     esac
 }
