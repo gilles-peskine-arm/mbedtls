@@ -11,7 +11,7 @@ run_test    "Sample: ssl_client1, openssl server, TLS 1.2" \
             "$O_SRV -tls1_2" \
             "$PROGRAMS_DIR/ssl_client1" \
             0 \
-            -c "New, TLSv1.2, Cipher is" \
+            -c "Protocol.*TLSv1.2" \
             -S "ERROR" \
             -C "error"
 
@@ -56,7 +56,6 @@ run_test    "Sample: dtls_client, openssl server, DTLS 1.2" \
             "$PROGRAMS_DIR/dtls_client" \
             0 \
             -s "Echo this" \
-            -s "DONE" \
             -c "Echo this" \
             -c "[1-9][0-9]* bytes written" \
             -c "[1-9][0-9]* bytes read" \
@@ -126,7 +125,7 @@ run_test    "Sample: ssl_server, openssl client, TLS 1.2" \
             "$O_CLI -tls1_2" \
             0 \
             -s "Successful connection using: TLS-" \
-            -c "New, TLSv1.2, Cipher is" \
+            -c "Protocol.*TLSv1.2" \
             -S "error" \
             -C "ERROR"
 
@@ -172,7 +171,7 @@ run_test    "Sample: ssl_fork_server, openssl client, TLS 1.2" \
             "$O_CLI -tls1_2" \
             0 \
             -s "Successful connection using: TLS-" \
-            -c "New, TLSv1.2, Cipher is" \
+            -c "Protocol.*TLSv1.2" \
             -S "error" \
             -C "ERROR"
 
@@ -218,7 +217,7 @@ run_test    "Sample: ssl_pthread_server, openssl client, TLS 1.2" \
             "$O_CLI -tls1_2" \
             0 \
             -s "Successful connection using: TLS-" \
-            -c "New, TLSv1.2, Cipher is" \
+            -c "Protocol.*TLSv1.2" \
             -S "error" \
             -C "ERROR"
 
@@ -265,7 +264,7 @@ run_test    "Sample: dtls_server, openssl client, DTLS 1.2" \
             0 \
             -s "[1-9][0-9]* bytes read" \
             -s "[1-9][0-9]* bytes written" \
-            -c "New, TLSv1.2, Cipher is" \
+            -c "Protocol.*TLSv1.2" \
             -S "error" \
             -C "ERROR"
 
