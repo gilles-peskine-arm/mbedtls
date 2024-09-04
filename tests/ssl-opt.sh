@@ -494,6 +494,7 @@ detect_required_features() {
                                               PSA_WANT_ECC_SECP_R1_384"
             fi
             ;;
+        *"programs/ssl/ssl_fork_server "*|\
         *"programs/ssl/ssl_pthread_server "*|\
         *"programs/ssl/ssl_server "*)
             requires_config_enabled MBEDTLS_CTR_DRBG_C
