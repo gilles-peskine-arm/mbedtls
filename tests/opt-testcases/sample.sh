@@ -132,6 +132,61 @@ run_test    "Sample: dtls_client, gnutls server, DTLS 1.2" \
             -S "Error" \
             -C "error"
 
+requires_certificate_authentication
+run_test    "Sample: mini_client, ssl_server2, certificate" \
+            -P 4433 \
+            "$PROGRAMS_DIR/ssl_server2 ca_file=$DATA_FILES_PATH/test-ca2.crt crt_file=$DATA_FILES_PATH/server6.crt key_file=$DATA_FILES_PATH/server6.key" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "[1-9][0-9]* bytes read" \
+            -s "[1-9][0-9]* bytes written" \
+            -S "error" \
+            -C "error"
+
+requires_protocol_version tls12
+run_test    "Sample: mini_client, openssl server, TLS 1.2" \
+            -P 4433 \
+            "$O_SRV -tls1_2" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "GET / HTTP/1.0" \
+            -S "ERROR" \
+            -C "error"
+
+requires_protocol_version tls12
+run_test    "Sample: mini_client, gnutls server, TLS 1.2" \
+            -P 4433 \
+            "$G_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.2" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "Version: TLS1.2" \
+            -S "Error" \
+            -C "error"
+
+requires_protocol_version tls13
+requires_openssl_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+run_test    "Sample: mini_client, openssl server, TLS 1.3" \
+            -P 4433 \
+            "$O_NEXT_SRV -tls1_3" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "GET / HTTP/1.0" \
+            -S "ERROR" \
+            -C "error"
+
+requires_protocol_version tls13
+requires_gnutls_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+run_test    "Sample: mini_client, gnutls server, TLS 1.3" \
+            -P 4433 \
+            "$G_NEXT_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "Version: TLS1.3" \
+            -S "Error" \
+            -C "error"
+
 run_test    "Sample: ssl_server, ssl_client2" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_server" \

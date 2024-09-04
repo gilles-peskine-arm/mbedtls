@@ -500,6 +500,16 @@ detect_required_features() {
             requires_config_enabled MBEDTLS_SSL_CLI_C
             requires_certificate_authentication
             ;;
+        *"programs/ssl/mini_client "*)
+            requires_config_enabled MBEDTLS_CTR_DRBG_C
+            requires_config_enabled MBEDTLS_ENTROPY_C
+            requires_config_enabled MBEDTLS_SSL_CLI_C
+            if [ "$PSK_ONLY" != "YES" ]; then
+                requires_config_enabled MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+                requires_any_configs_enabled MBEDTLS_ECP_DP_SECP384R1_ENABLED \
+                                             PSA_WANT_ECC_SECP_R1_384
+            fi
+            ;;
         *"programs/ssl/dtls_server "*|\
         *"programs/ssl/ssl_fork_server "*|\
         *"programs/ssl/ssl_pthread_server "*|\
@@ -1112,6 +1122,11 @@ check_osrv_dtls() {
             NEEDS_INPUT=1
             SRV_CMD="$( echo $SRV_CMD | sed s/-www// )";;
         *) NEEDS_INPUT=0;;
+    esac
+    case "$CLI_CMD" in
+        *mini_client*)
+            NEEDS_INPUT=1
+            SRV_CMD="$( echo $SRV_CMD | sed s/-www// )";;
     esac
 }
 
