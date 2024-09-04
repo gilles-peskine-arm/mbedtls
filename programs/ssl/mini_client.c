@@ -27,7 +27,6 @@
 #if !defined(MBEDTLS_CTR_DRBG_C) || !defined(MBEDTLS_ENTROPY_C) || \
     !defined(MBEDTLS_NET_C) || !defined(MBEDTLS_SSL_CLI_C) || \
     !defined(UNIX)
-
 int main(void)
 {
     mbedtls_printf("MBEDTLS_CTR_DRBG_C and/or MBEDTLS_ENTROPY_C and/or "
@@ -35,6 +34,18 @@ int main(void)
                    "not defined.\n");
     mbedtls_exit(0);
 }
+
+#elif !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED) &&        \
+    !(defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) &&      \
+      defined(MBEDTLS_PK_CAN_ECDSA_VERIFY) &&                   \
+      defined(MBEDTLS_ECP_HAVE_SECP384R1))
+int main(void)
+{
+    mbedtls_printf("No key exchange available with either PSK, "
+                   "or ECDSA on SECP384R1.\n");
+    mbedtls_exit(0);
+}
+
 #else
 
 #include <string.h>
@@ -130,6 +141,8 @@ enum exit_codes {
     x509_crt_parse_failed,
     ssl_handshake_failed,
     ssl_write_failed,
+    ssl_close_failed,
+    ssl_read_failed,
 };
 
 
@@ -248,7 +261,27 @@ int main(void)
         goto exit;
     }
 
-    mbedtls_ssl_close_notify(&ssl);
+    if (mbedtls_ssl_close_notify(&ssl) < 0) {
+        ret = ssl_close_failed;
+        goto exit;
+    }
+
+    /* If the server sends data, read it. This isn't necessary for the
+     * purpose of this program, but it makes it more convenient for
+     * running this client against servers such as "openssl s_server"
+     * in automated tests where the server might error out if it
+     * can't write. */
+    unsigned char buf[32];
+    do {
+        ret = mbedtls_ssl_read(&ssl, buf, sizeof(buf));
+    } while (ret > 0);
+    if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+        ret = 0;
+    }
+    if (ret < 0) {
+        ret = ssl_read_failed;
+        goto exit;
+    }
 
 exit:
     mbedtls_net_free(&server_fd);
@@ -265,4 +298,5 @@ exit:
 
     mbedtls_exit(ret);
 }
-#endif
+
+#endif /* configuration allows running this program */
