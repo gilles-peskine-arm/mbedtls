@@ -48,10 +48,16 @@ run_test    "Sample: ssl_client1, gnutls server, TLS 1.3" \
             -S "Error" \
             -C "error"
 
+# In principle, this test case should work with OpenSSL 1.0.2g (which is
+# our reference version of $OPENSSL at this time). However, on my machine,
+# dtls_client connects to localhost using IPv6, but OpenSSL 1.0.2.g only
+# accepts IPv4 connections. So use OPENSSL_NEXT, which is at least 1.1.1
+# and should be IPv6-aware.
 requires_protocol_version dtls12
+requires_openssl_next
 run_test    "Sample: dtls_client, openssl server, DTLS 1.2" \
             -P 4433 \
-            "$O_SRV -dtls1_2" \
+            "$O_NEXT_SRV -dtls1_2" \
             "$PROGRAMS_DIR/dtls_client" \
             0 \
             -s "Echo this" \
