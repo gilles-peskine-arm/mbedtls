@@ -511,11 +511,21 @@ detect_required_features() {
             requires_config_enabled MBEDTLS_THREADING_PTHREAD;;
     esac
 
+    can_psk=NO
+    case "$CMD_LINE" in
+        *[-_\ =]psk*|*[-_\ =]PSK*)
+            if [ "$PSK_ONLY" = "YES" ]; then
+                can_psk=YES
+            fi;;
+    esac
+
     case "$CMD_LINE" in
         */server5*|\
         */server7*|\
         */dir-maxpath*)
-            if [ "$TLS_VERSION" = "TLS13" ]; then
+            if [ "$can_psk" = "YES" ]; then
+                : # PSK is an option, so skip certificate requirement detection.
+            elif [ "$TLS_VERSION" = "TLS13" ]; then
                 # In case of TLS13 the support for ECDSA is enough
                 requires_pk_alg "ECDSA"
             else
@@ -549,16 +559,20 @@ detect_required_features() {
         */server1*|\
         */server2*|\
         */server7*)
-            # Certificates with an RSA key. The algorithm requirement is
-            # some subset of {PKCS#1v1.5 encryption, PKCS#1v1.5 signature,
-            # PSS signature}. We can't easily tell which subset works, and
-            # we aren't currently running ssl-opt.sh in configurations
-            # where partial RSA support is a problem, so generically, we
-            # just require RSA and it works out for our tests so far.
-            requires_config_enabled "MBEDTLS_RSA_C"
+            if [ "$can_psk" = "YES" ]; then
+                : # PSK is an option, so skip certificate requirement detection.
+            else
+                # Certificates with an RSA key. The algorithm requirement is
+                # some subset of {PKCS#1v1.5 encryption, PKCS#1v1.5 signature,
+                # PSS signature}. We can't easily tell which subset works, and
+                # we aren't currently running ssl-opt.sh in configurations
+                # where partial RSA support is a problem, so generically, we
+                # just require RSA and it works out for our tests so far.
+                requires_config_enabled "MBEDTLS_RSA_C"
+            fi
     esac
 
-    unset tmp
+    unset can_psk tmp
 }
 
 requires_certificate_authentication () {
@@ -622,14 +636,21 @@ maybe_adapt_for_psk() {
     adapt_cmd_for_psk SRV_CMD "$SRV_CMD"
 }
 
-case " $CONFIGS_ENABLED " in
-    *\ MBEDTLS_KEY_EXCHANGE_[^P]*) PSK_ONLY="NO";;
-    *\ MBEDTLS_KEY_EXCHANGE_P[^S]*) PSK_ONLY="NO";;
-    *\ MBEDTLS_KEY_EXCHANGE_PS[^K]*) PSK_ONLY="NO";;
-    *\ MBEDTLS_KEY_EXCHANGE_PSK[^_]*) PSK_ONLY="NO";;
-    *\ MBEDTLS_KEY_EXCHANGE_PSK_ENABLED\ *) PSK_ONLY="YES";;
-    *) PSK_ONLY="NO";;
-esac
+# Detect PSK-only mode. Limitation: PSK-only mode was only designed for
+# builds where the only key exchange is pure PSK. This excludes hybrid
+# key exchanges as well as certificate-based key exchanges.
+PSK_PRESENT="NO"
+PSK_ONLY=""
+for c in $CONFIGS_ENABLED; do
+    case $c in
+        MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) PSK_PRESENT="YES";;
+        MBEDTLS_KEY_EXCHANGE_*_ENABLED) PSK_ONLY="NO";;
+        MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_ENABLED) PSK_PRESENT="YES";;
+        MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_*_ENABLED) PSK_ONLY="NO";;
+    esac
+done
+: ${PSK_ONLY:=$PSK_PRESENT}
+unset c
 
 HAS_ALG_MD5="NO"
 HAS_ALG_SHA_1="NO"
