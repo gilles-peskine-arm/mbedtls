@@ -35,7 +35,7 @@ int main(void)
     mbedtls_exit(0);
 }
 
-#elif !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED) &&        \
+#elif !defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED) &&        \
     !(defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) &&      \
     defined(MBEDTLS_PK_CAN_ECDSA_VERIFY) &&                   \
     defined(MBEDTLS_ECP_HAVE_SECP384R1))
