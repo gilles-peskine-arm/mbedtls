@@ -1814,7 +1814,7 @@
 /**
  * \def MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
  *
- * Enable TLS 1.3 middlebox compatibility mode.
+ * Enable support TLS 1.3 middlebox compatibility mode.
  *
  * As specified in Section D.4 of RFC 8446, TLS 1.3 offers a compatibility
  * mode to make a TLS 1.3 connection more likely to pass through middle boxes
@@ -1826,8 +1826,10 @@
  * you know that middlebox compatibility issues won't occur, it is therefore
  * recommended to set this option.
  *
- * Comment to disable compatibility mode for TLS 1.3. If
- * MBEDTLS_SSL_PROTO_TLS1_3 is not enabled, this option does not have any
+ * Comment to disable support for compatibility mode for TLS 1.3. This breaks
+ * interoperability with clients and servers that use compatibility mode.
+ *
+ * If MBEDTLS_SSL_PROTO_TLS1_3 is not enabled, this option does not have any
  * effect on the build.
  *
  */
