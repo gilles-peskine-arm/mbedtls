@@ -35,13 +35,16 @@ int main(void)
     mbedtls_exit(0);
 }
 
+/* This client supports PSK key exchange modes in TLS <= 1.2.
+ * It doesn't handle session tickets, so it doesn't support TLS 1.3 PSK modes.
+ */
 #elif !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED) &&        \
     !(defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) &&      \
     defined(MBEDTLS_PK_CAN_ECDSA_VERIFY) &&                   \
     defined(MBEDTLS_ECP_HAVE_SECP384R1))
 int main(void)
 {
-    mbedtls_printf("No key exchange available with either PSK, "
+    mbedtls_printf("No key exchange available with either PSK (TLS 1.2 only), "
                    "or ECDSA on SECP384R1.\n");
     mbedtls_exit(0);
 }
