@@ -28,6 +28,7 @@ run_test    "Sample: ssl_client1, gnutls server, TLS 1.2" \
 
 requires_protocol_version tls13
 requires_openssl_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_client1, openssl server, TLS 1.3" \
             -P 4433 \
             "$O_NEXT_SRV -tls1_3" \
@@ -39,9 +40,35 @@ run_test    "Sample: ssl_client1, openssl server, TLS 1.3" \
 
 requires_protocol_version tls13
 requires_gnutls_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_client1, gnutls server, TLS 1.3" \
             -P 4433 \
             "$G_NEXT_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3" \
+            "$PROGRAMS_DIR/ssl_client1" \
+            0 \
+            -s "Version: TLS1.3" \
+            -c "<TD>Protocol version:</TD><TD>TLS1.3</TD>" \
+            -S "Error" \
+            -C "error"
+
+requires_protocol_version tls13
+requires_openssl_tls1_3
+requires_config_disabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+run_test    "Sample: ssl_client1, openssl server, TLS 1.3, no middlebox compatibility" \
+            -P 4433 \
+            "$O_NEXT_SRV -tls1_3 -no_middlebox" \
+            "$PROGRAMS_DIR/ssl_client1" \
+            0 \
+            -c "New, TLSv1.3, Cipher is" \
+            -S "ERROR" \
+            -C "error"
+
+requires_protocol_version tls13
+requires_gnutls_tls1_3
+requires_config_disabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+run_test    "Sample: ssl_client1, gnutls server, TLS 1.3, no middlebox compatibility" \
+            -P 4433 \
+            "$G_NEXT_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3:%DISABLE_TLS13_COMPAT_MODE" \
             "$PROGRAMS_DIR/ssl_client1" \
             0 \
             -s "Version: TLS1.3" \
@@ -124,7 +151,9 @@ run_test    "Sample: mini_client, gnutls server, TLS 1.2 certificate" \
 
 requires_protocol_version tls13
 requires_openssl_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: mini_client, openssl server, TLS 1.3 certificate" \
             -P 4433 \
             "$O_NEXT_SRV -tls1_3" \
@@ -136,10 +165,38 @@ run_test    "Sample: mini_client, openssl server, TLS 1.3 certificate" \
 
 requires_protocol_version tls13
 requires_gnutls_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: mini_client, gnutls server, TLS 1.3 certificate" \
             -P 4433 \
             "$G_NEXT_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "Version: TLS1.3" \
+            -S "Error" \
+            -C "error"
+
+requires_protocol_version tls13
+requires_openssl_tls1_3
+requires_config_disabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+requires_certificate_authentication
+run_test    "Sample: mini_client, openssl server, TLS 1.3 certificate, no middlebox compatibility" \
+            -P 4433 \
+            "$O_NEXT_SRV -tls1_3 -no_middlebox" \
+            "$PROGRAMS_DIR/mini_client" \
+            0 \
+            -s "GET / HTTP/1.0" \
+            -S "ERROR" \
+            -C "error"
+
+requires_protocol_version tls13
+requires_gnutls_tls1_3
+requires_config_disabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+requires_certificate_authentication
+run_test    "Sample: mini_client, gnutls server, TLS 1.3 certificate, no middlebox compatibility" \
+            -P 4433 \
+            "$G_NEXT_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3:%DISABLE_TLS13_COMPAT_MODE" \
             "$PROGRAMS_DIR/mini_client" \
             0 \
             -s "Version: TLS1.3" \
@@ -170,6 +227,7 @@ run_test    "Sample: ssl_server, gnutls client, TLS 1.2" \
 
 requires_protocol_version tls13
 requires_openssl_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_server, openssl client, TLS 1.3" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_server" \
@@ -182,10 +240,37 @@ run_test    "Sample: ssl_server, openssl client, TLS 1.3" \
 
 requires_protocol_version tls13
 requires_gnutls_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_server, gnutls client, TLS 1.3" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_server" \
             "$G_NEXT_CLI --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3 localhost" \
+            0 \
+            -s "Successful connection using: TLS1-3-" \
+            -c "Description:.*TLS1.3" \
+            -S "error" \
+            -C "ERROR"
+
+requires_protocol_version tls13
+requires_openssl_tls1_3
+requires_config_disabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+run_test    "Sample: ssl_server, openssl client, TLS 1.3, no middlebox compatibility" \
+            -P 4433 \
+            "$PROGRAMS_DIR/ssl_server" \
+            "$O_NEXT_CLI -tls1_3 -no_middlebox" \
+            0 \
+            -s "Successful connection using: TLS1-3-" \
+            -c "New, TLSv1.3, Cipher is" \
+            -S "error" \
+            -C "ERROR"
+
+requires_protocol_version tls13
+requires_gnutls_tls1_3
+requires_config_disabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
+run_test    "Sample: ssl_server, gnutls client, TLS 1.3, no middlebox compatibility" \
+            -P 4433 \
+            "$PROGRAMS_DIR/ssl_server" \
+            "$G_NEXT_CLI --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.3:%DISABLE_TLS13_COMPAT_MODE localhost" \
             0 \
             -s "Successful connection using: TLS1-3-" \
             -c "Description:.*TLS1.3" \
@@ -216,6 +301,7 @@ run_test    "Sample: ssl_fork_server, gnutls client, TLS 1.2" \
 
 requires_protocol_version tls13
 requires_openssl_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_fork_server, openssl client, TLS 1.3" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_fork_server" \
@@ -228,6 +314,7 @@ run_test    "Sample: ssl_fork_server, openssl client, TLS 1.3" \
 
 requires_protocol_version tls13
 requires_gnutls_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_fork_server, gnutls client, TLS 1.3" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_fork_server" \
@@ -262,6 +349,7 @@ run_test    "Sample: ssl_pthread_server, gnutls client, TLS 1.2" \
 
 requires_protocol_version tls13
 requires_openssl_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_pthread_server, openssl client, TLS 1.3" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_pthread_server" \
@@ -274,6 +362,7 @@ run_test    "Sample: ssl_pthread_server, openssl client, TLS 1.3" \
 
 requires_protocol_version tls13
 requires_gnutls_tls1_3
+requires_config_enabled MBEDTLS_SSL_TLS1_3_COMPATIBILITY_MODE
 run_test    "Sample: ssl_pthread_server, gnutls client, TLS 1.3" \
             -P 4433 \
             "$PROGRAMS_DIR/ssl_pthread_server" \
