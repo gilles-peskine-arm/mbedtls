@@ -7626,7 +7626,7 @@ run_test    "Not supported version: srv max TLS 1.0" \
             "$G_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.0" \
             "$P_CLI" \
             1 \
-            -s "Error in protocol version" \
+            -s "A TLS fatal alert has been received" \
             -c "Handshake protocol not within min/max boundaries" \
             -S "Version: TLS1.0" \
             -C "Protocol is TLSv1.0"
@@ -7636,7 +7636,7 @@ run_test    "Not supported version: srv max TLS 1.1" \
             "$G_SRV --priority=NORMAL:-VERS-TLS-ALL:+VERS-TLS1.1" \
             "$P_CLI" \
             1 \
-            -s "Error in protocol version" \
+            -s "A TLS fatal alert has been received" \
             -c "Handshake protocol not within min/max boundaries" \
             -S "Version: TLS1.1" \
             -C "Protocol is TLSv1.1"
