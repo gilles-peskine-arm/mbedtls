@@ -6033,7 +6033,6 @@ run_test    "Authentication: server goodcert, client required, no trusted CA" \
             -c "! mbedtls_ssl_handshake returned" \
             -c "SSL - No CA Chain is set, but required to operate"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: server goodcert, client required, no trusted CA (1.2)" \
             "$P_SRV force_version=tls12" \
             "$P_CLI debug_level=3 auth_mode=required ca_file=none ca_path=none" \
@@ -6055,7 +6054,6 @@ run_test    "Authentication: server goodcert, client optional, no trusted CA" \
             -C "X509 - Certificate verification failed" \
             -C "SSL - No CA Chain is set, but required to operate"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: server goodcert, client optional, no trusted CA (1.2)" \
             "$P_SRV" \
             "$P_CLI force_version=tls12 debug_level=3 auth_mode=optional ca_file=none ca_path=none" \
@@ -6078,7 +6076,6 @@ run_test    "Authentication: server goodcert, client none, no trusted CA" \
             -C "X509 - Certificate verification failed" \
             -C "SSL - No CA Chain is set, but required to operate"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: server goodcert, client none, no trusted CA (1.2)" \
             "$P_SRV" \
             "$P_CLI force_version=tls12 debug_level=3 auth_mode=none ca_file=none ca_path=none" \
@@ -6115,7 +6112,6 @@ run_test    "Authentication: server ECDH p256v1, client optional, p256v1 unsuppo
             -c "! Certificate verification flags"\
             -c "bad server certificate (ECDH curve)" # Expect failure only at ECDH params check
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: client SHA256, server required" \
             "$P_SRV auth_mode=required" \
             "$P_CLI debug_level=3 crt_file=$DATA_FILES_PATH/server6.crt \
@@ -6125,7 +6121,6 @@ run_test    "Authentication: client SHA256, server required" \
             -c "Supported Signature Algorithm found: 04 " \
             -c "Supported Signature Algorithm found: 05 "
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: client SHA384, server required" \
             "$P_SRV auth_mode=required" \
             "$P_CLI debug_level=3 crt_file=$DATA_FILES_PATH/server6.crt \
@@ -6370,7 +6365,6 @@ run_test    "Authentication: client max_int chain, server required" \
 
 # Tests for CA list in CertificateRequest messages
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: send CA list in CertificateRequest  (default)" \
             "$P_SRV debug_level=3 auth_mode=required" \
             "$P_CLI force_version=tls12 crt_file=$DATA_FILES_PATH/server6.crt \
@@ -6378,7 +6372,6 @@ run_test    "Authentication: send CA list in CertificateRequest  (default)" \
             0 \
             -s "requested DN"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: do not send CA list in CertificateRequest" \
             "$P_SRV debug_level=3 auth_mode=required cert_req_ca_list=0" \
             "$P_CLI force_version=tls12 crt_file=$DATA_FILES_PATH/server6.crt \
@@ -6398,7 +6391,6 @@ run_test    "Authentication: send CA list in CertificateRequest, client self sig
             -c "! mbedtls_ssl_handshake returned" \
             -s "X509 - Certificate verification failed"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: send alt conf DN hints in CertificateRequest" \
             "$P_SRV debug_level=3 auth_mode=optional cert_req_ca_list=2 \
              crt_file2=$DATA_FILES_PATH/server1.crt \
@@ -6409,7 +6401,6 @@ run_test    "Authentication: send alt conf DN hints in CertificateRequest" \
             0 \
             -c "DN hint: C=NL, O=PolarSSL, CN=PolarSSL Server 1"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: send alt conf DN hints in CertificateRequest (2)" \
             "$P_SRV debug_level=3 auth_mode=optional cert_req_ca_list=2 \
              crt_file2=$DATA_FILES_PATH/server2.crt \
@@ -6420,7 +6411,6 @@ run_test    "Authentication: send alt conf DN hints in CertificateRequest (2)" \
             0 \
             -c "DN hint: C=NL, O=PolarSSL, CN=localhost"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication: send alt hs DN hints in CertificateRequest" \
             "$P_SRV debug_level=3 auth_mode=optional cert_req_ca_list=3 \
              crt_file2=$DATA_FILES_PATH/server1.crt \
@@ -6500,7 +6490,6 @@ run_test    "Authentication, CA callback: server ECDH p256v1, client optional, p
             -c "bad server certificate (ECDH curve)" # Expect failure only at ECDH params check
 
 requires_config_enabled MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication, CA callback: client SHA384, server required" \
             "$P_SRV ca_callback=1 debug_level=3 auth_mode=required" \
             "$P_CLI debug_level=3 crt_file=$DATA_FILES_PATH/server6.crt \
@@ -6512,7 +6501,6 @@ run_test    "Authentication, CA callback: client SHA384, server required" \
             -c "Supported Signature Algorithm found: 05 "
 
 requires_config_enabled MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Authentication, CA callback: client SHA256, server required" \
             "$P_SRV ca_callback=1 debug_level=3 auth_mode=required" \
             "$P_CLI debug_level=3 crt_file=$DATA_FILES_PATH/server6.crt \
@@ -6987,7 +6975,6 @@ run_test    "Non-blocking I/O: ticket + client auth" \
             -C "mbedtls_ssl_handshake returned" \
             -c "Read from server: .* bytes read"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 requires_config_enabled MBEDTLS_SSL_SESSION_TICKETS
 run_test    "Non-blocking I/O: TLS 1.2 + ticket + client auth + resume" \
             "$P_SRV nbio=2 tickets=1 auth_mode=required" \
@@ -7009,7 +6996,6 @@ run_test    "Non-blocking I/O: TLS 1.3 + ticket + client auth + resume" \
             -C "mbedtls_ssl_handshake returned" \
             -c "Read from server: .* bytes read"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 requires_config_enabled MBEDTLS_SSL_SESSION_TICKETS
 run_test    "Non-blocking I/O: TLS 1.2 + ticket + resume" \
             "$P_SRV nbio=2 tickets=1 auth_mode=none" \
@@ -7031,7 +7017,6 @@ run_test    "Non-blocking I/O: TLS 1.3 + ticket + resume" \
             -C "mbedtls_ssl_handshake returned" \
             -c "Read from server: .* bytes read"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Non-blocking I/O: session-id resume" \
             "$P_SRV nbio=2 tickets=0 auth_mode=none" \
             "$P_CLI force_version=tls12 nbio=2 tickets=0 reconnect=1" \
@@ -7076,7 +7061,6 @@ run_test    "Event-driven I/O: ticket + client auth" \
             -C "mbedtls_ssl_handshake returned" \
             -c "Read from server: .* bytes read"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 requires_config_enabled MBEDTLS_SSL_SESSION_TICKETS
 run_test    "Event-driven I/O: TLS 1.2 + ticket + client auth + resume" \
             "$P_SRV event=1 tickets=1 auth_mode=required" \
@@ -7098,7 +7082,6 @@ run_test    "Event-driven I/O: TLS 1.3 + ticket + client auth + resume" \
             -C "mbedtls_ssl_handshake returned" \
             -c "Read from server: .* bytes read"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 requires_config_enabled MBEDTLS_SSL_SESSION_TICKETS
 run_test    "Event-driven I/O: TLS 1.2 + ticket + resume" \
             "$P_SRV event=1 tickets=1 auth_mode=none" \
@@ -7120,7 +7103,6 @@ run_test    "Event-driven I/O: TLS 1.3 + ticket + resume" \
             -C "mbedtls_ssl_handshake returned" \
             -c "Read from server: .* bytes read"
 
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Event-driven I/O: session-id resume" \
             "$P_SRV event=1 tickets=0 auth_mode=none" \
             "$P_CLI force_version=tls12 event=1 tickets=0 reconnect=1" \
