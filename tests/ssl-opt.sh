@@ -579,6 +579,11 @@ adapt_cmd_for_psk () {
         *gnutls-serv*) s='--pskpasswd=../framework/data_files/simplepass.psk';;
         *) s='psk=73776f726466697368';;
     esac
+    # GnuTLS's default priority doesn't include PSK or CCM-8 (which is the
+    # only cipher in config-ccm-psk-tls1_2.h and config-ccm-psk-dtls1_2.h).
+    case "$2" in
+        *gnutls-*) s="$s --priority=NORMAL:+PSK:+AES-256-CCM-8:+AES-128-CCM-8";;
+    esac
     eval $1='"$2 $s"'
     unset s
 }
@@ -622,6 +627,22 @@ maybe_adapt_for_psk() {
             return;;
         *\ auth_mode=*|*[-_\ =]crt[_=]*)
             # The test case involves certificates. PSK won't do.
+            SKIP_NEXT="YES"
+            return;;
+        *"gnutls-"*"--priority"*)
+            # On at least one side, we're passing an explicit list of ciphers
+            # that does not include "PSK" (caught above). The test case may
+            # or may not be meaningful with a PSK key exchange, but adapting
+            # it would require more understanding of the cipher filter
+            # than we can currently hope to achieve. So we won't try to
+            # adapt this test case. If you want a test case that is caught
+            # here to work in PSK-only builds, either make adapt_cmd_for_psk
+            # smarter and adapt this filter, or manually add a PSK variant
+            # of the test case.
+            #
+            # This pattern is only for GnuTLS, not for OpenSSL. For OpenSSL,
+            # we systematically pass "-cipher ALL..." except when interacting
+            # with old versions.
             SKIP_NEXT="YES"
             return;;
     esac
@@ -2121,6 +2142,14 @@ if [ "$LIST_TESTS" -eq 0 ];then
     G_SRV="$G_SRV -p $SRV_PORT"
     G_CLI="$G_CLI -p +SRV_PORT"
 
+    if [ -n "${OPENSSL_NEXT:-}" ]; then
+        O_NEXT_SRV="$O_NEXT_SRV -accept $SRV_PORT"
+        O_NEXT_SRV_NO_CERT="$O_NEXT_SRV_NO_CERT -accept $SRV_PORT"
+        O_NEXT_SRV_EARLY_DATA="$O_NEXT_SRV_EARLY_DATA -accept $SRV_PORT"
+        O_NEXT_CLI="$O_NEXT_CLI -connect 127.0.0.1:+SRV_PORT"
+        O_NEXT_CLI_NO_CERT="$O_NEXT_CLI_NO_CERT -connect 127.0.0.1:+SRV_PORT"
+    fi
+
     # Newer versions of OpenSSL have a syntax to enable all "ciphers", even
     # low-security ones. This covers not just cipher suites but also protocol
     # versions. It is necessary, for example, to use (D)TLS 1.0/1.1 on
@@ -2134,14 +2163,8 @@ if [ "$LIST_TESTS" -eq 0 ];then
             O_SRV="$O_SRV -cipher ALL@SECLEVEL=0"
             ;;
     esac
-
-    if [ -n "${OPENSSL_NEXT:-}" ]; then
-        O_NEXT_SRV="$O_NEXT_SRV -accept $SRV_PORT"
-        O_NEXT_SRV_NO_CERT="$O_NEXT_SRV_NO_CERT -accept $SRV_PORT"
-        O_NEXT_SRV_EARLY_DATA="$O_NEXT_SRV_EARLY_DATA -accept $SRV_PORT"
-        O_NEXT_CLI="$O_NEXT_CLI -connect 127.0.0.1:+SRV_PORT"
-        O_NEXT_CLI_NO_CERT="$O_NEXT_CLI_NO_CERT -connect 127.0.0.1:+SRV_PORT"
-    fi
+    O_NEXT_CLI="$O_NEXT_CLI -cipher ALL@SECLEVEL=0"
+    O_NEXT_SRV="$O_NEXT_SRV -cipher ALL@SECLEVEL=0"
 
     if [ -n "${GNUTLS_NEXT_SERV:-}" ]; then
         G_NEXT_SRV="$G_NEXT_SRV -p $SRV_PORT"
@@ -9465,7 +9488,7 @@ requires_config_enabled MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 requires_gnutls
 run_test    "ClientHello without extensions: PSK" \
             "$P_SRV force_version=tls12 debug_level=3 psk=73776f726466697368" \
-            "$G_CLI --priority=NORMAL:+PSK:-RSA:-DHE-RSA:%NO_EXTENSIONS:%DISABLE_SAFE_RENEGOTIATION --pskusername=Client_identity --pskkey=73776f726466697368 localhost" \
+            "$G_CLI --priority=NORMAL:+AES-128-CCM-8:+AES-256-CCM-8:+PSK:-RSA:-DHE-RSA:%NO_EXTENSIONS:%DISABLE_SAFE_RENEGOTIATION --pskusername=Client_identity --pskkey=73776f726466697368 localhost" \
             0 \
             -s "Ciphersuite is .*-PSK-.*" \
             -S "Ciphersuite is .*-EC.*" \
