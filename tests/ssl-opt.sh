@@ -10559,6 +10559,9 @@ run_test    "DTLS reassembly: no fragmentation (gnutls server)" \
 
 requires_gnutls
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
+# Without a certificate, and without extra work (e.g. a very long PSK
+# identity), no handshake message is large enough to be fragmented.
+requires_certificate_authentication
 run_test    "DTLS reassembly: some fragmentation (gnutls server)" \
             "$G_SRV -u --mtu 512" \
             "$P_CLI dtls=1 debug_level=2" \
@@ -10569,7 +10572,7 @@ run_test    "DTLS reassembly: some fragmentation (gnutls server)" \
 requires_gnutls
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 run_test    "DTLS reassembly: more fragmentation (gnutls server)" \
-            "$G_SRV -u --mtu 128" \
+            "$G_SRV -u --mtu 64" \
             "$P_CLI dtls=1 debug_level=2" \
             0 \
             -c "found fragmented DTLS handshake message" \
@@ -10578,7 +10581,7 @@ run_test    "DTLS reassembly: more fragmentation (gnutls server)" \
 requires_gnutls
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 run_test    "DTLS reassembly: more fragmentation, nbio (gnutls server)" \
-            "$G_SRV -u --mtu 128" \
+            "$G_SRV -u --mtu 64" \
             "$P_CLI dtls=1 nbio=2 debug_level=2" \
             0 \
             -c "found fragmented DTLS handshake message" \
@@ -10623,6 +10626,10 @@ run_test    "DTLS reassembly: no fragmentation (openssl server)" \
             -C "error"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
+# OpenSSL has a minimal MTU of 256.
+# Without a certificate, and without extra work (e.g. a very long PSK
+# identity), no handshake message is large enough to be fragmented.
+requires_certificate_authentication
 run_test    "DTLS reassembly: some fragmentation (openssl server)" \
             "$O_SRV -dtls -mtu 256" \
             "$P_CLI dtls=1 debug_level=2" \
@@ -10631,15 +10638,11 @@ run_test    "DTLS reassembly: some fragmentation (openssl server)" \
             -C "error"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
-run_test    "DTLS reassembly: more fragmentation (openssl server)" \
-            "$O_SRV -dtls -mtu 256" \
-            "$P_CLI dtls=1 debug_level=2" \
-            0 \
-            -c "found fragmented DTLS handshake message" \
-            -C "error"
-
-requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
-run_test    "DTLS reassembly: fragmentation, nbio (openssl server)" \
+# OpenSSL has a minimal MTU of 256.
+# Without a certificate, and without extra work (e.g. a very long PSK
+# identity), no handshake message is large enough to be fragmented.
+requires_certificate_authentication
+run_test    "DTLS reassembly: some fragmentation, nbio (openssl server)" \
             "$O_SRV -dtls -mtu 256" \
             "$P_CLI dtls=1 nbio=2 debug_level=2" \
             0 \
