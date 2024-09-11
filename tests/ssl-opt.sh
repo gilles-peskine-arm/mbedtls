@@ -610,9 +610,10 @@ adapt_cmd_for_psk () {
 # This code does not consider builds with ECDHE-PSK or RSA-PSK.
 #
 # Inputs:
+# * $NAME: the test case description.
 # * $CLI_CMD, $SRV_CMD, $PXY_CMD: client/server/proxy commands.
 # * $PSK_ONLY: YES if running in a PSK-only build (no asymmetric key exchanges).
-# * "$@": options passed to run_test.
+# * "$@": options passed to run_test (after the expected client status).
 #
 # Outputs:
 # * $CLI_CMD, $SRV_CMD: may be modified to add PSK-relevant arguments.
@@ -624,6 +625,7 @@ maybe_adapt_for_psk() {
     if [ "$SKIP_NEXT" = "YES" ]; then
         return
     fi
+
     case "$CLI_CMD $SRV_CMD" in
         *[-_\ =]psk*|*[-_\ =]PSK*)
             return;;
@@ -654,6 +656,14 @@ maybe_adapt_for_psk() {
             SKIP_NEXT="YES"
             return;;
     esac
+
+    case "$NAME" in
+        *keyUsage*|*extKeyUsage*)
+            # The test case is about an aspect of certificates. PSK won't do.
+            SKIP_NEXT="YES"
+            return;;
+    esac
+
     adapt_cmd_for_psk CLI_CMD "$CLI_CMD"
     adapt_cmd_for_psk SRV_CMD "$SRV_CMD"
 }
