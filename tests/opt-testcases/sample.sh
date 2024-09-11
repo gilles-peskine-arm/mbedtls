@@ -132,9 +132,10 @@ run_test    "Sample: dtls_client, gnutls server, DTLS 1.2" \
             -S "Error" \
             -C "error"
 
-run_test    "Sample: mini_client, ssl_server2, PSK" \
+run_test    "Sample: mini_client, ssl_server2, TLS 1.2 PSK" \
             -P 4433 \
-            "$PROGRAMS_DIR/ssl_server2 psk_identity=Client_identity psk=000102030405060708090a0b0c0d0e0f" \
+            "$PROGRAMS_DIR/ssl_server2 force_ciphersuite=TLS-PSK-WITH-AES-128-CCM \
+                                       psk_identity=Client_identity psk=000102030405060708090a0b0c0d0e0f" \
             "$PROGRAMS_DIR/mini_client" \
             0 \
             -s "[1-9][0-9]* bytes read" \
@@ -169,7 +170,7 @@ run_test    "Sample: mini_client, gnutls server, TLS 1.2 PSK" \
 requires_certificate_authentication
 run_test    "Sample: mini_client, ssl_server2, certificate" \
             -P 4433 \
-            "$PROGRAMS_DIR/ssl_server2" \
+            "$PROGRAMS_DIR/ssl_server2 ca_file=$DATA_FILES_PATH/test-ca2.crt crt_file=$DATA_FILES_PATH/server6.crt key_file=$DATA_FILES_PATH/server6.key" \
             "$PROGRAMS_DIR/mini_client" \
             0 \
             -s "[1-9][0-9]* bytes read" \
