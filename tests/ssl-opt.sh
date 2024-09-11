@@ -7210,7 +7210,6 @@ run_test    "Event-driven I/O, DTLS: session-id resume, UDP packing" \
 
 requires_all_configs_enabled MBEDTLS_SSL_CLI_C MBEDTLS_SSL_SRV_C
 requires_config_disabled MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Version nego m->m: cli 1.2, srv 1.2 -> 1.2" \
             "$P_SRV" \
             "$P_CLI" \
@@ -7222,7 +7221,6 @@ run_test    "Version nego m->m: cli 1.2, srv 1.2 -> 1.2" \
 
 requires_all_configs_enabled MBEDTLS_SSL_CLI_C MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Version nego m->m: cli max=1.2, srv max=1.2 -> 1.2" \
             "$P_SRV max_version=tls12" \
             "$P_CLI max_version=tls12" \
@@ -7282,7 +7280,6 @@ run_test    "Version nego m->m: cli 1.2+1.3, srv min=1.3 -> 1.3" \
 
 requires_all_configs_enabled MBEDTLS_SSL_CLI_C MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Version nego m->m: cli 1.2+1.3, srv max=1.2 -> 1.2" \
             "$P_SRV max_version=tls12" \
             "$P_CLI" \
@@ -7294,7 +7291,6 @@ run_test    "Version nego m->m: cli 1.2+1.3, srv max=1.2 -> 1.2" \
 
 requires_all_configs_enabled MBEDTLS_SSL_CLI_C MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Version nego m->m: cli max=1.2, srv 1.2+1.3 -> 1.2" \
             "$P_SRV" \
             "$P_CLI max_version=tls12" \
@@ -7343,7 +7339,6 @@ run_test    "Not supported version m->m: cli min=1.3, srv max=1.2" \
 # Tests of version negotiation on server side against GnuTLS client
 
 requires_all_configs_enabled MBEDTLS_SSL_SRV_C MBEDTLS_SSL_PROTO_TLS1_2
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego G->m: cli 1.2, srv 1.2+(1.3) -> 1.2" \
             "$P_SRV" \
             "$G_CLI localhost --priority=NORMAL:-VERS-ALL:+VERS-TLS1.2" \
@@ -7353,7 +7348,6 @@ run_test    "Server version nego G->m: cli 1.2, srv 1.2+(1.3) -> 1.2" \
 
 requires_all_configs_enabled MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego G->m: cli 1.2, srv max=1.2 -> 1.2" \
             "$P_SRV max_version=tls12" \
             "$G_CLI localhost --priority=NORMAL:-VERS-ALL:+VERS-TLS1.2" \
@@ -7432,7 +7426,6 @@ run_test    "Server version nego G->m: cli 1.2+1.3, srv min=1.3 -> 1.3" \
 
 requires_config_enabled MBEDTLS_SSL_SRV_C
 requires_config_disabled MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego G->m: cli 1.2+1.3, srv 1.2 -> 1.2" \
             "$P_SRV" \
             "$G_NEXT_CLI localhost --priority=NORMAL" \
@@ -7442,7 +7435,6 @@ run_test    "Server version nego G->m: cli 1.2+1.3, srv 1.2 -> 1.2" \
 
 requires_all_configs_enabled MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego G->m: cli 1.2+1.3, max=1.2 -> 1.2" \
             "$P_SRV max_version=tls12" \
             "$G_NEXT_CLI localhost --priority=NORMAL" \
@@ -7507,7 +7499,6 @@ run_test    "Not supported version G->m: cli 1.3, srv max=1.2" \
 # Tests of version negotiation on server side against OpenSSL client
 
 requires_all_configs_enabled MBEDTLS_SSL_SRV_C MBEDTLS_SSL_PROTO_TLS1_2
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego O->m: cli 1.2, srv 1.2+(1.3) -> 1.2" \
             "$P_SRV" \
             "$O_NEXT_CLI -tls1_2" \
@@ -7517,7 +7508,6 @@ run_test    "Server version nego O->m: cli 1.2, srv 1.2+(1.3) -> 1.2" \
 
 requires_all_configs_enabled MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego O->m: cli 1.2, srv max=1.2 -> 1.2" \
             "$P_SRV max_version=tls12" \
             "$O_NEXT_CLI -tls1_2" \
@@ -7583,7 +7573,6 @@ run_test    "Server version nego O->m: cli 1.2+1.3, srv min=1.3 -> 1.3" \
 
 requires_config_enabled MBEDTLS_SSL_SRV_C
 requires_config_disabled MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego O->m: cli 1.2+1.3, srv 1.2 -> 1.2" \
             "$P_SRV" \
             "$O_NEXT_CLI" \
@@ -7593,7 +7582,6 @@ run_test    "Server version nego O->m: cli 1.2+1.3, srv 1.2 -> 1.2" \
 
 requires_all_configs_enabled MBEDTLS_SSL_SRV_C \
                              MBEDTLS_SSL_PROTO_TLS1_2 MBEDTLS_SSL_PROTO_TLS1_3
-requires_any_configs_enabled $TLS1_2_KEY_EXCHANGES_WITH_CERT
 run_test    "Server version nego O->m: cli 1.2+1.3, srv max=1.2 -> 1.2" \
             "$P_SRV max_version=tls12" \
             "$O_NEXT_CLI" \
@@ -12642,6 +12630,9 @@ run_test    "TLS 1.3: Default" \
             -s "ECDH/FFDH group: " \
             -s "selected signature algorithm ecdsa_secp256r1_sha256"
 
+# The successive-versions tests don't actually require certificates,
+# but it would take a bit of work to pass the right PSK arguments in
+# the right build. So for simplicity, for now, insist on certificates.
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_config_enabled MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED
@@ -12652,8 +12643,11 @@ run_test    "Establish TLS 1.2 then TLS 1.3 session" \
                $P_CLI force_version=tls13 )" \
             0 \
             -s "Protocol is TLSv1.2" \
-            -s "Protocol is TLSv1.3" \
+            -s "Protocol is TLSv1.3"
 
+# The successive-versions tests don't actually require certificates,
+# but it would take a bit of work to pass the right PSK arguments in
+# the right build. So for simplicity, for now, insist on certificates.
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_config_enabled MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED
@@ -12664,7 +12658,7 @@ run_test    "Establish TLS 1.3 then TLS 1.2 session" \
                $P_CLI force_version=tls12 )" \
             0 \
             -s "Protocol is TLSv1.3" \
-            -s "Protocol is TLSv1.2" \
+            -s "Protocol is TLSv1.2"
 
 requires_openssl_tls1_3_with_compatible_ephemeral
 requires_config_enabled MBEDTLS_DEBUG_C
