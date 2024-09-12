@@ -7613,6 +7613,8 @@ run_test    "Not supported version O->m: cli 1.2, srv 1.3" \
 
 requires_config_enabled MBEDTLS_SSL_SRV_C
 requires_config_disabled MBEDTLS_SSL_PROTO_TLS1_3
+# observed 282/290 bytes in a handshake record with OpenSSL 1.1.1a/3.0.2
+requires_config_value_at_least "MBEDTLS_SSL_IN_CONTENT_LEN" 400
 run_test    "Not supported version O->m: cli 1.3, srv 1.2" \
             "$P_SRV" \
             "$O_NEXT_CLI -tls1_3" \
