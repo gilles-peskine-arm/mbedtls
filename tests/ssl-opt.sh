@@ -513,6 +513,12 @@ detect_required_features() {
     esac
 
     case " $CMD_LINE " in
+        *"programs/ssl/ssl_server "*)
+            # The actual minimum depends on the configuration since it's
+            # mostly about the certificate size.
+            # In config-suite-b.h, for the test certificates (server5.crt),
+            # 1024 is not enough.
+            requires_config_value_at_least MBEDTLS_SSL_OUT_CONTENT_LEN 2000;;
         *"programs/ssl/ssl_pthread_server "*)
             requires_config_enabled MBEDTLS_THREADING_PTHREAD;;
     esac
