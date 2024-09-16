@@ -1045,11 +1045,14 @@ def main():
                                  'comma/space-separated list of tasks. ')
         parser.add_argument('--list', action='store_true',
                             help='List all available tasks and exit.')
+        parser.add_argument('--allow-partial-coverage', action='store_false',
+                            dest='full_coverage',
+                            help="Only warn if a test case is skipped in all components. "
+                            "Only used by the 'analyze_coverage' task.")
         parser.add_argument('--require-full-coverage', action='store_true',
-                            dest='full_coverage', help="Require all available "
-                            "test cases to be executed and issue an error "
-                            "otherwise. This flag is ignored if 'task' is "
-                            "neither 'all' nor 'analyze_coverage'")
+                            dest='full_coverage', default=True,
+                            help="Require all available test cases to be executed (default). "
+                            "Only used by the 'analyze_coverage' task.")
         options = parser.parse_args()
 
         if options.list:
