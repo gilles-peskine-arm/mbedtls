@@ -238,6 +238,19 @@ class CoverageTask(Task):
             'Opaque key for server authentication: invalid key: decrypt with ECC key, no async',
             'Opaque key for server authentication: invalid key: ecdh with RSA key, no async',
         ],
+        'test_suite_pkcs12': [
+            # Probably a missing configuration in the CI.
+            # https://github.com/Mbed-TLS/mbedtls/issues/9580
+            'PBE Decrypt, (Invalid padding & PKCS7 padding disabled)',
+            'PBE Encrypt, pad = 8 (PKCS7 padding disabled)',
+        ],
+        'test_suite_pkcs5': [
+            # Probably a missing configuration in the CI.
+            # https://github.com/Mbed-TLS/mbedtls/issues/9580
+            'PBES2 Decrypt (Invalid padding & PKCS7 padding disabled)',
+            'PBES2 Encrypt, pad=6 (PKCS7 padding disabled)',
+            'PBES2 Encrypt, pad=8 (PKCS7 padding disabled)',
+        ],
         'test_suite_psa_crypto_generate_key.generated': [
             # Ignore mechanisms that are not implemented, except
             # for public keys for which we always test that
@@ -249,10 +262,17 @@ class CoverageTask(Task):
                          exclude=r'ECC_PUB'),
         ],
         'test_suite_psa_crypto_metadata': [
-            # Algorithm not supported yet
+            # Algorithms declared but not supported.
+            # https://github.com/Mbed-TLS/mbedtls/issues/9579
+            'Asymmetric signature: Ed25519ph',
+            'Asymmetric signature: Ed448ph',
             'Asymmetric signature: pure EdDSA',
-            # Algorithm not supported yet
             'Cipher: XTS',
+            'MAC: CBC_MAC-3DES',
+            'MAC: CBC_MAC-AES-128',
+            'MAC: CBC_MAC-AES-192',
+            'MAC: CBC_MAC-AES-256',
+        ],
         'test_suite_psa_crypto_not_supported.generated': [
             # It is a bug that not-supported test cases aren't getting
             # run for never-implemented key types.
