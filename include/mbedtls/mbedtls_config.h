@@ -1406,9 +1406,7 @@
 #define MBEDTLS_SSL_DTLS_CONNECTION_ID
 
 
-/**
- * \def MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT
- *
+/*
  * Defines whether RFC 9146 (default) or the legacy version
  * (version draft-ietf-tls-dtls-connection-id-05,
  * https://tools.ietf.org/html/draft-ietf-tls-dtls-connection-id-05)
@@ -1423,8 +1421,6 @@
  *             in RFC 9146 enabled by utilizing
  *             MBEDTLS_SSL_DTLS_CONNECTION_ID without use
  *             of MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT.
- *
- * Requires: MBEDTLS_SSL_DTLS_CONNECTION_ID
  */
 #define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
 
