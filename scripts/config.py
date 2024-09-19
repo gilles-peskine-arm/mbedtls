@@ -187,19 +187,23 @@ def is_boolean_setting(name, value):
         return True
     return False
 
-def realfull_adapter(_name, _value, active, section):
-    """Activate all symbols found in the global and boolean feature sections.
+def realfull_adapter(name, value, _active, _section):
+    """Activate all symbols with a non-empty expansion or that are header paths.
 
     This is intended for building the documentation, including the
     documentation of settings that are activated by defining an optional
-    preprocessor macro.
-
-    Do not activate definitions in the section containing symbols that are
-    supposed to be defined and documented in their own module.
+    preprocessor macro. We exclude most symbols with an empty expansion
+    because they are copied from another header and documented there.
     """
-    if section == 'Module configuration options':
-        return active
-    return True
+    if not value:
+        return True
+    if name.endswith('_CONFIG_FILE'):
+        return True
+    if name.startswith('MBEDTLS_PSA_') and name.endswith('_FILE'):
+        return True
+    if name == 'MBEDTLS_CONFIG_VERSION':
+        return True
+    return False
 
 PSA_UNSUPPORTED_FEATURE = frozenset([
     'PSA_WANT_ALG_CBC_MAC',
