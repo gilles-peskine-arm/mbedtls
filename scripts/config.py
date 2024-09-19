@@ -141,17 +141,16 @@ class Config:
         """Run adapter on each known symbol and (de)activate it accordingly.
 
         `adapter` must be a function that returns a boolean. It is called as
-        `adapter(name, value, active, section)` for each setting, where
-        `value` is the macro's expansion (possibly empty), `active` is
-        `True` if `name` is set and `False` if `name` is known but unset,
-        and `section` is the name of the section containing `name`. If
-        `adapter` returns `True`, then set `name` (i.e. make it active),
+        `adapter(name, value, active)` for each setting, where
+        `value` is the macro's expansion (possibly empty), and `active` is
+        `True` if `name` is set and `False` if `name` is known but unset.
+        If `adapter` returns `True`, then set `name` (i.e. make it active),
         otherwise unset `name` (i.e. make it known but inactive).
         """
         for setting in self.settings.values():
             is_active = setting.active
             setting.active = adapter(setting.name, setting.value,
-                                     setting.active, setting.section)
+                                     setting.active)
             # Check if modifying the config file
             if setting.configfile and setting.active != is_active:
                 setting.configfile.modified = True
@@ -187,7 +186,7 @@ def is_boolean_setting(name, value):
         return True
     return False
 
-def realfull_adapter(name, value, _active, _section):
+def realfull_adapter(name, value, _active):
     """Activate all symbols with a non-empty expansion or that are header paths.
 
     This is intended for building the documentation, including the
@@ -302,7 +301,7 @@ def include_in_full(name):
         return is_seamless_alt(name)
     return True
 
-def full_adapter(name, value, active, _section):
+def full_adapter(name, value, active):
     """Config adapter for "full"."""
     if not is_boolean_setting(name, value):
         return active
@@ -340,7 +339,7 @@ def keep_in_baremetal(name):
         return False
     return True
 
-def baremetal_adapter(name, value, active, _section):
+def baremetal_adapter(name, value, active):
     """Config adapter for "baremetal"."""
     if not is_boolean_setting(name, value):
         return active
@@ -359,10 +358,10 @@ EXCLUDE_FOR_SIZE = frozenset([
     'MBEDTLS_TEST_HOOKS', # only useful with the hosted test framework, increases code size
 ])
 
-def baremetal_size_adapter(name, value, active, section):
+def baremetal_size_adapter(name, value, active):
     if name in EXCLUDE_FOR_SIZE:
         return False
-    return baremetal_adapter(name, value, active, section)
+    return baremetal_adapter(name, value, active)
 
 def include_in_crypto(name):
     """Rules for symbols in a crypto configuration."""
@@ -383,15 +382,15 @@ def include_in_crypto(name):
 def crypto_adapter(adapter):
     """Modify an adapter to disable non-crypto symbols.
 
-    ``crypto_adapter(adapter)(name, value, active, section)`` is like
-    ``adapter(name, value, active, section)``, but unsets all X.509 and TLS symbols.
+    ``crypto_adapter(adapter)(name, value, active)`` is like
+    ``adapter(name, value, active)``, but unsets all X.509 and TLS symbols.
     """
-    def continuation(name, value, active, section):
+    def continuation(name, value, active):
         if not include_in_crypto(name):
             return False
         if adapter is None:
             return active
-        return adapter(name, value, active, section)
+        return adapter(name, value, active)
     return continuation
 
 DEPRECATED = frozenset([
@@ -401,34 +400,34 @@ DEPRECATED = frozenset([
 def no_deprecated_adapter(adapter):
     """Modify an adapter to disable deprecated symbols.
 
-    ``no_deprecated_adapter(adapter)(name, value, active, section)`` is like
-    ``adapter(name, value, active, section)``, but unsets all deprecated symbols
+    ``no_deprecated_adapter(adapter)(name, value, active)`` is like
+    ``adapter(name, value, active)``, but unsets all deprecated symbols
     and sets ``MBEDTLS_DEPRECATED_REMOVED``.
     """
-    def continuation(name, value, active, section):
+    def continuation(name, value, active):
         if name == 'MBEDTLS_DEPRECATED_REMOVED':
             return True
         if name in DEPRECATED:
             return False
         if adapter is None:
             return active
-        return adapter(name, value, active, section)
+        return adapter(name, value, active)
     return continuation
 
 def no_platform_adapter(adapter):
     """Modify an adapter to disable platform symbols.
 
-    ``no_platform_adapter(adapter)(name, value, active, section)`` is like
-    ``adapter(name, value, active, section)``, but unsets all platform symbols other
+    ``no_platform_adapter(adapter)(name, value, active)`` is like
+    ``adapter(name, value, active)``, but unsets all platform symbols other
     ``than MBEDTLS_PLATFORM_C.
     """
-    def continuation(name, value, active, section):
+    def continuation(name, value, active):
         # Allow MBEDTLS_PLATFORM_C but remove all other platform symbols.
         if name.startswith('MBEDTLS_PLATFORM_') and name != 'MBEDTLS_PLATFORM_C':
             return False
         if adapter is None:
             return active
-        return adapter(name, value, active, section)
+        return adapter(name, value, active)
     return continuation
 
 class ConfigFile(metaclass=ABCMeta):
