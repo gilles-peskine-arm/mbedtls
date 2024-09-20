@@ -148,8 +148,6 @@ derived."""
     conf.adapt(config.full_adapter)
     set_config_option_value(conf, 'MBEDTLS_TEST_HOOKS', colors, False)
     set_config_option_value(conf, 'MBEDTLS_PSA_CRYPTO_CONFIG', colors, False)
-    if options.unset_use_psa:
-        set_config_option_value(conf, 'MBEDTLS_USE_PSA_CRYPTO', colors, False)
 
 class Job:
     """A job builds the library in a specific configuration and runs some tests."""
@@ -533,9 +531,6 @@ def main():
         parser.add_argument('--make-command', metavar='CMD',
                             help='Command to run instead of make (e.g. gmake)',
                             action='store', default='make')
-        parser.add_argument('--unset-use-psa',
-                            help='Unset MBEDTLS_USE_PSA_CRYPTO before any test',
-                            action='store_true', dest='unset_use_psa')
         parser.add_argument('tasks', metavar='TASKS', nargs='*',
                             help='The domain(s) or job(s) to test (default: all).',
                             default=True)
