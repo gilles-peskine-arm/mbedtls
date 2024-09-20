@@ -202,6 +202,8 @@ def realfull_adapter(name, value, _active):
         return True
     if name == 'MBEDTLS_CONFIG_VERSION':
         return True
+    if name.startswith('PSA_WANT_'):
+        return True
     return False
 
 PSA_UNSUPPORTED_FEATURE = frozenset([
