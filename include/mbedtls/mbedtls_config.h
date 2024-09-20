@@ -1415,7 +1415,7 @@
  * Set the value to 0 for the standard version, and
  * 1 for the legacy draft version.
  *
- * \deprecated Support for the legacy version of the DTLS
+ * Note:       Support for the legacy version of the DTLS
  *             Connection ID feature is deprecated. Please
  *             switch to the standardized version defined
  *             in RFC 9146 enabled by utilizing
