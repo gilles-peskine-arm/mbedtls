@@ -45,9 +45,20 @@ Outcomes = typing.Dict[str, ComponentOutcomes]
 class Results:
     """Process analysis results."""
 
-    def __init__(self):
+    def __init__(self,
+                 stderr: bool = True,
+                 log_file: typing.Optional[str] = None) -> None:
+        """Log and count errors.
+
+        Log to stderr if stderr is true.
+        Log to log_file if specified.
+        """
         self.error_count = 0
         self.warning_count = 0
+        self.stderr = stderr
+        self.log_file = None
+        if log_file is not None:
+            self.log_file = open(log_file, 'w', encoding='utf-8')
 
     def new_section(self, fmt, *args, **kwargs):
         self._print_line('\n*** ' + fmt + ' ***\n', *args, **kwargs)
@@ -63,9 +74,12 @@ class Results:
         self.warning_count += 1
         self._print_line('Warning: ' + fmt, *args, **kwargs)
 
-    @staticmethod
-    def _print_line(fmt, *args, **kwargs):
-        sys.stderr.write((fmt + '\n').format(*args, **kwargs))
+    def _print_line(self, fmt, *args, **kwargs):
+        line = (fmt + '\n').format(*args, **kwargs)
+        if self.stderr:
+            sys.stderr.write(line)
+        if self.log_file:
+            self.log_file.write(line)
 
 def execute_reference_driver_tests(results: Results, ref_component: str, driver_component: str, \
                                    outcome_file: str) -> None:
@@ -1032,8 +1046,6 @@ KNOWN_TASKS = {
 
 
 def main():
-    main_results = Results()
-
     try:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('outcomes', metavar='OUTCOMES.CSV',
@@ -1045,6 +1057,10 @@ def main():
                                  'comma/space-separated list of tasks. ')
         parser.add_argument('--list', action='store_true',
                             help='List all available tasks and exit.')
+        parser.add_argument('--log-file',
+                            default='tests/analyze_outcomes.log',
+                            help='Log file (default: tests/analyze_outcomes.log;'
+                                 ' empty means no log file)')
         parser.add_argument('--allow-partial-coverage', action='store_false',
                             dest='full_coverage',
                             help="Only warn if a test case is skipped in all components. "
@@ -1059,6 +1075,8 @@ def main():
             for task in KNOWN_TASKS:
                 print(task)
             sys.exit(0)
+
+        main_results = Results(log_file=options.log_file)
 
         if options.specified_tasks == 'all':
             tasks_list = KNOWN_TASKS.keys()
