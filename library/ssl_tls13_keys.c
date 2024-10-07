@@ -927,23 +927,17 @@ int mbedtls_ssl_tls13_populate_transform(
     mbedtls_ssl_key_set const *traffic_keys,
     mbedtls_ssl_context *ssl /* DEBUG ONLY */)
 {
-#if !defined(MBEDTLS_USE_PSA_CRYPTO)
-    int ret;
-    mbedtls_cipher_info_t const *cipher_info;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
     unsigned char const *key_enc;
     unsigned char const *iv_enc;
     unsigned char const *key_dec;
     unsigned char const *iv_dec;
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_key_type_t key_type;
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_algorithm_t alg;
     size_t key_bits;
     psa_status_t status = PSA_SUCCESS;
-#endif
 
 #if !defined(MBEDTLS_DEBUG_C)
     ssl = NULL; /* make sure we don't use it except for those cases */
@@ -957,29 +951,6 @@ int mbedtls_ssl_tls13_populate_transform(
         return MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
     }
 
-#if !defined(MBEDTLS_USE_PSA_CRYPTO)
-    cipher_info = mbedtls_cipher_info_from_type(ciphersuite_info->cipher);
-    if (cipher_info == NULL) {
-        MBEDTLS_SSL_DEBUG_MSG(1, ("cipher info for %u not found",
-                                  ciphersuite_info->cipher));
-        return MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
-    }
-
-    /*
-     * Setup cipher contexts in target transform
-     */
-    if ((ret = mbedtls_cipher_setup(&transform->cipher_ctx_enc,
-                                    cipher_info)) != 0) {
-        MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_cipher_setup", ret);
-        return ret;
-    }
-
-    if ((ret = mbedtls_cipher_setup(&transform->cipher_ctx_dec,
-                                    cipher_info)) != 0) {
-        MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_cipher_setup", ret);
-        return ret;
-    }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_SSL_SRV_C)
     if (endpoint == MBEDTLS_SSL_IS_SERVER) {
@@ -1005,21 +976,6 @@ int mbedtls_ssl_tls13_populate_transform(
     memcpy(transform->iv_enc, iv_enc, traffic_keys->iv_len);
     memcpy(transform->iv_dec, iv_dec, traffic_keys->iv_len);
 
-#if !defined(MBEDTLS_USE_PSA_CRYPTO)
-    if ((ret = mbedtls_cipher_setkey(&transform->cipher_ctx_enc,
-                                     key_enc, (int) mbedtls_cipher_info_get_key_bitlen(cipher_info),
-                                     MBEDTLS_ENCRYPT)) != 0) {
-        MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_cipher_setkey", ret);
-        return ret;
-    }
-
-    if ((ret = mbedtls_cipher_setkey(&transform->cipher_ctx_dec,
-                                     key_dec, (int) mbedtls_cipher_info_get_key_bitlen(cipher_info),
-                                     MBEDTLS_DECRYPT)) != 0) {
-        MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_cipher_setkey", ret);
-        return ret;
-    }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     /*
      * Setup other fields in SSL transform
@@ -1043,7 +999,6 @@ int mbedtls_ssl_tls13_populate_transform(
     transform->minlen =
         transform->taglen + MBEDTLS_SSL_CID_TLS1_3_PADDING_GRANULARITY;
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     /*
      * Setup psa keys and alg
      */
@@ -1084,7 +1039,6 @@ int mbedtls_ssl_tls13_populate_transform(
             return PSA_TO_MBEDTLS_ERR(status);
         }
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     return 0;
 }
@@ -1841,7 +1795,6 @@ int mbedtls_ssl_tls13_export_handshake_psk(mbedtls_ssl_context *ssl,
                                            unsigned char **psk,
                                            size_t *psk_len)
 {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_key_attributes_t key_attributes = PSA_KEY_ATTRIBUTES_INIT;
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
@@ -1871,14 +1824,6 @@ int mbedtls_ssl_tls13_export_handshake_psk(mbedtls_ssl_context *ssl,
         return PSA_TO_MBEDTLS_ERR(status);
     }
     return 0;
-#else
-    *psk = ssl->handshake->psk;
-    *psk_len = ssl->handshake->psk_len;
-    if (*psk == NULL) {
-        return MBEDTLS_ERR_SSL_INTERNAL_ERROR;
-    }
-    return 0;
-#endif /* !MBEDTLS_USE_PSA_CRYPTO */
 }
 #endif /* MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_SOME_PSK_ENABLED */
 

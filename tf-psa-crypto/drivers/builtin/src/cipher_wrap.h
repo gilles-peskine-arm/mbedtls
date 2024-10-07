@@ -16,9 +16,7 @@
 
 #include "mbedtls/cipher.h"
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #ifdef __cplusplus
 extern "C" {
@@ -144,7 +142,6 @@ typedef struct {
     const mbedtls_cipher_info_t *info;
 } mbedtls_cipher_definition_t;
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 typedef enum {
     MBEDTLS_CIPHER_PSA_KEY_UNSET = 0,
     MBEDTLS_CIPHER_PSA_KEY_OWNED, /* Used for PSA-based cipher contexts which */
@@ -163,7 +160,6 @@ typedef struct {
     mbedtls_svc_key_id_t slot;
     mbedtls_cipher_psa_key_ownership slot_state;
 } mbedtls_cipher_context_psa;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 extern const mbedtls_cipher_definition_t mbedtls_cipher_definitions[];
 

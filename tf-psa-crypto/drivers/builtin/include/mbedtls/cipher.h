@@ -631,7 +631,6 @@ void mbedtls_cipher_free(mbedtls_cipher_context_t *ctx);
 int mbedtls_cipher_setup(mbedtls_cipher_context_t *ctx,
                          const mbedtls_cipher_info_t *cipher_info);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
 /**
  * \brief               This function initializes a cipher context for
@@ -663,7 +662,6 @@ int MBEDTLS_DEPRECATED mbedtls_cipher_setup_psa(mbedtls_cipher_context_t *ctx,
                                                 const mbedtls_cipher_info_t *cipher_info,
                                                 size_t taglen);
 #endif /* MBEDTLS_DEPRECATED_REMOVED */
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /**
  * \brief        This function returns the block size of the given cipher

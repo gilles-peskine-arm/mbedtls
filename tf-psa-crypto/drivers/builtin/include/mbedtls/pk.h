@@ -139,7 +139,6 @@ typedef struct mbedtls_pk_rsassa_pss_options {
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE MBEDTLS_ECDSA_MAX_LEN
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if PSA_SIGNATURE_MAX_SIZE > MBEDTLS_PK_SIGNATURE_MAX_SIZE
 /* PSA_SIGNATURE_MAX_SIZE is the maximum size of a signature made
  * through the PSA API in the PSA representation. */
@@ -157,7 +156,6 @@ typedef struct mbedtls_pk_rsassa_pss_options {
 #undef MBEDTLS_PK_SIGNATURE_MAX_SIZE
 #define MBEDTLS_PK_SIGNATURE_MAX_SIZE (PSA_VENDOR_ECDSA_SIGNATURE_MAX_SIZE + 11)
 #endif
-#endif /* defined(MBEDTLS_USE_PSA_CRYPTO) */
 
 /* Internal helper to define which fields in the pk_context structure below
  * should be used for EC keys: legacy ecp_keypair or the raw (PSA friendly)
@@ -233,9 +231,7 @@ typedef struct mbedtls_pk_context {
      * Note: this private key storing solution only affects EC keys, not the
      *       other ones. The latters still use the pk_ctx to store their own
      *       context. */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t MBEDTLS_PRIVATE(priv_id);      /**< Key ID for opaque keys */
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     /* The following fields are meant for storing the public key in raw format
      * which is handy for:
      * - easily importing it into the PSA context
@@ -357,7 +353,6 @@ void mbedtls_pk_restart_free(mbedtls_pk_restart_ctx *ctx);
  */
 int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 /**
  * \brief Initialize a PK context to wrap a PSA key.
  *
@@ -396,7 +391,6 @@ int mbedtls_pk_setup(mbedtls_pk_context *ctx, const mbedtls_pk_info_t *info);
  */
 int mbedtls_pk_setup_opaque(mbedtls_pk_context *ctx,
                             const mbedtls_svc_key_id_t key);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
 /**
@@ -455,7 +449,6 @@ static inline size_t mbedtls_pk_get_len(const mbedtls_pk_context *ctx)
  */
 int mbedtls_pk_can_do(const mbedtls_pk_context *ctx, mbedtls_pk_type_t type);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 /**
  * \brief           Tell if context can do the operation given by PSA algorithm
  *
@@ -485,7 +478,6 @@ int mbedtls_pk_can_do(const mbedtls_pk_context *ctx, mbedtls_pk_type_t type);
  */
 int mbedtls_pk_can_do_ext(const mbedtls_pk_context *ctx, psa_algorithm_t alg,
                           psa_key_usage_t usage);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 /**

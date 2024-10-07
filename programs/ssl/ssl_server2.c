@@ -245,7 +245,6 @@ int main(void)
     "                          The PSK values are in hex, without 0x.\n" \
     "                          id1,psk1[,id2,psk2[,...]]\n"             \
     "    psk_identity=%%s     default: \"Client_identity\"\n"
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #define USAGE_PSK_SLOT                          \
     "    psk_opaque=%%d       default: 0 (don't use opaque static PSK)\n"     \
     "                          Enable this to store the PSK configured through command line\n" \
@@ -265,9 +264,6 @@ int main(void)
     "                          Note: This is to test integration of PSA-based opaque PSKs with\n" \
     "                          Mbed TLS only. Production systems are likely to configure Mbed TLS\n" \
     "                          with prepopulated key slots instead of importing raw key material.\n"
-#else
-#define USAGE_PSK_SLOT ""
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 #define USAGE_PSK USAGE_PSK_RAW USAGE_PSK_SLOT
 #else
 #define USAGE_PSK ""
@@ -416,14 +412,9 @@ int main(void)
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #define USAGE_ECJPAKE \
     "    ecjpake_pw=%%s           default: none (disabled)\n"   \
     "    ecjpake_pw_opaque=%%d    default: 0 (disabled)\n"
-#else /* MBEDTLS_USE_PSA_CRYPTO */
-#define USAGE_ECJPAKE \
-    "    ecjpake_pw=%%s           default: none (disabled)\n"
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 #else /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
 #define USAGE_ECJPAKE ""
 #endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
@@ -625,10 +616,8 @@ struct options {
     int async_private_delay1;   /* number of times f_async_resume needs to be called for key 1, or -1 for no async */
     int async_private_delay2;   /* number of times f_async_resume needs to be called for key 2, or -1 for no async */
     int async_private_error;    /* inject error in async private callback */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     int psk_opaque;
     int psk_list_opaque;
-#endif
 #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
     int ca_callback;            /* Use callback for trusted certificate list */
 #endif
@@ -636,9 +625,7 @@ struct options {
     const char *psk_identity;   /* the pre-shared key identity              */
     char *psk_list;             /* list of PSK id/key pairs for callback    */
     const char *ecjpake_pw;     /* the EC J-PAKE password                   */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     int ecjpake_pw_opaque;      /* set to 1 to use the opaque method for setting the password */
-#endif
     int force_ciphersuite[2];   /* protocol/ciphersuite to use, or all      */
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3)
     int tls13_kex_modes;        /* supported TLS 1.3 key exchange modes     */
@@ -945,9 +932,7 @@ struct _psk_entry {
     const char *name;
     size_t key_len;
     unsigned char key[MBEDTLS_PSK_MAX_LEN];
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t slot;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     psk_entry *next;
 };
 
@@ -959,7 +944,6 @@ static int psk_free(psk_entry *head)
     psk_entry *next;
 
     while (head != NULL) {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         psa_status_t status;
         mbedtls_svc_key_id_t const slot = head->slot;
 
@@ -969,7 +953,6 @@ static int psk_free(psk_entry *head)
                 return status;
             }
         }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
         next = head->next;
         mbedtls_free(head);
@@ -1035,11 +1018,9 @@ static int psk_callback(void *p_info, mbedtls_ssl_context *ssl,
     while (cur != NULL) {
         if (name_len == strlen(cur->name) &&
             memcmp(name, cur->name, name_len) == 0) {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
             if (MBEDTLS_SVC_KEY_ID_GET_KEY_ID(cur->slot) != 0) {
                 return mbedtls_ssl_set_hs_psk_opaque(ssl, cur->slot);
             } else
-#endif
             return mbedtls_ssl_set_hs_psk(ssl, cur->key, cur->key_len);
         }
 
@@ -1305,7 +1286,6 @@ static void ssl_async_cancel(mbedtls_ssl_context *ssl)
 #endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
 #endif /* MBEDTLS_SSL_ASYNC_PRIVATE */
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
 static psa_status_t psa_setup_psk_key_slot(mbedtls_svc_key_id_t *slot,
                                            psa_algorithm_t alg,
@@ -1329,7 +1309,6 @@ static psa_status_t psa_setup_psk_key_slot(mbedtls_svc_key_id_t *slot,
     return PSA_SUCCESS;
 }
 #endif /* MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED */
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
 static int report_cid_usage(mbedtls_ssl_context *ssl,
@@ -1513,10 +1492,8 @@ int main(int argc, char *argv[])
     io_ctx_t io_ctx;
     unsigned char *buf = 0;
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_algorithm_t alg = 0;
     mbedtls_svc_key_id_t psk_slot = MBEDTLS_SVC_KEY_ID_INIT;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     unsigned char psk[MBEDTLS_PSK_MAX_LEN];
     size_t psk_len = 0;
     psk_entry *psk_info = NULL;
@@ -1544,10 +1521,8 @@ int main(int argc, char *argv[])
     mbedtls_x509_crt srvcert2;
     mbedtls_pk_context pkey2;
     mbedtls_x509_crt_profile crt_profile_for_test = mbedtls_x509_crt_profile_default;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t key_slot = MBEDTLS_SVC_KEY_ID_INIT; /* invalid key slot */
     mbedtls_svc_key_id_t key_slot2 = MBEDTLS_SVC_KEY_ID_INIT; /* invalid key slot */
-#endif
     int key_cert_init = 0, key_cert_init2 = 0;
 #endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
 #if defined(MBEDTLS_SSL_ASYNC_PRIVATE)
@@ -1705,19 +1680,15 @@ int main(int argc, char *argv[])
     opt.async_private_delay2 = DFL_ASYNC_PRIVATE_DELAY2;
     opt.async_private_error = DFL_ASYNC_PRIVATE_ERROR;
     opt.psk                 = DFL_PSK;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     opt.psk_opaque          = DFL_PSK_OPAQUE;
     opt.psk_list_opaque     = DFL_PSK_LIST_OPAQUE;
-#endif
 #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
     opt.ca_callback         = DFL_CA_CALLBACK;
 #endif
     opt.psk_identity        = DFL_PSK_IDENTITY;
     opt.psk_list            = DFL_PSK_LIST;
     opt.ecjpake_pw          = DFL_ECJPAKE_PW;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     opt.ecjpake_pw_opaque   = DFL_ECJPAKE_PW_OPAQUE;
-#endif
     opt.force_ciphersuite[0] = DFL_FORCE_CIPHER;
 #if defined(MBEDTLS_SSL_PROTO_TLS1_3)
     opt.tls13_kex_modes     = DFL_TLS1_3_KEX_MODES;
@@ -1944,13 +1915,11 @@ usage:
         else if (strcmp(p, "psk") == 0) {
             opt.psk = q;
         }
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         else if (strcmp(p, "psk_opaque") == 0) {
             opt.psk_opaque = atoi(q);
         } else if (strcmp(p, "psk_list_opaque") == 0) {
             opt.psk_list_opaque = atoi(q);
         }
-#endif
 #if defined(MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK)
         else if (strcmp(p, "ca_callback") == 0) {
             opt.ca_callback = atoi(q);
@@ -1963,11 +1932,9 @@ usage:
         } else if (strcmp(p, "ecjpake_pw") == 0) {
             opt.ecjpake_pw = q;
         }
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         else if (strcmp(p, "ecjpake_pw_opaque") == 0) {
             opt.ecjpake_pw_opaque = atoi(q);
         }
-#endif
         else if (strcmp(p, "force_ciphersuite") == 0) {
             opt.force_ciphersuite[0] = mbedtls_ssl_get_ciphersuite_id(q);
 
@@ -2340,7 +2307,6 @@ usage:
         goto exit;
     }
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (opt.psk_opaque != 0) {
         if (strlen(opt.psk) == 0) {
             mbedtls_printf("psk_opaque set but no psk to be imported specified.\n");
@@ -2370,7 +2336,6 @@ usage:
             goto usage;
         }
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     if (opt.force_ciphersuite[0] > 0) {
         const mbedtls_ssl_ciphersuite_t *ciphersuite_info;
@@ -2400,7 +2365,6 @@ usage:
             opt.min_version = ciphersuite_info->min_tls_version;
         }
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
         if (opt.psk_opaque != 0 || opt.psk_list_opaque != 0) {
             /* Determine KDF algorithm the opaque PSK will be used in. */
@@ -2412,7 +2376,6 @@ usage:
             alg = PSA_ALG_TLS12_PSK_TO_MS(PSA_ALG_SHA_256);
         }
 #endif /* MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED */
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     }
 
 #if defined(MBEDTLS_SSL_DTLS_CONNECTION_ID)
@@ -2707,7 +2670,6 @@ usage:
 #endif /* PSA_HAVE_ALG_SOME_ECDSA && PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT */
     }
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (opt.key_opaque != 0) {
         psa_algorithm_t psa_alg, psa_alg2 = PSA_ALG_NONE;
         psa_key_usage_t psa_usage = 0;
@@ -2743,7 +2705,6 @@ usage:
             }
         }
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     mbedtls_printf(" ok (key types: %s, %s)\n",
                    key_cert_init ? mbedtls_pk_get_name(&pkey) : "none",
@@ -3178,7 +3139,6 @@ usage:
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
 
     if (strlen(opt.psk) != 0 && strlen(opt.psk_identity) != 0) {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         if (opt.psk_opaque != 0) {
             /* The algorithm has already been determined earlier. */
             status = psa_setup_psk_key_slot(&psk_slot, alg, psk, psk_len);
@@ -3195,7 +3155,6 @@ usage:
                 goto exit;
             }
         } else
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
         if (psk_len > 0) {
             ret = mbedtls_ssl_conf_psk(&conf, psk, psk_len,
                                        (const unsigned char *) opt.psk_identity,
@@ -3209,7 +3168,6 @@ usage:
     }
 
     if (opt.psk_list != NULL) {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         if (opt.psk_list_opaque != 0) {
             psk_entry *cur_psk;
             for (cur_psk = psk_info; cur_psk != NULL; cur_psk = cur_psk->next) {
@@ -3223,7 +3181,6 @@ usage:
                 }
             }
         }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
         mbedtls_ssl_conf_psk_cb(&conf, psk_callback, psk_info);
     }
@@ -3396,7 +3353,6 @@ reset:
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED)
     if (opt.ecjpake_pw != DFL_ECJPAKE_PW) {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         if (opt.ecjpake_pw_opaque != DFL_ECJPAKE_PW_OPAQUE) {
             psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
 
@@ -3422,7 +3378,6 @@ reset:
             }
             mbedtls_printf("using opaque password\n");
         } else
-#endif  /* MBEDTLS_USE_PSA_CRYPTO */
         {
             if ((ret = mbedtls_ssl_set_hs_ecjpake_password(&ssl,
                                                            (const unsigned char *) opt.ecjpake_pw,
@@ -4238,10 +4193,8 @@ exit:
     mbedtls_pk_free(&pkey);
     mbedtls_x509_crt_free(&srvcert2);
     mbedtls_pk_free(&pkey2);
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_destroy_key(key_slot);
     psa_destroy_key(key_slot2);
-#endif
 #endif
 
 #if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_FS_IO)

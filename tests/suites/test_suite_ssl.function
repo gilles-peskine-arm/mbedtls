@@ -3472,11 +3472,7 @@ void ssl_ecjpake_set_password(int use_opaque_arg)
 {
     mbedtls_ssl_context ssl;
     mbedtls_ssl_config conf;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t pwd_slot = MBEDTLS_SVC_KEY_ID_INIT;
-#else   /* MBEDTLS_USE_PSA_CRYPTO */
-    (void) use_opaque_arg;
-#endif  /* MBEDTLS_USE_PSA_CRYPTO */
     unsigned char pwd_string[sizeof(ECJPAKE_TEST_PWD)] = "";
     size_t pwd_len = 0;
     int ret;
@@ -3503,7 +3499,6 @@ void ssl_ecjpake_set_password(int use_opaque_arg)
     pwd_len = strlen(ECJPAKE_TEST_PWD);
     memcpy(pwd_string, ECJPAKE_TEST_PWD, pwd_len);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (use_opaque_arg) {
         psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
         psa_key_attributes_t check_attributes = PSA_KEY_ATTRIBUTES_INIT;
@@ -3530,16 +3525,13 @@ void ssl_ecjpake_set_password(int use_opaque_arg)
         PSA_ASSERT(psa_import_key(&attributes, pwd_string,
                                   pwd_len, &pwd_slot));
     }
-#endif  /* MBEDTLS_USE_PSA_CRYPTO */
 
     /* final check which should work without errors */
     ECJPAKE_TEST_SET_PASSWORD(0);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (use_opaque_arg) {
         psa_destroy_key(pwd_slot);
     }
-#endif  /* MBEDTLS_USE_PSA_CRYPTO */
     mbedtls_ssl_free(&ssl);
     mbedtls_ssl_config_free(&conf);
 

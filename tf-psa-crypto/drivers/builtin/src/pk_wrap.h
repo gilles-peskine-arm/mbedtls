@@ -15,9 +15,7 @@
 
 #include "mbedtls/pk.h"
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
-#endif
 
 struct mbedtls_pk_info_t {
     /** Public key type */
@@ -121,7 +119,6 @@ extern const mbedtls_pk_info_t mbedtls_ecdsa_info;
 extern const mbedtls_pk_info_t mbedtls_rsa_alt_info;
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 extern const mbedtls_pk_info_t mbedtls_ecdsa_opaque_info;
 extern const mbedtls_pk_info_t mbedtls_rsa_opaque_info;
 
@@ -133,6 +130,5 @@ int mbedtls_pk_psa_rsa_sign_ext(psa_algorithm_t psa_alg_md,
                                 size_t *sig_len);
 #endif /* MBEDTLS_RSA_C */
 
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 #endif /* MBEDTLS_PK_WRAP_H */

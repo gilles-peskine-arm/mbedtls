@@ -993,25 +993,21 @@ exit:
 void mbedtls_pk_check_pair(char *pub_file, char *prv_file, int ret)
 {
     mbedtls_pk_context pub, prv, alt;
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_svc_key_id_t opaque_key_id = MBEDTLS_SVC_KEY_ID_INIT;
     psa_key_attributes_t opaque_key_attr = PSA_KEY_ATTRIBUTES_INIT;
     int is_ec_key = 0;
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     mbedtls_pk_init(&pub);
     mbedtls_pk_init(&prv);
     mbedtls_pk_init(&alt);
     USE_PSA_INIT();
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     /* mbedtls_pk_check_pair() returns either PK or ECP error codes depending
        on MBEDTLS_USE_PSA_CRYPTO so here we dynamically translate between the
        two */
     if (ret == MBEDTLS_ERR_ECP_BAD_INPUT_DATA) {
         ret = MBEDTLS_ERR_PK_BAD_INPUT_DATA;
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     TEST_ASSERT(mbedtls_pk_parse_public_keyfile(&pub, pub_file) == 0);
     TEST_ASSERT(mbedtls_pk_parse_keyfile(&prv, prv_file, NULL,
@@ -1032,7 +1028,6 @@ void mbedtls_pk_check_pair(char *pub_file, char *prv_file, int ret)
                     == ret);
     }
 #endif
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     is_ec_key = (mbedtls_pk_get_type(&prv) == MBEDTLS_PK_ECKEY);
     /* Turn the prv PK context into an opaque one.*/
     TEST_EQUAL(mbedtls_pk_get_psa_attributes(&prv, PSA_KEY_USAGE_SIGN_HASH,
@@ -1050,12 +1045,9 @@ void mbedtls_pk_check_pair(char *pub_file, char *prv_file, int ret)
         TEST_EQUAL(mbedtls_pk_check_pair(&pub, &prv, mbedtls_test_rnd_std_rand,
                                          NULL), MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE);
     }
-#endif
 
 exit:
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     psa_destroy_key(opaque_key_id);
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
     mbedtls_pk_free(&pub);
     mbedtls_pk_free(&prv);
     mbedtls_pk_free(&alt);
@@ -1097,13 +1089,6 @@ void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
     int actual_result;
     actual_result = mbedtls_pk_verify(&pk, digest, message_str->x, 0,
                                       result_str->x, mbedtls_pk_get_len(&pk));
-#if !defined(MBEDTLS_USE_PSA_CRYPTO)
-    if (actual_result == MBEDTLS_ERR_RSA_INVALID_PADDING &&
-        expected_result == MBEDTLS_ERR_RSA_VERIFY_FAILED) {
-        /* Tolerate INVALID_PADDING error for an invalid signature with
-         * the legacy API (but not with PSA). */
-    } else
-#endif
     {
         TEST_EQUAL(actual_result, expected_result);
     }
@@ -1112,13 +1097,6 @@ void pk_rsa_verify_test_vec(data_t *message_str, int padding, int digest,
                                                   result_str->x,
                                                   mbedtls_pk_get_len(&pk),
                                                   rs_ctx);
-#if !defined(MBEDTLS_USE_PSA_CRYPTO)
-    if (actual_result == MBEDTLS_ERR_RSA_INVALID_PADDING &&
-        expected_result == MBEDTLS_ERR_RSA_VERIFY_FAILED) {
-        /* Tolerate INVALID_PADDING error for an invalid signature with
-         * the legacy API (but not with PSA). */
-    } else
-#endif
     {
         TEST_EQUAL(actual_result, expected_result);
     }
@@ -1170,7 +1148,6 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
                                 digest, message_str->x, message_str->len,
                                 result_str->x, sig_len);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (result == MBEDTLS_ERR_RSA_INVALID_PADDING) {
         /* Mbed TLS distinguishes "invalid padding" from "valid padding but
          * the rest of the signature is invalid". This has little use in
@@ -1183,7 +1160,6 @@ void pk_rsa_verify_ext_test_vec(data_t *message_str, int digest,
          */
         TEST_ASSERT(ret == result || ret == MBEDTLS_ERR_RSA_VERIFY_FAILED);
     } else
-#endif
     {
         TEST_EQUAL(ret, result);
     }
@@ -2266,7 +2242,6 @@ void pk_import_into_psa_lifetime(int from_opaque,
     PSA_INIT();
 
     if (from_opaque) {
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
         psa_key_type_t from_psa_type =
             PSA_KEY_TYPE_ECC_KEY_PAIR(MBEDTLS_TEST_PSA_ECC_ONE_FAMILY);
         psa_key_usage_t psa_key_usage =
@@ -2283,11 +2258,6 @@ void pk_import_into_psa_lifetime(int from_opaque,
                                 persistent_key_id, &old_key_id));
         TEST_EQUAL(mbedtls_pk_setup_opaque(&pk, old_key_id), 0);
         psa_reset_key_attributes(&attributes);
-#else
-        (void) from_persistent;
-        (void) from_exportable;
-        TEST_FAIL("Attempted to test opaque key without opaque key support");
-#endif
     } else {
         psa_key_type_t psa_type_according_to_setup;
         TEST_EQUAL(pk_setup_for_type(MBEDTLS_PK_ECKEY, 1,

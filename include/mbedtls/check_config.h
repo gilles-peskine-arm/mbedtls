@@ -322,20 +322,12 @@
 #error "MBEDTLS_KEY_EXCHANGE_RSA_ENABLED defined, but not all prerequisites"
 #endif
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED) &&    \
     ( !defined(PSA_WANT_ALG_JPAKE) ||                   \
       !defined(PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_BASIC) || \
       !defined(PSA_WANT_ECC_SECP_R1_256) )
 #error "MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED defined, but not all prerequisites"
 #endif
-#else /* MBEDTLS_USE_PSA_CRYPTO */
-#if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED) &&    \
-    ( !defined(MBEDTLS_ECJPAKE_C) ||                    \
-      !defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) )
-#error "MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED defined, but not all prerequisites"
-#endif
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
 /* Use of EC J-PAKE in TLS requires SHA-256. */
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED) &&                    \

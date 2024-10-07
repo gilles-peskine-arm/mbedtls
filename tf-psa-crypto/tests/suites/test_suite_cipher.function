@@ -895,13 +895,9 @@ void auth_crypt_tv(int cipher_id, data_t *key, data_t *iv,
     mbedtls_cipher_init(&ctx);
 
     /* Initialize PSA Crypto */
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (use_psa == 1) {
         PSA_ASSERT(psa_crypto_init());
     }
-#else
-    (void) use_psa;
-#endif
 
     /*
      * Are we using NIST_KW? with padding?
@@ -1041,11 +1037,9 @@ exit:
     mbedtls_free(encrypt_buf);
     mbedtls_free(cipher_plus_tag);
 
-#if defined(MBEDTLS_USE_PSA_CRYPTO)
     if (use_psa == 1) {
         PSA_DONE();
     }
-#endif /* MBEDTLS_USE_PSA_CRYPTO */
 }
 /* END_CASE */
 
