@@ -14,8 +14,8 @@
     defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/error.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 
 #include <stdio.h>
 #include <string.h>

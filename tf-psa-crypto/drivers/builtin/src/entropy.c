@@ -9,7 +9,7 @@
 
 #if defined(MBEDTLS_ENTROPY_C)
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/unstable/entropy.h"
 #include "entropy_poll.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"

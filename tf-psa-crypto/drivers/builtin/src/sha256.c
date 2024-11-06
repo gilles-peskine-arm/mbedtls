@@ -52,7 +52,7 @@
 
 #if defined(MBEDTLS_SHA256_C) || defined(MBEDTLS_SHA224_C)
 
-#include "mbedtls/sha256.h"
+#include "mbedtls/unstable/sha256.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

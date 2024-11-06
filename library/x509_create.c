@@ -11,7 +11,7 @@
 
 #include "mbedtls/asn1write.h"
 #include "mbedtls/error.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/unstable/oid.h"
 
 #include <string.h>
 

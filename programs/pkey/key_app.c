@@ -13,10 +13,10 @@
     defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_FS_IO) && \
     defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/error.h"
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 
 #include <string.h>
 #endif

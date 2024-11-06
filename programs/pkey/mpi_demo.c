@@ -10,7 +10,7 @@
 #include "mbedtls/platform.h"
 
 #if defined(MBEDTLS_BIGNUM_C) && defined(MBEDTLS_FS_IO)
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 
 #include <stdio.h>
 #endif

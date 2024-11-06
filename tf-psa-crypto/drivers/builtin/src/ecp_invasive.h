@@ -15,9 +15,9 @@
 #define MBEDTLS_ECP_INVASIVE_H
 
 #include "common.h"
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 #include "bignum_mod.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 
 /*
  * Curve modulus types

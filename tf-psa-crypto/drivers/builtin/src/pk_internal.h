@@ -14,7 +14,7 @@
 #include "mbedtls/pk.h"
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)

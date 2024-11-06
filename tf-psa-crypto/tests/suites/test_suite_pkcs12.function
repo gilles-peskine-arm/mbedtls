@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/pkcs12.h"
+#include "mbedtls/unstable/pkcs12.h"
 #include "common.h"
 
 typedef enum {

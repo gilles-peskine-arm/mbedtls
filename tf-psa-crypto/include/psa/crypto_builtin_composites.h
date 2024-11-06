@@ -24,14 +24,14 @@
 
 #include <psa/crypto_driver_common.h>
 
-#include "mbedtls/cmac.h"
+#include "mbedtls/unstable/cmac.h"
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
-#include "mbedtls/gcm.h"
+#include "mbedtls/unstable/gcm.h"
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
-#include "mbedtls/ccm.h"
+#include "mbedtls/unstable/ccm.h"
 #endif
-#include "mbedtls/chachapoly.h"
+#include "mbedtls/unstable/chachapoly.h"
 
 /*
  * MAC multi-part operation definitions.
@@ -102,7 +102,7 @@ typedef struct {
 
 #define MBEDTLS_PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, { 0 } }
 
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/unstable/ecdsa.h"
 
 /* Context structure for the Mbed TLS interruptible sign hash implementation. */
 typedef struct {
@@ -177,7 +177,7 @@ typedef struct {
 
 /* EC-JPAKE operation definitions */
 
-#include "mbedtls/ecjpake.h"
+#include "mbedtls/unstable/ecjpake.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
 #define MBEDTLS_PSA_BUILTIN_PAKE  1

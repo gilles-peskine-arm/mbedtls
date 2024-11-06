@@ -17,7 +17,7 @@
 #include "mbedtls/build_info.h"
 #include "common.h"
 
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/aes.h"
 
 
 #if defined(MBEDTLS_AESCE_C) \

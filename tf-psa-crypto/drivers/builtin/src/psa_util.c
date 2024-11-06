@@ -34,19 +34,19 @@
 #endif
 #if defined(PSA_WANT_KEY_TYPE_RSA_PUBLIC_KEY) ||    \
     defined(PSA_WANT_KEY_TYPE_RSA_KEY_PAIR_BASIC)
-#include <mbedtls/rsa.h>
+#include <mbedtls/unstable/rsa.h>
 #endif
 #if defined(MBEDTLS_USE_PSA_CRYPTO) && \
     defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include <mbedtls/ecp.h>
+#include <mbedtls/unstable/ecp.h>
 #endif
 #if defined(MBEDTLS_PK_C)
 #include <mbedtls/pk.h>
 #endif
 #if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)
-#include <mbedtls/cipher.h>
+#include <mbedtls/unstable/cipher.h>
 #endif
-#include <mbedtls/entropy.h>
+#include <mbedtls/unstable/entropy.h>
 
 /* PSA_SUCCESS is kept at the top of each error table since
  * it's the most common status when everything functions properly. */

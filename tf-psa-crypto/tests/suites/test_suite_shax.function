@@ -1,8 +1,8 @@
 /* BEGIN_HEADER */
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
-#include "mbedtls/sha3.h"
+#include "mbedtls/unstable/sha1.h"
+#include "mbedtls/unstable/sha256.h"
+#include "mbedtls/unstable/sha512.h"
+#include "mbedtls/unstable/sha3.h"
 /* END_HEADER */
 
 /* BEGIN_CASE depends_on:MBEDTLS_SHA1_C */

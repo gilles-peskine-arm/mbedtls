@@ -9,7 +9,7 @@
 
 #include "mbedtls/pk.h"
 #include "mbedtls/error_common.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 #include "pk_internal.h"
 
 #if defined(MBEDTLS_PK_C) && defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)

@@ -13,7 +13,7 @@
 #define MBEDTLS_BIGNUM_MOD_RAW_INVASIVE_H
 
 #include "common.h"
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 #include "bignum_mod.h"
 
 #if defined(MBEDTLS_TEST_HOOKS)

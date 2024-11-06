@@ -41,7 +41,7 @@
     #define MBEDTLS_SHA3_RHO_UNROLL 1 //no-check-names
 #endif
 
-#include "mbedtls/sha3.h"
+#include "mbedtls/unstable/sha3.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

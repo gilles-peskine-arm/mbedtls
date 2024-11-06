@@ -34,12 +34,12 @@
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 
-#include "mbedtls/md5.h"
-#include "mbedtls/ripemd160.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/sha512.h"
-#include "mbedtls/sha3.h"
+#include "mbedtls/unstable/md5.h"
+#include "mbedtls/unstable/ripemd160.h"
+#include "mbedtls/unstable/sha1.h"
+#include "mbedtls/unstable/sha256.h"
+#include "mbedtls/unstable/sha512.h"
+#include "mbedtls/unstable/sha3.h"
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include <psa/crypto.h>

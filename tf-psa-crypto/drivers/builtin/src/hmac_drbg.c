@@ -15,7 +15,7 @@
 
 #if defined(MBEDTLS_HMAC_DRBG_C)
 
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/unstable/hmac_drbg.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

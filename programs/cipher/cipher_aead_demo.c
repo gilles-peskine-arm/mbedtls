@@ -33,7 +33,7 @@
  * standard C headers for functions we'll use here. */
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 
 #include <stdlib.h>
 #include <stdio.h>

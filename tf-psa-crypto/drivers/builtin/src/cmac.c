@@ -30,7 +30,7 @@
 
 #if defined(MBEDTLS_CMAC_C)
 
-#include "mbedtls/cmac.h"
+#include "mbedtls/unstable/cmac.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 #include "mbedtls/platform.h"

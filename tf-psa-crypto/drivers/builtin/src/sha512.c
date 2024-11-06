@@ -30,7 +30,7 @@
 
 #if defined(MBEDTLS_SHA512_C) || defined(MBEDTLS_SHA384_C)
 
-#include "mbedtls/sha512.h"
+#include "mbedtls/unstable/sha512.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

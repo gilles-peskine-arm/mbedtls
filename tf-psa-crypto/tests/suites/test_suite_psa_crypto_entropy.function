@@ -4,7 +4,7 @@
 
 #include <psa/crypto.h>
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/unstable/entropy.h"
 #include "entropy_poll.h"
 
 /* Calculating the minimum allowed entropy size in bytes */

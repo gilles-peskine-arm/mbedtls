@@ -1,6 +1,6 @@
 /* BEGIN_HEADER */
-#include "mbedtls/md5.h"
-#include "mbedtls/ripemd160.h"
+#include "mbedtls/unstable/md5.h"
+#include "mbedtls/unstable/ripemd160.h"
 /* END_HEADER */
 
 /* BEGIN_CASE depends_on:MBEDTLS_MD5_C */

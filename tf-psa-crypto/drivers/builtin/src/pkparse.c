@@ -11,11 +11,11 @@
 
 #include "mbedtls/pk.h"
 #include "mbedtls/asn1.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/unstable/oid.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/error_common.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 #include "pk_internal.h"
 
 #include <string.h>
@@ -27,7 +27,7 @@
 
 /* Key types */
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "rsa_internal.h"
 #endif
 
@@ -36,10 +36,10 @@
 #include "mbedtls/pem.h"
 #endif
 #if defined(MBEDTLS_PKCS5_C)
-#include "mbedtls/pkcs5.h"
+#include "mbedtls/unstable/pkcs5.h"
 #endif
 #if defined(MBEDTLS_PKCS12_C)
-#include "mbedtls/pkcs12.h"
+#include "mbedtls/unstable/pkcs12.h"
 #endif
 
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)

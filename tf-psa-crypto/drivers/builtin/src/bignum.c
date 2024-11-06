@@ -25,7 +25,7 @@
 
 #if defined(MBEDTLS_BIGNUM_C)
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 #include "bignum_core.h"
 #include "bignum_internal.h"
 #include "bn_mul.h"

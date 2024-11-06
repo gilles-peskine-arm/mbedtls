@@ -24,11 +24,11 @@ int main(void)
 
 #include "mbedtls/error.h"
 #include "mbedtls/pk.h"
-#include "mbedtls/ecdsa.h"
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/ecdsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "mbedtls/error.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 
 #include <stdio.h>
 #include <stdlib.h>

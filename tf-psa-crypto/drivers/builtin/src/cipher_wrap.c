@@ -17,35 +17,35 @@
 #include "mbedtls/error_common.h"
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-#include "mbedtls/chachapoly.h"
+#include "mbedtls/unstable/chachapoly.h"
 #endif
 
 #if defined(MBEDTLS_AES_C)
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/aes.h"
 #endif
 
 #if defined(MBEDTLS_CAMELLIA_C)
-#include "mbedtls/camellia.h"
+#include "mbedtls/unstable/camellia.h"
 #endif
 
 #if defined(MBEDTLS_ARIA_C)
-#include "mbedtls/aria.h"
+#include "mbedtls/unstable/aria.h"
 #endif
 
 #if defined(MBEDTLS_DES_C)
-#include "mbedtls/des.h"
+#include "mbedtls/unstable/des.h"
 #endif
 
 #if defined(MBEDTLS_CHACHA20_C)
-#include "mbedtls/chacha20.h"
+#include "mbedtls/unstable/chacha20.h"
 #endif
 
 #if defined(MBEDTLS_GCM_C)
-#include "mbedtls/gcm.h"
+#include "mbedtls/unstable/gcm.h"
 #endif
 
 #if defined(MBEDTLS_CCM_C)
-#include "mbedtls/ccm.h"
+#include "mbedtls/unstable/ccm.h"
 #endif
 
 #if defined(MBEDTLS_NIST_KW_C)

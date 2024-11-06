@@ -4,8 +4,8 @@
 #include "common.h"
 #include "mbedtls/ssl.h"
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 #include "mbedtls/timing.h"
 #include "test/certs.h"
 

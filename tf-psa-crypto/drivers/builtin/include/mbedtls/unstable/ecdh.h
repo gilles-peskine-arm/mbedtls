@@ -23,7 +23,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 
 /*
  * Mbed TLS supports two formats for ECDH contexts (#mbedtls_ecdh_context

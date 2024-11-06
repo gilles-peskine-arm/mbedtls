@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mbedtls/pk.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 #include "common.h"
 
 //4 Kb should be enough for every bug ;-)

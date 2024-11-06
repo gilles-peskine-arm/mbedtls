@@ -15,10 +15,10 @@
 
 #if defined(MBEDTLS_PKCS12_C)
 
-#include "mbedtls/pkcs12.h"
+#include "mbedtls/unstable/pkcs12.h"
 #include "mbedtls/asn1.h"
 #if defined(MBEDTLS_CIPHER_C)
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 #endif /* MBEDTLS_CIPHER_C */
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
@@ -26,7 +26,7 @@
 #include <string.h>
 
 #if defined(MBEDTLS_DES_C)
-#include "mbedtls/des.h"
+#include "mbedtls/unstable/des.h"
 #endif
 
 #include "psa_util_internal.h"

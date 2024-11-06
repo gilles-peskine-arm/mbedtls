@@ -16,14 +16,14 @@
 #include "mbedtls/psa_util.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/unstable/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)

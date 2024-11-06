@@ -2,11 +2,11 @@
 
 /* Test random generation as a whole. */
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/ecdsa.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/unstable/bignum.h"
+#include "mbedtls/unstable/ctr_drbg.h"
+#include "mbedtls/unstable/ecdsa.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/hmac_drbg.h"
 #include "mbedtls/psa_util.h"
 #include "psa/crypto.h"
 

@@ -52,7 +52,7 @@
 #if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
 #include "psa/crypto.h"
 #else
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/aes.h"
 #endif
 
 #include "entropy.h"

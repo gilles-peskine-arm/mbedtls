@@ -12,7 +12,7 @@
 #include "psa/crypto.h"
 #include "psa_crypto_cipher.h"
 #include "psa_crypto_core.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 
 #include "test/drivers/cipher.h"
 

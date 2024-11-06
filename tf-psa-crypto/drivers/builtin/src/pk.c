@@ -17,14 +17,14 @@
 #include "mbedtls/error_common.h"
 
 #if defined(MBEDTLS_RSA_C)
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "rsa_internal.h"
 #endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 #endif
 #if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/unstable/ecdsa.h"
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)

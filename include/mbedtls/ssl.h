@@ -14,8 +14,8 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/bignum.h"
+#include "mbedtls/unstable/ecp.h"
 
 #include "mbedtls/ssl_ciphersuites.h"
 
@@ -25,13 +25,13 @@
 #endif
 
 #if defined(MBEDTLS_DHM_C)
-#include "mbedtls/dhm.h"
+#include "mbedtls/unstable/dhm.h"
 #endif
 
 #include "mbedtls/md.h"
 
 #if defined(MBEDTLS_KEY_EXCHANGE_SOME_ECDH_OR_ECDHE_ANY_ENABLED)
-#include "mbedtls/ecdh.h"
+#include "mbedtls/unstable/ecdh.h"
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)

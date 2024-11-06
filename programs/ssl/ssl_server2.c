@@ -58,7 +58,7 @@ int main(void)
 #endif
 
 #include "mbedtls/pk.h"
-#include "mbedtls/dhm.h"
+#include "mbedtls/unstable/dhm.h"
 
 /* Size of memory to be allocated for the heap, when using the library's memory
  * management and MBEDTLS_MEMORY_BUFFER_ALLOC_C is enabled. */

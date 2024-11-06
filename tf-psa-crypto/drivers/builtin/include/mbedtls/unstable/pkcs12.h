@@ -13,7 +13,7 @@
 #include "mbedtls/build_info.h"
 
 #include "mbedtls/md.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 #include "mbedtls/asn1.h"
 
 #include <stddef.h>

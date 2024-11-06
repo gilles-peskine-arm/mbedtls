@@ -10,8 +10,8 @@
 
 #if defined(MBEDTLS_RSA_C)
 
-#include "mbedtls/rsa.h"
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/rsa.h"
+#include "mbedtls/unstable/bignum.h"
 #include "rsa_alt_helpers.h"
 
 /*

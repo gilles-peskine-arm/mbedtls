@@ -16,12 +16,12 @@
     defined(MBEDTLS_RSA_C) && defined(MBEDTLS_SHA256_C) && \
     defined(MBEDTLS_FS_IO) && defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/net_sockets.h"
-#include "mbedtls/aes.h"
-#include "mbedtls/dhm.h"
-#include "mbedtls/rsa.h"
-#include "mbedtls/sha256.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/aes.h"
+#include "mbedtls/unstable/dhm.h"
+#include "mbedtls/unstable/rsa.h"
+#include "mbedtls/unstable/sha256.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 
 #include <stdio.h>
 #include <string.h>

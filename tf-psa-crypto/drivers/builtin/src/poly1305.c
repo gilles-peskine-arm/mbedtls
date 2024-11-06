@@ -10,7 +10,7 @@
 
 #if defined(MBEDTLS_POLY1305_C)
 
-#include "mbedtls/poly1305.h"
+#include "mbedtls/unstable/poly1305.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

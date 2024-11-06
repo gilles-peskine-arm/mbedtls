@@ -11,7 +11,7 @@
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_FS_IO)
 #include "mbedtls/error.h"
-#include "mbedtls/base64.h"
+#include "mbedtls/unstable/base64.h"
 
 #include <stdio.h>
 #include <stdlib.h>

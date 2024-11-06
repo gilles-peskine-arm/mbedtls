@@ -17,7 +17,7 @@
 
 #include <string.h>
 
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/aes.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"

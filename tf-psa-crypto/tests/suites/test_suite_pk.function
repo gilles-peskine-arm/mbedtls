@@ -5,10 +5,10 @@
 
 /* For error codes */
 #include "mbedtls/asn1.h"
-#include "mbedtls/base64.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/base64.h"
+#include "mbedtls/unstable/ecp.h"
 #include "mbedtls/error_common.h"
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "rsa_internal.h"
 #include "pk_internal.h"
 

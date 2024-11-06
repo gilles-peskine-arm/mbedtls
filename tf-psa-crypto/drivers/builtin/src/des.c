@@ -15,7 +15,7 @@
 
 #if defined(MBEDTLS_DES_C)
 
-#include "mbedtls/des.h"
+#include "mbedtls/unstable/des.h"
 #include "mbedtls/error_common.h"
 #include "mbedtls/platform_util.h"
 

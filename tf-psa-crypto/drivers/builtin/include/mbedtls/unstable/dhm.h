@@ -53,7 +53,7 @@
 #include "mbedtls/private_access.h"
 
 #include "mbedtls/build_info.h"
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 
 /*
  * DHM Error codes

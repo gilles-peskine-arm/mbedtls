@@ -14,7 +14,7 @@
 
 #if defined(MBEDTLS_MD5_C)
 
-#include "mbedtls/md5.h"
+#include "mbedtls/unstable/md5.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

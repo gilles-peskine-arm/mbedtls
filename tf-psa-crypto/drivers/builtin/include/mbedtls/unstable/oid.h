@@ -19,7 +19,7 @@
 #include <stddef.h>
 
 #if defined(MBEDTLS_CIPHER_C)
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 #endif
 
 #include "mbedtls/md.h"

@@ -14,7 +14,7 @@
 #include <test/psa_crypto_helpers.h>
 
 #if defined(MBEDTLS_CTR_DRBG_C)
-#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/unstable/ctr_drbg.h>
 #endif
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
@@ -159,7 +159,7 @@ exit:
 
 #if defined(MBEDTLS_PSA_INJECT_ENTROPY)
 
-#include <mbedtls/entropy.h>
+#include <mbedtls/unstable/entropy.h>
 #include <psa_crypto_its.h>
 
 int mbedtls_test_inject_entropy_seed_read(unsigned char *buf, size_t len)

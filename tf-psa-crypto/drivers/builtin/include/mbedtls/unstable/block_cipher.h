@@ -15,13 +15,13 @@
 #include "mbedtls/build_info.h"
 
 #if defined(MBEDTLS_AES_C)
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/aes.h"
 #endif
 #if defined(MBEDTLS_ARIA_C)
-#include "mbedtls/aria.h"
+#include "mbedtls/unstable/aria.h"
 #endif
 #if defined(MBEDTLS_CAMELLIA_C)
-#include "mbedtls/camellia.h"
+#include "mbedtls/unstable/camellia.h"
 #endif
 
 #if defined(MBEDTLS_BLOCK_CIPHER_SOME_PSA)

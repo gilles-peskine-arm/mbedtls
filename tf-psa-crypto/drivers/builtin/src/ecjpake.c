@@ -14,7 +14,7 @@
 
 #if defined(MBEDTLS_ECJPAKE_C)
 
-#include "mbedtls/ecjpake.h"
+#include "mbedtls/unstable/ecjpake.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

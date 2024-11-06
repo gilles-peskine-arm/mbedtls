@@ -17,7 +17,7 @@
 #include <psa/crypto.h>
 #endif
 
-#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/unstable/ctr_drbg.h>
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 /** Initialize the PSA Crypto subsystem. */

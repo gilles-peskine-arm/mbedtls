@@ -15,7 +15,7 @@
 
 #include <stddef.h>
 
-#include "md.h"
+#include "../md.h"
 
 #if defined(PSA_WANT_ALG_SHA_512) && !defined(MBEDTLS_ENTROPY_FORCE_SHA256)
 #define MBEDTLS_ENTROPY_SHA512_ACCUMULATOR

@@ -20,9 +20,9 @@
 #include <string.h>
 #include "mbedtls/platform.h"
 
-#include <mbedtls/ecdsa.h>
-#include <mbedtls/ecdh.h>
-#include <mbedtls/ecp.h>
+#include <mbedtls/unstable/ecdsa.h>
+#include <mbedtls/unstable/ecdh.h>
+#include <mbedtls/unstable/ecp.h>
 #include <mbedtls/error_common.h>
 
 #if defined(MBEDTLS_PSA_BUILTIN_KEY_TYPE_ECC_KEY_PAIR_BASIC) || \

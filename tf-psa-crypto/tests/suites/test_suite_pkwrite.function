@@ -1,8 +1,8 @@
 /* BEGIN_HEADER */
 #include "pk_internal.h"
 #include "mbedtls/pem.h"
-#include "mbedtls/oid.h"
-#include "mbedtls/base64.h"
+#include "mbedtls/unstable/oid.h"
+#include "mbedtls/unstable/base64.h"
 #include "psa/crypto_sizes.h"
 
 typedef enum {

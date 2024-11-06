@@ -22,7 +22,7 @@
 #include <string.h>
 #include "mbedtls/platform.h"
 
-#include <mbedtls/rsa.h>
+#include <mbedtls/unstable/rsa.h>
 #include <mbedtls/error_common.h>
 #include "rsa_internal.h"
 

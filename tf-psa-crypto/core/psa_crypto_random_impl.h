@@ -18,17 +18,17 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #else /* MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/unstable/entropy.h"
 
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_CTR_DRBG_C)
 
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 #undef MBEDTLS_PSA_HMAC_DRBG_MD_TYPE
 
 #elif defined(MBEDTLS_HMAC_DRBG_C)
 
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/unstable/hmac_drbg.h"
 #if defined(PSA_WANT_ALG_SHA_512) && defined(PSA_WANT_ALG_SHA_256)
 #include <limits.h>
 #if SIZE_MAX > 0xffffffff

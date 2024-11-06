@@ -70,7 +70,7 @@
 
 #include "common.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 
 #include "constant_time_internal.h"
 

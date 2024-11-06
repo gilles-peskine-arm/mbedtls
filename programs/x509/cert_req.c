@@ -27,8 +27,8 @@ int main(void)
 #else
 
 #include "mbedtls/x509_csr.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 #include "mbedtls/error.h"
 
 #include <stdio.h>

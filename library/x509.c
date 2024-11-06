@@ -21,7 +21,7 @@
 
 #include "mbedtls/asn1.h"
 #include "mbedtls/error.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/unstable/oid.h"
 
 #include <stdio.h>
 #include <string.h>

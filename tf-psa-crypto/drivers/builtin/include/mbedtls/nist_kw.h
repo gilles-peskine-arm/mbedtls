@@ -26,7 +26,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 
 #ifdef __cplusplus
 extern "C" {

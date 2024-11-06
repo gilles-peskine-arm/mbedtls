@@ -35,7 +35,7 @@
 #endif
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
-#include "mbedtls/oid.h"
+#include "mbedtls/unstable/oid.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)

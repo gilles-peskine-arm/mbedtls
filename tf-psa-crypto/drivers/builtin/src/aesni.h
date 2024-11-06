@@ -15,7 +15,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/aes.h"
 
 #define MBEDTLS_AESNI_AES      0x02000000u
 #define MBEDTLS_AESNI_CLMUL    0x00000002u

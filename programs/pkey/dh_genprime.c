@@ -21,9 +21,9 @@ int main(void)
 }
 #else
 
-#include "mbedtls/bignum.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/bignum.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 
 #include <stdio.h>
 #include <string.h>

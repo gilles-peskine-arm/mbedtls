@@ -10,11 +10,11 @@
 #if defined(MBEDTLS_PEM_PARSE_C) || defined(MBEDTLS_PEM_WRITE_C)
 
 #include "mbedtls/pem.h"
-#include "mbedtls/base64.h"
-#include "mbedtls/des.h"
-#include "mbedtls/aes.h"
+#include "mbedtls/unstable/base64.h"
+#include "mbedtls/unstable/des.h"
+#include "mbedtls/unstable/aes.h"
 #include "mbedtls/md.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

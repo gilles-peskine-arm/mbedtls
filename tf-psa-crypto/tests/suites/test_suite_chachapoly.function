@@ -1,5 +1,5 @@
 /* BEGIN_HEADER */
-#include "mbedtls/chachapoly.h"
+#include "mbedtls/unstable/chachapoly.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

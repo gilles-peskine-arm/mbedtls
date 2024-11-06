@@ -17,7 +17,7 @@
 #include <string.h>
 
 #if defined(MBEDTLS_BIGNUM_C)
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 #endif
 
 #include "mbedtls/platform.h"

@@ -1,6 +1,6 @@
 #include "mbedtls/ssl.h"
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
 #include "mbedtls/ssl_ticket.h"
 #include "test/certs.h"
 #include "common.h"

@@ -10,7 +10,7 @@
 #include "mbedtls/platform.h"
 
 #if defined(MBEDTLS_MD5_C)
-#include "mbedtls/md5.h"
+#include "mbedtls/unstable/md5.h"
 #endif
 
 #if !defined(MBEDTLS_MD5_C)

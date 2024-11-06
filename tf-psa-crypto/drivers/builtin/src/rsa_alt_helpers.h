@@ -49,7 +49,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 
 #ifdef __cplusplus
 extern "C" {

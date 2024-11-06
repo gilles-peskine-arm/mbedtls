@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-#include "mbedtls/ecdh.h"
+#include "mbedtls/unstable/ecdh.h"
 
 #include "everest/x25519.h"
 #include "everest/everest.h"

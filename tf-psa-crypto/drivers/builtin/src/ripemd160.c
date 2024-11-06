@@ -15,7 +15,7 @@
 
 #if defined(MBEDTLS_RIPEMD160_C)
 
-#include "mbedtls/ripemd160.h"
+#include "mbedtls/unstable/ripemd160.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

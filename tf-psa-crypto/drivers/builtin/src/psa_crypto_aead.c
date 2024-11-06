@@ -17,10 +17,10 @@
 #include <string.h>
 #include "mbedtls/platform.h"
 
-#include "mbedtls/ccm.h"
-#include "mbedtls/chachapoly.h"
-#include "mbedtls/cipher.h"
-#include "mbedtls/gcm.h"
+#include "mbedtls/unstable/ccm.h"
+#include "mbedtls/unstable/chachapoly.h"
+#include "mbedtls/unstable/cipher.h"
+#include "mbedtls/unstable/gcm.h"
 #include "mbedtls/error_common.h"
 
 static psa_status_t psa_aead_setup(

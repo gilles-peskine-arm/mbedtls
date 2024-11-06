@@ -17,7 +17,7 @@
 
 #if defined(MBEDTLS_DHM_C)
 
-#include "mbedtls/dhm.h"
+#include "mbedtls/unstable/dhm.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

@@ -15,13 +15,13 @@
 
 #if defined(MBEDTLS_ECDSA_C)
 
-#include "mbedtls/ecdsa.h"
+#include "mbedtls/unstable/ecdsa.h"
 #include "mbedtls/asn1write.h"
 
 #include <string.h>
 
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-#include "mbedtls/hmac_drbg.h"
+#include "mbedtls/unstable/hmac_drbg.h"
 #endif
 
 #include "mbedtls/platform.h"

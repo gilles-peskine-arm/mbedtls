@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
 #include "mbedtls/error_common.h"
-#include "mbedtls/pkcs5.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/pkcs5.h"
+#include "mbedtls/unstable/cipher.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

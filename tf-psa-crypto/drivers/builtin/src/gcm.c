@@ -19,7 +19,7 @@
 
 #if defined(MBEDTLS_GCM_C)
 
-#include "mbedtls/gcm.h"
+#include "mbedtls/unstable/gcm.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"

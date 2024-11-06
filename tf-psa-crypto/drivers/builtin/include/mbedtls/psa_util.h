@@ -70,7 +70,7 @@ int mbedtls_psa_get_random(void *p_rng,
  * @{
  */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include <mbedtls/ecp.h>
+#include <mbedtls/unstable/ecp.h>
 
 /** Convert an ECC curve identifier from the Mbed TLS encoding to PSA.
  *

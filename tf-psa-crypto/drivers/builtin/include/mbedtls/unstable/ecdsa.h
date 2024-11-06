@@ -21,7 +21,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/ecp.h"
 #include "mbedtls/md.h"
 
 /**

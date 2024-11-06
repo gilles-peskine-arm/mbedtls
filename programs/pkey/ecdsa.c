@@ -11,10 +11,10 @@
 
 #if defined(MBEDTLS_ECDSA_C) && \
     defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_CTR_DRBG_C)
-#include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
-#include "mbedtls/ecdsa.h"
-#include "mbedtls/sha256.h"
+#include "mbedtls/unstable/entropy.h"
+#include "mbedtls/unstable/ctr_drbg.h"
+#include "mbedtls/unstable/ecdsa.h"
+#include "mbedtls/unstable/sha256.h"
 
 #include <string.h>
 #endif

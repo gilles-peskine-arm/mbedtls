@@ -20,7 +20,7 @@
  */
 
 #include "mbedtls/ssl.h"
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 
 #if defined(MBEDTLS_HAVE_TIME)
 #include "mbedtls/platform_time.h"

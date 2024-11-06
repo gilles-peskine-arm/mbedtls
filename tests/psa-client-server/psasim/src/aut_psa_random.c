@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/unstable/entropy.h"
 
 #define BUFFER_SIZE 100
 

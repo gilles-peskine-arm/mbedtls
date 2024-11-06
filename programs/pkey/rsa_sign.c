@@ -23,7 +23,7 @@ int main(void)
 }
 #else
 
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 
 #include <stdio.h>
 #include <string.h>

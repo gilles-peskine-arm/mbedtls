@@ -28,7 +28,7 @@
 #include "psa/crypto.h"
 #include "common.h"
 
-#include "mbedtls/entropy.h"
+#include "mbedtls/unstable/entropy.h"
 
 #if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 /** \brief Configure entropy sources.

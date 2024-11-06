@@ -19,7 +19,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 #include "mbedtls/md.h"
 
 #if defined(MBEDTLS_THREADING_C)

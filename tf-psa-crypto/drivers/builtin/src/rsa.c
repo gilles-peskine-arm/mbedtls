@@ -27,12 +27,12 @@
 
 #if defined(MBEDTLS_RSA_C)
 
-#include "mbedtls/rsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "bignum_core.h"
 #include "bignum_internal.h"
 #include "rsa_alt_helpers.h"
 #include "rsa_internal.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/unstable/oid.h"
 #include "mbedtls/asn1write.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"

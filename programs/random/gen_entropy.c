@@ -10,7 +10,7 @@
 #include "mbedtls/platform.h"
 
 #if defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_FS_IO)
-#include "mbedtls/entropy.h"
+#include "mbedtls/unstable/entropy.h"
 
 #include <stdio.h>
 #endif

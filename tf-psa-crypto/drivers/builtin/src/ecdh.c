@@ -16,7 +16,7 @@
 
 #if defined(MBEDTLS_ECDH_C)
 
-#include "mbedtls/ecdh.h"
+#include "mbedtls/unstable/ecdh.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 

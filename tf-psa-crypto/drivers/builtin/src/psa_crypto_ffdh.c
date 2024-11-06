@@ -14,7 +14,7 @@
  * MBEDTLS_DHM_RFC7919_FFDHEXXXX_[P|G]_BIN symbols that are used in
  * mbedtls_psa_ffdh_set_prime_generator(). Apart from that, this module
  * only uses bignum functions for arithmetic. */
-#include <mbedtls/dhm.h>
+#include <mbedtls/unstable/dhm.h>
 
 #include <psa/crypto.h>
 #include "psa_crypto_core.h"

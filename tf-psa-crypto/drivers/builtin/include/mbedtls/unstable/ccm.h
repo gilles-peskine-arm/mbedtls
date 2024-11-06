@@ -38,10 +38,10 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
-#include "mbedtls/block_cipher.h"
+#include "mbedtls/unstable/block_cipher.h"
 #endif
 
 #define MBEDTLS_CCM_DECRYPT       0

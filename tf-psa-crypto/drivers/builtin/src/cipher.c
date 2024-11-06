@@ -13,7 +13,7 @@
 
 #if defined(MBEDTLS_CIPHER_C)
 
-#include "mbedtls/cipher.h"
+#include "mbedtls/unstable/cipher.h"
 #include "cipher_wrap.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
@@ -24,23 +24,23 @@
 #include <string.h>
 
 #if defined(MBEDTLS_CHACHAPOLY_C)
-#include "mbedtls/chachapoly.h"
+#include "mbedtls/unstable/chachapoly.h"
 #endif
 
 #if defined(MBEDTLS_GCM_C)
-#include "mbedtls/gcm.h"
+#include "mbedtls/unstable/gcm.h"
 #endif
 
 #if defined(MBEDTLS_CCM_C)
-#include "mbedtls/ccm.h"
+#include "mbedtls/unstable/ccm.h"
 #endif
 
 #if defined(MBEDTLS_CHACHA20_C)
-#include "mbedtls/chacha20.h"
+#include "mbedtls/unstable/chacha20.h"
 #endif
 
 #if defined(MBEDTLS_CMAC_C)
-#include "mbedtls/cmac.h"
+#include "mbedtls/unstable/cmac.h"
 #endif
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO) && !defined(MBEDTLS_DEPRECATED_REMOVED)

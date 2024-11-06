@@ -26,7 +26,7 @@
 #include "mbedtls/build_info.h"
 #include "mbedtls/platform_util.h"
 
-#include "mbedtls/bignum.h"
+#include "mbedtls/unstable/bignum.h"
 
 /*
  * ECP error codes

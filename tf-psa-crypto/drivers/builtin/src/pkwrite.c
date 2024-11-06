@@ -11,7 +11,7 @@
 
 #include "mbedtls/pk.h"
 #include "mbedtls/asn1write.h"
-#include "mbedtls/oid.h"
+#include "mbedtls/unstable/oid.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 #include "pk_internal.h"
@@ -19,8 +19,8 @@
 #include <string.h>
 
 #if defined(MBEDTLS_ECP_C)
-#include "mbedtls/bignum.h"
-#include "mbedtls/ecp.h"
+#include "mbedtls/unstable/bignum.h"
+#include "mbedtls/unstable/ecp.h"
 #include "mbedtls/platform_util.h"
 #endif
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
