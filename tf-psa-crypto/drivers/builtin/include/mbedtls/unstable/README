@@ -1,0 +1,16 @@
+This directory contains declarations that may be used by Mbed TLS.
+These declarations are not part of the TF-PSA-Crypto API, and may
+be changed or removed without notice.
+
+Over the life time of TF-PSA-Crypto 1.x and Mbed TLS 4.x, we intend
+to remove all dependencies of Mbed TLS on these unstable interfaces,
+and corresponding minor releases of TF-PSA-Crypto will stop providing
+these interfaces.
+
+This directory also contains definitions of structured types which
+are exposed by TF-PSA-Crypto. Consider these types to be opaque:
+the existence of the type is public, but the list of fields of the
+structure is an implementation detail which may change in minor releases.
+(In such cases, the field layout is part of the ABI of TF-PSA-Crypto,
+however, so changes to these structures will lead to a change of the
+TF-PSA-Crypto ABI version if they affect the default configuration.)
