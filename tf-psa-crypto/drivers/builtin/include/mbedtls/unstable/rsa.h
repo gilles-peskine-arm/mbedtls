@@ -78,7 +78,8 @@ extern "C" {
 /**
  * \brief   The RSA context structure.
  */
-typedef struct mbedtls_rsa_context {
+typedef struct mbedtls_rsa_context mbedtls_rsa_context;
+struct mbedtls_rsa_context {
     int MBEDTLS_PRIVATE(ver);                    /*!<  Reserved for internal purposes.
                                                   *    Do not set this field in application
                                                   *    code. Its meaning might change without
@@ -115,8 +116,7 @@ typedef struct mbedtls_rsa_context {
     /* Invariant: the mutex is initialized iff ver != 0. */
     mbedtls_threading_mutex_t MBEDTLS_PRIVATE(mutex);    /*!<  Thread-safety mutex. */
 #endif
-}
-mbedtls_rsa_context;
+};
 
 /**
  * \brief          This function initializes an RSA context.

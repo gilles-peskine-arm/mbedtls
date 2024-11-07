@@ -45,12 +45,12 @@ extern "C" {
 /**
  * \brief The ARIA context-type definition.
  */
-typedef struct mbedtls_aria_context {
+typedef struct mbedtls_aria_context mbedtls_aria_context;
+struct mbedtls_aria_context {
     unsigned char MBEDTLS_PRIVATE(nr);           /*!< The number of rounds (12, 14 or 16) */
     /*! The ARIA round keys. */
     uint32_t MBEDTLS_PRIVATE(rk)[MBEDTLS_ARIA_MAX_ROUNDS + 1][MBEDTLS_ARIA_BLOCKSIZE / 4];
-}
-mbedtls_aria_context;
+};
 
 /**
  * \brief          This function initializes the specified ARIA context.

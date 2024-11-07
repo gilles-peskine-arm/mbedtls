@@ -33,12 +33,12 @@
 extern "C" {
 #endif
 
-typedef struct mbedtls_chacha20_context {
+typedef struct mbedtls_chacha20_context mbedtls_chacha20_context;
+struct mbedtls_chacha20_context {
     uint32_t MBEDTLS_PRIVATE(state)[16];          /*! The state (before round operations). */
     uint8_t  MBEDTLS_PRIVATE(keystream8)[64];     /*! Leftover keystream bytes. */
     size_t MBEDTLS_PRIVATE(keystream_bytes_used); /*! Number of keystream bytes already used. */
-}
-mbedtls_chacha20_context;
+};
 
 /**
  * \brief           This function initializes the specified ChaCha20 context.

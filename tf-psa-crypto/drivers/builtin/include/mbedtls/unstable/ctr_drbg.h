@@ -173,16 +173,18 @@ extern "C" {
 #endif
 
 #if defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
-typedef struct mbedtls_ctr_drbg_psa_context {
+typedef struct mbedtls_ctr_drbg_psa_context mbedtls_ctr_drbg_psa_context;
+struct mbedtls_ctr_drbg_psa_context {
     mbedtls_svc_key_id_t key_id;
     psa_cipher_operation_t operation;
-} mbedtls_ctr_drbg_psa_context;
+};
 #endif
 
 /**
  * \brief          The CTR_DRBG context structure.
  */
-typedef struct mbedtls_ctr_drbg_context {
+typedef struct mbedtls_ctr_drbg_context mbedtls_ctr_drbg_context;
+struct mbedtls_ctr_drbg_context {
     unsigned char MBEDTLS_PRIVATE(counter)[16];  /*!< The counter (V). */
     int MBEDTLS_PRIVATE(reseed_counter);         /*!< The reseed counter.
                                                   * This is the number of requests that have
@@ -228,8 +230,7 @@ typedef struct mbedtls_ctr_drbg_context {
      */
     mbedtls_threading_mutex_t MBEDTLS_PRIVATE(mutex);
 #endif
-}
-mbedtls_ctr_drbg_context;
+};
 
 /**
  * \brief               This function initializes the CTR_DRBG context,

@@ -33,14 +33,14 @@
 extern "C" {
 #endif
 
-typedef struct mbedtls_poly1305_context {
+typedef struct mbedtls_poly1305_context mbedtls_poly1305_context;
+struct mbedtls_poly1305_context {
     uint32_t MBEDTLS_PRIVATE(r)[4];      /** The value for 'r' (low 128 bits of the key). */
     uint32_t MBEDTLS_PRIVATE(s)[4];      /** The value for 's' (high 128 bits of the key). */
     uint32_t MBEDTLS_PRIVATE(acc)[5];    /** The accumulator number. */
     uint8_t MBEDTLS_PRIVATE(queue)[16];  /** The current partial block of data. */
     size_t MBEDTLS_PRIVATE(queue_len);   /** The number of bytes stored in 'queue'. */
-}
-mbedtls_poly1305_context;
+};
 
 /**
  * \brief           This function initializes the specified Poly1305 context.

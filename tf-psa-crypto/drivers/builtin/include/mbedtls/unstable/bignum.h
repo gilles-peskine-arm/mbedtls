@@ -204,7 +204,8 @@ extern "C" {
 /**
  * \brief          MPI structure
  */
-typedef struct mbedtls_mpi {
+typedef struct mbedtls_mpi mbedtls_mpi;
+struct mbedtls_mpi {
     /** Pointer to limbs.
      *
      * This may be \c NULL if \c n is 0.
@@ -235,8 +236,7 @@ typedef struct mbedtls_mpi {
 #if MBEDTLS_MPI_MAX_LIMBS > 65535
 #error "MBEDTLS_MPI_MAX_LIMBS > 65535 is not supported"
 #endif
-}
-mbedtls_mpi;
+};
 
 /**
  * \brief           Initialize an MPI context.

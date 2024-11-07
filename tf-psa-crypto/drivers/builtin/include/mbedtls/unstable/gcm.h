@@ -53,7 +53,8 @@ extern "C" {
 /**
  * \brief          The GCM context structure.
  */
-typedef struct mbedtls_gcm_context {
+typedef struct mbedtls_gcm_context mbedtls_gcm_context;
+struct mbedtls_gcm_context {
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
     mbedtls_block_cipher_context_t MBEDTLS_PRIVATE(block_cipher_ctx);  /*!< The cipher context used. */
 #else
@@ -69,8 +70,7 @@ typedef struct mbedtls_gcm_context {
                                                               #MBEDTLS_GCM_ENCRYPT or
                                                               #MBEDTLS_GCM_DECRYPT. */
     unsigned char MBEDTLS_PRIVATE(acceleration);             /*!< The acceleration to use. */
-}
-mbedtls_gcm_context;
+};
 
 /**
  * \brief           This function initializes the specified GCM context,

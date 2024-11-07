@@ -473,14 +473,15 @@ extern "C" {
 /**
  * \brief Base OID descriptor structure
  */
-typedef struct mbedtls_oid_descriptor_t {
+typedef struct mbedtls_oid_descriptor_t mbedtls_oid_descriptor_t;
+struct mbedtls_oid_descriptor_t {
     const char *MBEDTLS_PRIVATE(asn1);               /*!< OID ASN.1 representation       */
     size_t MBEDTLS_PRIVATE(asn1_len);                /*!< length of asn1                 */
 #if !defined(MBEDTLS_X509_REMOVE_INFO)
     const char *MBEDTLS_PRIVATE(name);               /*!< official name (e.g. from RFC)  */
     const char *MBEDTLS_PRIVATE(description);        /*!< human friendly description     */
 #endif
-} mbedtls_oid_descriptor_t;
+};
 
 /**
  * \brief          Translate an X.509 extension OID into local values

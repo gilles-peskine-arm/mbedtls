@@ -38,12 +38,12 @@ extern "C" {
  *                 stronger message digests instead.
  *
  */
-typedef struct mbedtls_sha1_context {
+typedef struct mbedtls_sha1_context mbedtls_sha1_context;
+struct mbedtls_sha1_context {
     uint32_t MBEDTLS_PRIVATE(total)[2];          /*!< The number of Bytes processed.  */
     uint32_t MBEDTLS_PRIVATE(state)[5];          /*!< The intermediate digest state.  */
     unsigned char MBEDTLS_PRIVATE(buffer)[64];   /*!< The data block being processed. */
-}
-mbedtls_sha1_context;
+};
 
 /**
  * \brief          This function initializes a SHA-1 context.

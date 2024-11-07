@@ -96,7 +96,8 @@ extern "C" {
 /**
  * \brief          The DHM context structure.
  */
-typedef struct mbedtls_dhm_context {
+typedef struct mbedtls_dhm_context mbedtls_dhm_context;
+struct mbedtls_dhm_context {
     mbedtls_mpi MBEDTLS_PRIVATE(P);      /*!<  The prime modulus. */
     mbedtls_mpi MBEDTLS_PRIVATE(G);      /*!<  The generator. */
     mbedtls_mpi MBEDTLS_PRIVATE(X);      /*!<  Our secret value. */
@@ -107,8 +108,7 @@ typedef struct mbedtls_dhm_context {
     mbedtls_mpi MBEDTLS_PRIVATE(Vi);     /*!<  The blinding value. */
     mbedtls_mpi MBEDTLS_PRIVATE(Vf);     /*!<  The unblinding value. */
     mbedtls_mpi MBEDTLS_PRIVATE(pX);     /*!<  The previous \c X. */
-}
-mbedtls_dhm_context;
+};
 
 /**
  * \brief          This function initializes the DHM context.

@@ -41,10 +41,10 @@ extern "C" {
  *                 security risk. We recommend considering stronger ciphers
  *                 instead.
  */
-typedef struct mbedtls_des_context {
+typedef struct mbedtls_des_context mbedtls_des_context;
+struct mbedtls_des_context {
     uint32_t MBEDTLS_PRIVATE(sk)[32];            /*!<  DES subkeys       */
-}
-mbedtls_des_context;
+};
 
 /**
  * \brief          Triple-DES context structure
@@ -53,10 +53,10 @@ mbedtls_des_context;
  *                 security risk. We recommend considering stronger ciphers
  *                 instead.
  */
-typedef struct mbedtls_des3_context {
+typedef struct mbedtls_des3_context mbedtls_des3_context;
+struct mbedtls_des3_context {
     uint32_t MBEDTLS_PRIVATE(sk)[96];            /*!<  3DES subkeys      */
-}
-mbedtls_des3_context;
+};
 
 
 /**

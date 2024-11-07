@@ -62,7 +62,8 @@ extern "C" {
  * \brief    The CCM context-type definition. The CCM context is passed
  *           to the APIs called.
  */
-typedef struct mbedtls_ccm_context {
+typedef struct mbedtls_ccm_context mbedtls_ccm_context;
+struct mbedtls_ccm_context {
     unsigned char MBEDTLS_PRIVATE(y)[16];    /*!< The Y working buffer */
     unsigned char MBEDTLS_PRIVATE(ctr)[16];  /*!< The counter buffer */
     size_t MBEDTLS_PRIVATE(plaintext_len);   /*!< Total plaintext length */
@@ -87,8 +88,7 @@ typedef struct mbedtls_ccm_context {
 #endif
     int MBEDTLS_PRIVATE(state);              /*!< Working value holding context's
                                                   state. Used for chunked data input */
-}
-mbedtls_ccm_context;
+};
 
 /**
  * \brief           This function initializes the specified CCM context,

@@ -263,7 +263,8 @@ typedef struct mbedtls_cmac_context_t mbedtls_cmac_context_t;
  *              code-size, so should not be used directly. The accessor
  *              functions adjust for this and return the "natural" value.
  */
-typedef struct mbedtls_cipher_info_t {
+typedef struct mbedtls_cipher_info_t mbedtls_cipher_info_t;
+struct mbedtls_cipher_info_t {
     /** Name of the cipher. */
     const char *MBEDTLS_PRIVATE(name);
 
@@ -304,7 +305,7 @@ typedef struct mbedtls_cipher_info_t {
     /** Index to LUT for base cipher information and functions. */
     unsigned int MBEDTLS_PRIVATE(base_idx) : 5;
 
-} mbedtls_cipher_info_t;
+};
 
 /* For internal use only.
  * These are used to more compactly represent the fields above. */
@@ -313,7 +314,8 @@ typedef struct mbedtls_cipher_info_t {
 /**
  * Generic cipher context.
  */
-typedef struct mbedtls_cipher_context_t {
+typedef struct mbedtls_cipher_context_t mbedtls_cipher_context_t;
+struct mbedtls_cipher_context_t {
     /** Information about the associated cipher. */
     const mbedtls_cipher_info_t *MBEDTLS_PRIVATE(cipher_info);
 
@@ -365,7 +367,7 @@ typedef struct mbedtls_cipher_context_t {
     unsigned char MBEDTLS_PRIVATE(psa_enabled);
 #endif /* MBEDTLS_USE_PSA_CRYPTO && !MBEDTLS_DEPRECATED_REMOVED */
 
-} mbedtls_cipher_context_t;
+};
 
 /**
  * \brief This function retrieves the list of ciphers supported

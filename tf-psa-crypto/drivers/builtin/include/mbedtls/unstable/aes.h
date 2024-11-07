@@ -56,7 +56,8 @@ extern "C" {
 /**
  * \brief The AES context-type definition.
  */
-typedef struct mbedtls_aes_context {
+typedef struct mbedtls_aes_context mbedtls_aes_context;
+struct mbedtls_aes_context {
     int MBEDTLS_PRIVATE(nr);                     /*!< The number of rounds. */
     size_t MBEDTLS_PRIVATE(rk_offset);           /*!< The offset in array elements to AES
                                                     round keys in the buffer. */
@@ -69,19 +70,19 @@ typedef struct mbedtls_aes_context {
                                                     simplifying key expansion in the 256-bit
                                                     case by generating an extra round key. */
 #endif /* MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
-}
-mbedtls_aes_context;
+};
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
  * \brief The AES XTS context-type definition.
  */
-typedef struct mbedtls_aes_xts_context {
+typedef struct mbedtls_aes_xts_context mbedtls_aes_xts_context;
+struct mbedtls_aes_xts_context {
     mbedtls_aes_context MBEDTLS_PRIVATE(crypt); /*!< The AES context to use for AES block
                                                    encryption or decryption. */
     mbedtls_aes_context MBEDTLS_PRIVATE(tweak); /*!< The AES context used for tweak
                                                    computation. */
-} mbedtls_aes_xts_context;
+};
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
 /**

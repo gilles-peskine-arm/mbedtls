@@ -71,7 +71,8 @@ extern "C" {
 /**
  * HMAC_DRBG context.
  */
-typedef struct mbedtls_hmac_drbg_context {
+typedef struct mbedtls_hmac_drbg_context mbedtls_hmac_drbg_context;
+struct mbedtls_hmac_drbg_context {
     /* Working state: the key K is not stored explicitly,
      * but is implied by the HMAC context */
     mbedtls_md_context_t MBEDTLS_PRIVATE(md_ctx);                    /*!< HMAC context (inc. K)  */
@@ -99,7 +100,7 @@ typedef struct mbedtls_hmac_drbg_context {
      */
     mbedtls_threading_mutex_t MBEDTLS_PRIVATE(mutex);
 #endif
-} mbedtls_hmac_drbg_context;
+};
 
 /**
  * \brief               HMAC_DRBG context initialization.

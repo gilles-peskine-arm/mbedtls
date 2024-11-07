@@ -56,7 +56,8 @@ typedef enum {
  * convention from the Thread v1.0 spec. Correspondence is indicated in the
  * description as a pair C: client name, S: server name
  */
-typedef struct mbedtls_ecjpake_context {
+typedef struct mbedtls_ecjpake_context mbedtls_ecjpake_context;
+struct mbedtls_ecjpake_context {
     mbedtls_md_type_t MBEDTLS_PRIVATE(md_type);          /**< Hash to use                    */
     mbedtls_ecp_group MBEDTLS_PRIVATE(grp);              /**< Elliptic curve                 */
     mbedtls_ecjpake_role MBEDTLS_PRIVATE(role);          /**< Are we client or server?       */
@@ -72,7 +73,7 @@ typedef struct mbedtls_ecjpake_context {
     mbedtls_mpi MBEDTLS_PRIVATE(xm2);                    /**< My private key 2  C: x2, S: x4 */
 
     mbedtls_mpi MBEDTLS_PRIVATE(s);                      /**< Pre-shared secret (passphrase) */
-} mbedtls_ecjpake_context;
+};
 
 /**
  * \brief           Initialize an ECJPAKE context.

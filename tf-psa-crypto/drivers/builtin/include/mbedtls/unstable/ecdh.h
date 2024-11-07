@@ -83,7 +83,8 @@ typedef enum {
  * should not make any assumptions about the structure of
  * mbedtls_ecdh_context_mbed.
  */
-typedef struct mbedtls_ecdh_context_mbed {
+typedef struct mbedtls_ecdh_context_mbed mbedtls_ecdh_context_mbed;
+struct mbedtls_ecdh_context_mbed {
     mbedtls_ecp_group MBEDTLS_PRIVATE(grp);   /*!< The elliptic curve used. */
     mbedtls_mpi MBEDTLS_PRIVATE(d);           /*!< The private key. */
     mbedtls_ecp_point MBEDTLS_PRIVATE(Q);     /*!< The public key. */
@@ -92,7 +93,7 @@ typedef struct mbedtls_ecdh_context_mbed {
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     mbedtls_ecp_restart_ctx MBEDTLS_PRIVATE(rs); /*!< The restart context for EC computations. */
 #endif
-} mbedtls_ecdh_context_mbed;
+};
 #endif
 
 /**
@@ -102,7 +103,8 @@ typedef struct mbedtls_ecdh_context_mbed {
  *                  should not be shared between multiple threads.
  * \brief           The ECDH context structure.
  */
-typedef struct mbedtls_ecdh_context {
+typedef struct mbedtls_ecdh_context mbedtls_ecdh_context;
+struct mbedtls_ecdh_context {
 #if defined(MBEDTLS_ECDH_LEGACY_CONTEXT)
     mbedtls_ecp_group MBEDTLS_PRIVATE(grp);   /*!< The elliptic curve used. */
     mbedtls_mpi MBEDTLS_PRIVATE(d);           /*!< The private key. */
@@ -138,8 +140,7 @@ typedef struct mbedtls_ecdh_context {
                                                     if this flag is set. */
 #endif /* MBEDTLS_ECP_RESTARTABLE */
 #endif /* MBEDTLS_ECDH_LEGACY_CONTEXT */
-}
-mbedtls_ecdh_context;
+};
 
 /**
  * \brief          Return the ECP group for provided context.

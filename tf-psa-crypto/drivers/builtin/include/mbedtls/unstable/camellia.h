@@ -34,11 +34,11 @@ extern "C" {
 /**
  * \brief          CAMELLIA context structure
  */
-typedef struct mbedtls_camellia_context {
+typedef struct mbedtls_camellia_context mbedtls_camellia_context;
+struct mbedtls_camellia_context {
     int MBEDTLS_PRIVATE(nr);                     /*!<  number of rounds  */
     uint32_t MBEDTLS_PRIVATE(rk)[68];            /*!<  CAMELLIA round keys    */
-}
-mbedtls_camellia_context;
+};
 
 /**
  * \brief          Initialize a CAMELLIA context.

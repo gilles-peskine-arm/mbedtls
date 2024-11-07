@@ -32,12 +32,12 @@ extern "C" {
  *                 stronger message digests instead.
  *
  */
-typedef struct mbedtls_md5_context {
+typedef struct mbedtls_md5_context mbedtls_md5_context;
+struct mbedtls_md5_context {
     uint32_t MBEDTLS_PRIVATE(total)[2];          /*!< number of bytes processed  */
     uint32_t MBEDTLS_PRIVATE(state)[4];          /*!< intermediate digest state  */
     unsigned char MBEDTLS_PRIVATE(buffer)[64];   /*!< data block being processed */
-}
-mbedtls_md5_context;
+};
 
 /**
  * \brief          Initialize MD5 context

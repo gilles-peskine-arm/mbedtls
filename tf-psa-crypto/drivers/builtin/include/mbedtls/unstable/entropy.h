@@ -90,19 +90,20 @@ typedef int (*mbedtls_entropy_f_source_ptr)(void *data, unsigned char *output, s
 /**
  * \brief           Entropy source state
  */
-typedef struct mbedtls_entropy_source_state {
+typedef struct mbedtls_entropy_source_state mbedtls_entropy_source_state;
+struct mbedtls_entropy_source_state {
     mbedtls_entropy_f_source_ptr    MBEDTLS_PRIVATE(f_source);   /**< The entropy source callback */
     void *MBEDTLS_PRIVATE(p_source);             /**< The callback data pointer */
     size_t          MBEDTLS_PRIVATE(size);       /**< Amount received in bytes */
     size_t          MBEDTLS_PRIVATE(threshold);  /**< Minimum bytes required before release */
     int             MBEDTLS_PRIVATE(strong);     /**< Is the source strong? */
-}
-mbedtls_entropy_source_state;
+};
 
 /**
  * \brief           Entropy context structure
  */
-typedef struct mbedtls_entropy_context {
+typedef struct mbedtls_entropy_context mbedtls_entropy_context;
+struct mbedtls_entropy_context {
     mbedtls_md_context_t  MBEDTLS_PRIVATE(accumulator);
     int MBEDTLS_PRIVATE(accumulator_started); /* 0 after init.
                                                * 1 after the first update.
@@ -115,8 +116,7 @@ typedef struct mbedtls_entropy_context {
 #if defined(MBEDTLS_ENTROPY_NV_SEED)
     int MBEDTLS_PRIVATE(initial_entropy_run);
 #endif
-}
-mbedtls_entropy_context;
+};
 
 #if !defined(MBEDTLS_NO_PLATFORM_ENTROPY)
 /**

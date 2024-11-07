@@ -137,12 +137,13 @@ typedef enum {
  * accessed directly by applications. Future versions of the library may
  * add extra fields or reorder existing fields.
  */
-typedef struct mbedtls_ecp_curve_info {
+typedef struct mbedtls_ecp_curve_info mbedtls_ecp_curve_info;
+struct mbedtls_ecp_curve_info {
     mbedtls_ecp_group_id grp_id;    /*!< An internal identifier. */
     uint16_t tls_id;                /*!< The TLS NamedCurve identifier. */
     uint16_t bit_size;              /*!< The curve size in bits. */
     const char *name;               /*!< A human-friendly name. */
-} mbedtls_ecp_curve_info;
+};
 
 /**
  * \brief           The ECP point structure, in Jacobian coordinates.
@@ -155,12 +156,12 @@ typedef struct mbedtls_ecp_curve_info {
  *                  Otherwise, \p X and \p Y are its standard (affine)
  *                  coordinates.
  */
-typedef struct mbedtls_ecp_point {
+typedef struct mbedtls_ecp_point mbedtls_ecp_point;
+struct mbedtls_ecp_point {
     mbedtls_mpi MBEDTLS_PRIVATE(X);          /*!< The X coordinate of the ECP point. */
     mbedtls_mpi MBEDTLS_PRIVATE(Y);          /*!< The Y coordinate of the ECP point. */
     mbedtls_mpi MBEDTLS_PRIVATE(Z);          /*!< The Z coordinate of the ECP point. */
-}
-mbedtls_ecp_point;
+};
 
 /**
  * \brief           The ECP group structure.
@@ -221,7 +222,8 @@ mbedtls_ecp_point;
  *                of these fields does not need to be supported.
  *                They do not need to be at the same offset in the structure.
  */
-typedef struct mbedtls_ecp_group {
+typedef struct mbedtls_ecp_group mbedtls_ecp_group;
+struct mbedtls_ecp_group {
     mbedtls_ecp_group_id id;    /*!< An internal group identifier. */
     mbedtls_mpi P;              /*!< The prime modulus of the base field. */
     mbedtls_mpi A;              /*!< For Short Weierstrass: \p A in the equation. Note that
@@ -247,8 +249,7 @@ typedef struct mbedtls_ecp_group {
     void *MBEDTLS_PRIVATE(t_data);               /*!< Unused. */
     mbedtls_ecp_point *MBEDTLS_PRIVATE(T);       /*!< Pre-computed points for ecp_mul_comb(). */
     size_t MBEDTLS_PRIVATE(T_size);              /*!< The number of dynamic allocated pre-computed points. */
-}
-mbedtls_ecp_group;
+};
 
 /**
  * \name SECTION: Module settings
@@ -412,12 +413,12 @@ typedef void mbedtls_ecp_restart_ctx;
  * \note    Members are deliberately in the same order as in the
  *          ::mbedtls_ecdsa_context structure.
  */
-typedef struct mbedtls_ecp_keypair {
+typedef struct mbedtls_ecp_keypair mbedtls_ecp_keypair;
+struct mbedtls_ecp_keypair {
     mbedtls_ecp_group MBEDTLS_PRIVATE(grp);      /*!<  Elliptic curve and base point     */
     mbedtls_mpi MBEDTLS_PRIVATE(d);              /*!<  our secret value                  */
     mbedtls_ecp_point MBEDTLS_PRIVATE(Q);        /*!<  our public value                  */
-}
-mbedtls_ecp_keypair;
+};
 
 /**
  * The uncompressed point format for Short Weierstrass curves
