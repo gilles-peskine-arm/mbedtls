@@ -19,8 +19,7 @@
 #include "mbedtls/build_info.h"
 
 #include "mbedtls/opaque/mpi_contexts.h"
-
-#include "mbedtls/md.h"
+#include "mbedtls/opaque/hash_contexts.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -192,7 +191,7 @@ enum mbedtls_ecjpake_role {
 };
 
 struct mbedtls_ecjpake_context {
-    mbedtls_md_type_t MBEDTLS_PRIVATE(md_type);          /**< Hash to use                    */
+    enum mbedtls_md_type_t MBEDTLS_PRIVATE(md_type);          /**< Hash to use                    */
     struct mbedtls_ecp_group MBEDTLS_PRIVATE(grp);              /**< Elliptic curve                 */
     enum mbedtls_ecjpake_role MBEDTLS_PRIVATE(role);          /**< Are we client or server?       */
     int MBEDTLS_PRIVATE(point_format);                   /**< Format for point export        */
