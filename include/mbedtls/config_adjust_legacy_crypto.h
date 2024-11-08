@@ -281,6 +281,44 @@
 #define MBEDTLS_ECP_LIGHT
 #endif
 
+/* Flags indicating whether to include code that is specific to certain
+ * types of curves. These flags are for internal library use only. */
+#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
+#define MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED
+#endif
+#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
+    defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+#define MBEDTLS_ECP_MONTGOMERY_ENABLED
+#endif
+
+/*
+ * Mbed TLS supports two formats for ECDH contexts (#mbedtls_ecdh_context
+ * defined in `ecdh.h`). For most applications, the choice of format makes
+ * no difference, since all library functions can work with either format,
+ * except that the new format is incompatible with MBEDTLS_ECP_RESTARTABLE.
+
+ * The new format used when this option is disabled is smaller
+ * (56 bytes on a 32-bit platform). In future versions of the library, it
+ * will support alternative implementations of ECDH operations.
+ * The new format is incompatible with applications that access
+ * context fields directly and with restartable ECP operations.
+ */
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+#define MBEDTLS_ECDH_LEGACY_CONTEXT
+#else
+#undef MBEDTLS_ECDH_LEGACY_CONTEXT
+#endif
+
 /* Backward compatibility: after #8740 the RSA module offers functions to parse
  * and write RSA private/public keys without relying on the PK one. Of course
  * this needs ASN1 support to do so, so we enable it here. */
@@ -318,6 +356,19 @@
  * enable it, so we enable it here. */
 #if defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PKCS5_C) && defined(MBEDTLS_CIPHER_MODE_CBC)
 #define MBEDTLS_CIPHER_PADDING_PKCS7
+#endif
+
+#if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C) || defined(MBEDTLS_CHACHAPOLY_C)
+#define MBEDTLS_CIPHER_MODE_AEAD
+#endif
+
+#if defined(MBEDTLS_CIPHER_MODE_CBC)
+#define MBEDTLS_CIPHER_MODE_WITH_PADDING
+#endif
+
+#if defined(MBEDTLS_CIPHER_NULL_CIPHER) || \
+    defined(MBEDTLS_CHACHA20_C)
+#define MBEDTLS_CIPHER_MODE_STREAM
 #endif
 
 /* Backwards compatibility for some macros which were renamed to reflect that

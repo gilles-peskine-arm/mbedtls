@@ -50,26 +50,6 @@
 /** Operation in progress, call again with the same parameters to continue. */
 #define MBEDTLS_ERR_ECP_IN_PROGRESS                       -0x4B00
 
-/* Flags indicating whether to include code that is specific to certain
- * types of curves. These flags are for internal library use only. */
-#if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_BP256R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_BP384R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_BP512R1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
-#define MBEDTLS_ECP_SHORT_WEIERSTRASS_ENABLED
-#endif
-#if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED) || \
-    defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
-#define MBEDTLS_ECP_MONTGOMERY_ENABLED
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

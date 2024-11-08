@@ -21,19 +21,6 @@
 #include <stddef.h>
 #include "mbedtls/platform_util.h"
 
-#if defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C) || defined(MBEDTLS_CHACHAPOLY_C)
-#define MBEDTLS_CIPHER_MODE_AEAD
-#endif
-
-#if defined(MBEDTLS_CIPHER_MODE_CBC)
-#define MBEDTLS_CIPHER_MODE_WITH_PADDING
-#endif
-
-#if defined(MBEDTLS_CIPHER_NULL_CIPHER) || \
-    defined(MBEDTLS_CHACHA20_C)
-#define MBEDTLS_CIPHER_MODE_STREAM
-#endif
-
 /** The selected feature is not available. */
 #define MBEDTLS_ERR_CIPHER_FEATURE_UNAVAILABLE  -0x6080
 /** Bad input parameters. */
