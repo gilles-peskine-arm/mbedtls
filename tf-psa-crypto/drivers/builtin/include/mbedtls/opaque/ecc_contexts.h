@@ -100,6 +100,15 @@ struct mbedtls_ecp_group {
     size_t MBEDTLS_PRIVATE(T_size);              /*!< The number of dynamic allocated pre-computed points. */
 };
 
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+struct mbedtls_ecp_restart_ctx {
+    unsigned MBEDTLS_PRIVATE(ops_done);                  /*!<  current ops count             */
+    unsigned MBEDTLS_PRIVATE(depth);                     /*!<  call depth (0 = top-level)    */
+    struct mbedtls_ecp_restart_mul *MBEDTLS_PRIVATE(rsm);   /*!<  ecp_mul_comb() sub-context    */
+    struct mbedtls_ecp_restart_muladd *MBEDTLS_PRIVATE(ma); /*!<  ecp_muladd() sub-context      */
+};
+#endif
+
 struct mbedtls_ecp_keypair {
     struct mbedtls_ecp_group MBEDTLS_PRIVATE(grp);      /*!<  Elliptic curve and base point     */
     struct mbedtls_mpi MBEDTLS_PRIVATE(d);              /*!<  our secret value                  */
@@ -123,6 +132,18 @@ struct mbedtls_ecdh_context_mbed {
     struct mbedtls_mpi MBEDTLS_PRIVATE(z);           /*!< The shared secret. */
 #if defined(MBEDTLS_ECP_RESTARTABLE)
     struct mbedtls_ecp_restart_ctx MBEDTLS_PRIVATE(rs); /*!< The restart context for EC computations. */
+#endif
+};
+#endif
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+struct mbedtls_ecdsa_restart_ctx {
+    struct mbedtls_ecp_restart_ctx MBEDTLS_PRIVATE(ecp);        /*!<  base context for ECP restart and
+                                                            shared administrative info    */
+    struct mbedtls_ecdsa_restart_ver *MBEDTLS_PRIVATE(ver); /*!<  ecdsa_verify() sub-context    */
+    struct mbedtls_ecdsa_restart_sig *MBEDTLS_PRIVATE(sig); /*!<  ecdsa_sign() sub-context      */
+#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
+    struct mbedtls_ecdsa_restart_det *MBEDTLS_PRIVATE(det); /*!<  ecdsa_sign_det() sub-context  */
 #endif
 };
 #endif

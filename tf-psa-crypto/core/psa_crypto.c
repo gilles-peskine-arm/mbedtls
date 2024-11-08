@@ -56,6 +56,7 @@
 #include "mbedtls/constant_time.h"
 #include "mbedtls/unstable/des.h"
 #include "mbedtls/unstable/ecdh.h"
+#include "mbedtls/unstable/ecdsa.h"
 #include "mbedtls/unstable/ecp.h"
 #include "mbedtls/unstable/entropy.h"
 #include "mbedtls/error_common.h"

@@ -102,14 +102,14 @@ typedef struct {
 #if (defined(MBEDTLS_PSA_BUILTIN_ALG_ECDSA) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \
     defined(MBEDTLS_ECP_RESTARTABLE)
-    mbedtls_ecdsa_context *MBEDTLS_PRIVATE(ctx);
-    mbedtls_ecdsa_restart_ctx MBEDTLS_PRIVATE(restart_ctx);
+    struct mbedtls_ecp_keypair *MBEDTLS_PRIVATE(ctx);
+    struct mbedtls_ecdsa_restart_ctx MBEDTLS_PRIVATE(restart_ctx);
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
 
     size_t MBEDTLS_PRIVATE(coordinate_bytes);
     psa_algorithm_t MBEDTLS_PRIVATE(alg);
-    mbedtls_md_type_t MBEDTLS_PRIVATE(md_alg);
+    enum mbedtls_md_type_t MBEDTLS_PRIVATE(md_alg);
     uint8_t MBEDTLS_PRIVATE(hash)[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
     size_t MBEDTLS_PRIVATE(hash_length);
 
@@ -137,7 +137,7 @@ typedef struct {
     defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \
     defined(MBEDTLS_ECP_RESTARTABLE)
 
-    struct mbedtls_ecdsa_context *MBEDTLS_PRIVATE(ctx);
+    struct mbedtls_ecp_keypair *MBEDTLS_PRIVATE(ctx);
     struct mbedtls_ecdsa_restart_ctx MBEDTLS_PRIVATE(restart_ctx);
 
     uint32_t MBEDTLS_PRIVATE(num_ops);

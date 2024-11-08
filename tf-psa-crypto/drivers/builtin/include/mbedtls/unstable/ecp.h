@@ -274,12 +274,7 @@ typedef struct mbedtls_ecp_restart_muladd mbedtls_ecp_restart_muladd_ctx;
 /**
  * \brief           General context for resuming ECC operations
  */
-typedef struct {
-    unsigned MBEDTLS_PRIVATE(ops_done);                  /*!<  current ops count             */
-    unsigned MBEDTLS_PRIVATE(depth);                     /*!<  call depth (0 = top-level)    */
-    mbedtls_ecp_restart_mul_ctx *MBEDTLS_PRIVATE(rsm);   /*!<  ecp_mul_comb() sub-context    */
-    mbedtls_ecp_restart_muladd_ctx *MBEDTLS_PRIVATE(ma); /*!<  ecp_muladd() sub-context      */
-} mbedtls_ecp_restart_ctx;
+typedef struct mbedtls_ecp_restart_ctx mbedtls_ecp_restart_ctx;
 
 /*
  * Operation counts for restartable functions

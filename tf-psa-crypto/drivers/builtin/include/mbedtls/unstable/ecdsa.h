@@ -95,15 +95,7 @@ typedef struct mbedtls_ecdsa_restart_det mbedtls_ecdsa_restart_det_ctx;
 /**
  * \brief           General context for resuming ECDSA operations
  */
-typedef struct {
-    mbedtls_ecp_restart_ctx MBEDTLS_PRIVATE(ecp);        /*!<  base context for ECP restart and
-                                                            shared administrative info    */
-    mbedtls_ecdsa_restart_ver_ctx *MBEDTLS_PRIVATE(ver); /*!<  ecdsa_verify() sub-context    */
-    mbedtls_ecdsa_restart_sig_ctx *MBEDTLS_PRIVATE(sig); /*!<  ecdsa_sign() sub-context      */
-#if defined(MBEDTLS_ECDSA_DETERMINISTIC)
-    mbedtls_ecdsa_restart_det_ctx *MBEDTLS_PRIVATE(det); /*!<  ecdsa_sign_det() sub-context  */
-#endif
-} mbedtls_ecdsa_restart_ctx;
+typedef struct mbedtls_ecdsa_restart_ctx mbedtls_ecdsa_restart_ctx;
 
 #else /* MBEDTLS_ECP_RESTARTABLE */
 
