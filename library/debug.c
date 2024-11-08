@@ -13,6 +13,7 @@
 
 #include "debug_internal.h"
 #include "mbedtls/error.h"
+#include "mbedtls/unstable/ecdh.h"
 
 #include <stdarg.h>
 #include <stdio.h>

@@ -38,6 +38,10 @@
 #include "mbedtls/unstable/sha512.h"
 #endif
 
+#if defined(MBEDTLS_DHM_C)
+#include "mbedtls/unstable/dhm.h"
+#endif
+
 #if defined(MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED) && \
     !defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "mbedtls/unstable/ecjpake.h"

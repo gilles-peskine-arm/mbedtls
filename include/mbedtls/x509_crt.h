@@ -15,7 +15,7 @@
 
 #include "mbedtls/x509.h"
 #include "mbedtls/x509_crl.h"
-#include "mbedtls/unstable/bignum.h"
+#include "mbedtls/opaque/mpi_contexts.h"
 
 /**
  * \addtogroup x509_module
@@ -967,7 +967,7 @@ void mbedtls_x509write_crt_set_version(mbedtls_x509write_cert *ctx, int version)
  * \return          0 if successful
  */
 int MBEDTLS_DEPRECATED mbedtls_x509write_crt_set_serial(
-    mbedtls_x509write_cert *ctx, const mbedtls_mpi *serial);
+    mbedtls_x509write_cert *ctx, const struct mbedtls_mpi *serial);
 #endif // MBEDTLS_BIGNUM_C && !MBEDTLS_DEPRECATED_REMOVED
 
 /**

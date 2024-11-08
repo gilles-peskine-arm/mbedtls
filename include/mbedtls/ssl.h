@@ -14,8 +14,9 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/unstable/bignum.h"
-#include "mbedtls/unstable/ecp.h"
+#include "mbedtls/opaque/mpi_contexts.h"
+#include "mbedtls/opaque/ecc_contexts.h"
+struct mbedtls_dhm_context; // defined in mbedtls/unstable/dhm.h
 
 #include "mbedtls/ssl_ciphersuites.h"
 
@@ -24,15 +25,7 @@
 #include "mbedtls/x509_crl.h"
 #endif
 
-#if defined(MBEDTLS_DHM_C)
-#include "mbedtls/unstable/dhm.h"
-#endif
-
 #include "mbedtls/md.h"
-
-#if defined(MBEDTLS_KEY_EXCHANGE_SOME_ECDH_OR_ECDHE_ANY_ENABLED)
-#include "mbedtls/unstable/ecdh.h"
-#endif
 
 #if defined(MBEDTLS_HAVE_TIME)
 #include "mbedtls/platform_time.h"
@@ -1571,14 +1564,14 @@ struct mbedtls_ssl_config {
 #endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
 
 #if defined(MBEDTLS_ECP_C) && !defined(MBEDTLS_DEPRECATED_REMOVED)
-    const mbedtls_ecp_group_id *MBEDTLS_PRIVATE(curve_list); /*!< allowed curves             */
+    const enum mbedtls_ecp_group_id *MBEDTLS_PRIVATE(curve_list); /*!< allowed curves             */
 #endif
 
     const uint16_t *MBEDTLS_PRIVATE(group_list);     /*!< allowed IANA NamedGroups */
 
 #if defined(MBEDTLS_DHM_C)
-    mbedtls_mpi MBEDTLS_PRIVATE(dhm_P);              /*!< prime modulus for DHM              */
-    mbedtls_mpi MBEDTLS_PRIVATE(dhm_G);              /*!< generator for DHM                  */
+    struct mbedtls_mpi MBEDTLS_PRIVATE(dhm_P);              /*!< prime modulus for DHM              */
+    struct mbedtls_mpi MBEDTLS_PRIVATE(dhm_G);              /*!< generator for DHM                  */
 #endif
 
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
@@ -3801,7 +3794,7 @@ int mbedtls_ssl_conf_dh_param_bin(mbedtls_ssl_config *conf,
  *
  * \return         0 if successful
  */
-int mbedtls_ssl_conf_dh_param_ctx(mbedtls_ssl_config *conf, mbedtls_dhm_context *dhm_ctx);
+int mbedtls_ssl_conf_dh_param_ctx(mbedtls_ssl_config *conf, struct mbedtls_dhm_context *dhm_ctx);
 #endif /* MBEDTLS_DHM_C && defined(MBEDTLS_SSL_SRV_C) */
 
 #if defined(MBEDTLS_DHM_C) && defined(MBEDTLS_SSL_CLI_C)
@@ -3861,7 +3854,7 @@ void mbedtls_ssl_conf_dhm_min_bitlen(mbedtls_ssl_config *conf,
  *                 terminated by MBEDTLS_ECP_DP_NONE.
  */
 void MBEDTLS_DEPRECATED mbedtls_ssl_conf_curves(mbedtls_ssl_config *conf,
-                                                const mbedtls_ecp_group_id *curves);
+                                                const enum mbedtls_ecp_group_id *curves);
 #endif /* MBEDTLS_DEPRECATED_REMOVED */
 #endif /* MBEDTLS_ECP_C */
 

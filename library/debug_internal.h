@@ -11,6 +11,7 @@
 #define MBEDTLS_DEBUG_INTERNAL_H
 
 #include "mbedtls/debug.h"
+#include "mbedtls/opaque/ecc_contexts.h"
 
 /**
  * \brief    Print a message to the debug output. This function is always used
@@ -112,7 +113,7 @@ void mbedtls_debug_print_mpi(const mbedtls_ssl_context *ssl, int level,
  */
 void mbedtls_debug_print_ecp(const mbedtls_ssl_context *ssl, int level,
                              const char *file, int line,
-                             const char *text, const mbedtls_ecp_point *X);
+                             const char *text, const struct mbedtls_ecp_point *X);
 #endif
 
 #if defined(MBEDTLS_X509_CRT_PARSE_C) && !defined(MBEDTLS_X509_REMOVE_INFO)
@@ -164,7 +165,7 @@ typedef enum {
  */
 void mbedtls_debug_printf_ecdh(const mbedtls_ssl_context *ssl, int level,
                                const char *file, int line,
-                               const mbedtls_ecdh_context *ecdh,
+                               const struct mbedtls_ecdh_context *ecdh,
                                mbedtls_debug_ecdh_attr attr);
 #endif /* MBEDTLS_KEY_EXCHANGE_SOME_ECDH_OR_ECDHE_ANY_ENABLED &&
           MBEDTLS_ECDH_C */

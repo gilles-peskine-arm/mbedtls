@@ -64,17 +64,6 @@
 #define MBEDTLS_MPI_WINDOW_SIZE                           3        /**< Maximum window size used. */
 #endif /* !MBEDTLS_MPI_WINDOW_SIZE */
 
-#if !defined(MBEDTLS_MPI_MAX_SIZE)
-/*
- * Maximum size of MPIs allowed in bits and bytes for user-MPIs.
- * ( Default: 512 bytes => 4096 bits, Maximum tested: 2048 bytes => 16384 bits )
- *
- * Note: Calculations can temporarily result in larger MPIs. So the number
- * of limbs required (MBEDTLS_MPI_MAX_LIMBS) is higher.
- */
-#define MBEDTLS_MPI_MAX_SIZE                              1024     /**< Maximum number of bytes for usable MPIs. */
-#endif /* !MBEDTLS_MPI_MAX_SIZE */
-
 #define MBEDTLS_MPI_MAX_BITS                              (8 * MBEDTLS_MPI_MAX_SIZE)      /**< Maximum number of bits for usable MPIs. */
 
 /*

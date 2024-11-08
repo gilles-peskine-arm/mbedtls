@@ -14,10 +14,6 @@
 
 #include "mbedtls/ssl.h"
 
-#if defined(MBEDTLS_ECP_C)
-#include "mbedtls/unstable/ecp.h"
-#endif
-
 #if defined(MBEDTLS_DEBUG_C)
 
 #define MBEDTLS_DEBUG_STRIP_PARENS(...)   __VA_ARGS__

@@ -66,6 +66,47 @@ enum mbedtls_ecp_group_id {
  */
 #define MBEDTLS_ECP_DP_MAX     14
 
+/**
+ * The maximum size of the groups, that is, of \c N and \c P.
+ */
+#if !defined(MBEDTLS_ECP_LIGHT)
+/* Dummy definition to help code that has optional ECP support and
+ * defines an MBEDTLS_ECP_MAX_BYTES-sized array unconditionally. */
+#define MBEDTLS_ECP_MAX_BITS 1
+/* Note: the curves must be listed in DECREASING size! */
+#elif defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 521
+#elif defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 512
+#elif defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 448
+#elif defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 384
+#elif defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 384
+#elif defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 256
+#elif defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 256
+#elif defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 256
+#elif defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 255
+#elif defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 225 // n is slightly above 2^224
+#elif defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 224
+#elif defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 192
+#elif defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
+#define MBEDTLS_ECP_MAX_BITS 192
+#else /* !MBEDTLS_ECP_LIGHT */
+#error "Missing definition of MBEDTLS_ECP_MAX_BITS"
+#endif /* !MBEDTLS_ECP_LIGHT */
+
+#define MBEDTLS_ECP_MAX_BYTES    ((MBEDTLS_ECP_MAX_BITS + 7) / 8)
+#define MBEDTLS_ECP_MAX_PT_LEN   (2 * MBEDTLS_ECP_MAX_BYTES + 1)
+
 struct mbedtls_ecp_point {
     struct mbedtls_mpi MBEDTLS_PRIVATE(X);          /*!< The X coordinate of the ECP point. */
     struct mbedtls_mpi MBEDTLS_PRIVATE(Y);          /*!< The Y coordinate of the ECP point. */
