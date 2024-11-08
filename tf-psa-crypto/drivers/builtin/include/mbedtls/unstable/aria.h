@@ -20,6 +20,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/cipher_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -27,10 +29,6 @@
 
 #define MBEDTLS_ARIA_ENCRYPT     1 /**< ARIA encryption. */
 #define MBEDTLS_ARIA_DECRYPT     0 /**< ARIA decryption. */
-
-#define MBEDTLS_ARIA_BLOCKSIZE   16 /**< ARIA block size in bytes. */
-#define MBEDTLS_ARIA_MAX_ROUNDS  16 /**< Maximum number of rounds in ARIA. */
-#define MBEDTLS_ARIA_MAX_KEYSIZE 32 /**< Maximum size of an ARIA key in bytes. */
 
 /** Bad input data. */
 #define MBEDTLS_ERR_ARIA_BAD_INPUT_DATA -0x005C
@@ -46,11 +44,6 @@ extern "C" {
  * \brief The ARIA context-type definition.
  */
 typedef struct mbedtls_aria_context mbedtls_aria_context;
-struct mbedtls_aria_context {
-    unsigned char MBEDTLS_PRIVATE(nr);           /*!< The number of rounds (12, 14 or 16) */
-    /*! The ARIA round keys. */
-    uint32_t MBEDTLS_PRIVATE(rk)[MBEDTLS_ARIA_MAX_ROUNDS + 1][MBEDTLS_ARIA_BLOCKSIZE / 4];
-};
 
 /**
  * \brief          This function initializes the specified ARIA context.

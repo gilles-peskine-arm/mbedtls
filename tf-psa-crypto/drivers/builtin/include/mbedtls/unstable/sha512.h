@@ -15,6 +15,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/hash_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -33,15 +35,6 @@ extern "C" {
  *                 made in the call to mbedtls_sha512_starts().
  */
 typedef struct mbedtls_sha512_context mbedtls_sha512_context;
-struct mbedtls_sha512_context {
-    uint64_t MBEDTLS_PRIVATE(total)[2];          /*!< The number of Bytes processed. */
-    uint64_t MBEDTLS_PRIVATE(state)[8];          /*!< The intermediate digest state. */
-    unsigned char MBEDTLS_PRIVATE(buffer)[128];  /*!< The data block being processed. */
-#if defined(MBEDTLS_SHA384_C)
-    int MBEDTLS_PRIVATE(is384);                  /*!< Determines which function to use:
-                                                      0: Use SHA-512, or 1: Use SHA-384. */
-#endif
-};
 
 /**
  * \brief          This function initializes a SHA-512 context.

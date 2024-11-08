@@ -18,6 +18,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/mode_contexts.h"
+
 #include <stddef.h>
 #include "mbedtls/platform_util.h"
 
@@ -183,11 +185,7 @@ typedef enum {
 } mbedtls_cipher_padding_t;
 
 /** Type of operation. */
-typedef enum {
-    MBEDTLS_OPERATION_NONE = -1,
-    MBEDTLS_DECRYPT = 0,
-    MBEDTLS_ENCRYPT,
-} mbedtls_operation_t;
+typedef enum mbedtls_operation_t mbedtls_operation_t;
 
 enum {
     /** Undefined key length. */
@@ -199,18 +197,6 @@ enum {
     /** Key length in bits, including parity, for DES in three-key EDE. \warning 3DES is considered weak. */
     MBEDTLS_KEY_LENGTH_DES_EDE3 = 192,
 };
-
-/** Maximum length of any IV, in Bytes. */
-/* This should ideally be derived automatically from list of ciphers.
- * This should be kept in sync with MBEDTLS_SSL_MAX_IV_LENGTH defined
- * in library/ssl_misc.h. */
-#define MBEDTLS_MAX_IV_LENGTH      16
-
-/** Maximum block size of any cipher, in Bytes. */
-/* This should ideally be derived automatically from list of ciphers.
- * This should be kept in sync with MBEDTLS_SSL_MAX_BLOCK_LENGTH defined
- * in library/ssl_misc.h. */
-#define MBEDTLS_MAX_BLOCK_LENGTH   16
 
 /** Maximum key length, in Bytes. */
 /* This should ideally be derived automatically from list of ciphers.
@@ -302,59 +288,6 @@ struct mbedtls_cipher_info_t {
  * Generic cipher context.
  */
 typedef struct mbedtls_cipher_context_t mbedtls_cipher_context_t;
-struct mbedtls_cipher_context_t {
-    /** Information about the associated cipher. */
-    const mbedtls_cipher_info_t *MBEDTLS_PRIVATE(cipher_info);
-
-    /** Key length to use. */
-    int MBEDTLS_PRIVATE(key_bitlen);
-
-    /** Operation that the key of the context has been
-     * initialized for.
-     */
-    mbedtls_operation_t MBEDTLS_PRIVATE(operation);
-
-#if defined(MBEDTLS_CIPHER_MODE_WITH_PADDING)
-    /** Padding functions to use, if relevant for
-     * the specific cipher mode.
-     */
-    void(*MBEDTLS_PRIVATE(add_padding))(unsigned char *output, size_t olen, size_t data_len);
-    int(*MBEDTLS_PRIVATE(get_padding))(unsigned char *input, size_t ilen, size_t *data_len);
-#endif
-
-    /** Buffer for input that has not been processed yet. */
-    unsigned char MBEDTLS_PRIVATE(unprocessed_data)[MBEDTLS_MAX_BLOCK_LENGTH];
-
-    /** Number of Bytes that have not been processed yet. */
-    size_t MBEDTLS_PRIVATE(unprocessed_len);
-
-    /** Current IV or NONCE_COUNTER for CTR-mode, data unit (or sector) number
-     * for XTS-mode. */
-    unsigned char MBEDTLS_PRIVATE(iv)[MBEDTLS_MAX_IV_LENGTH];
-
-    /** IV size in Bytes, for ciphers with variable-length IVs. */
-    size_t MBEDTLS_PRIVATE(iv_size);
-
-    /** The cipher-specific context. */
-    void *MBEDTLS_PRIVATE(cipher_ctx);
-
-#if defined(MBEDTLS_CMAC_C)
-    /** CMAC-specific context. */
-    mbedtls_cmac_context_t *MBEDTLS_PRIVATE(cmac_ctx);
-#endif
-
-#if defined(MBEDTLS_USE_PSA_CRYPTO) && !defined(MBEDTLS_DEPRECATED_REMOVED)
-    /** Indicates whether the cipher operations should be performed
-     *  by Mbed TLS' own crypto library or an external implementation
-     *  of the PSA Crypto API.
-     *  This is unset if the cipher context was established through
-     *  mbedtls_cipher_setup(), and set if it was established through
-     *  mbedtls_cipher_setup_psa().
-     */
-    unsigned char MBEDTLS_PRIVATE(psa_enabled);
-#endif /* MBEDTLS_USE_PSA_CRYPTO && !MBEDTLS_DEPRECATED_REMOVED */
-
-};
 
 /**
  * \brief This function retrieves the list of ciphers supported

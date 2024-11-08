@@ -26,6 +26,7 @@
 #include "mbedtls/build_info.h"
 #include "mbedtls/platform_util.h"
 
+#include "mbedtls/opaque/ecc_contexts.h"
 #include "mbedtls/unstable/bignum.h"
 
 /*
@@ -63,43 +64,7 @@ extern "C" {
  * parameters. Therefore, only standardized domain parameters from trusted
  * sources should be used. See mbedtls_ecp_group_load().
  */
-/* Note: when adding a new curve:
- * - Add it at the end of this enum, otherwise you'll break the ABI by
- *   changing the numerical value for existing curves.
- * - Increment MBEDTLS_ECP_DP_MAX below if needed.
- * - Update the calculation of MBEDTLS_ECP_MAX_BITS below.
- * - Add the corresponding MBEDTLS_ECP_DP_xxx_ENABLED macro definition to
- *   mbedtls_config.h.
- * - List the curve as a dependency of MBEDTLS_ECP_C and
- *   MBEDTLS_ECDSA_C if supported in check_config.h.
- * - Add the curve to the appropriate curve type macro
- *   MBEDTLS_ECP_yyy_ENABLED above.
- * - Add the necessary definitions to ecp_curves.c.
- * - Add the curve to the ecp_supported_curves array in ecp.c.
- * - Add the curve to applicable profiles in x509_crt.c.
- * - Add the curve to applicable presets in ssl_tls.c.
- */
-typedef enum {
-    MBEDTLS_ECP_DP_NONE = 0,       /*!< Curve not defined. */
-    MBEDTLS_ECP_DP_SECP192R1,      /*!< Domain parameters for the 192-bit curve defined by FIPS 186-4 and SEC1. */
-    MBEDTLS_ECP_DP_SECP224R1,      /*!< Domain parameters for the 224-bit curve defined by FIPS 186-4 and SEC1. */
-    MBEDTLS_ECP_DP_SECP256R1,      /*!< Domain parameters for the 256-bit curve defined by FIPS 186-4 and SEC1. */
-    MBEDTLS_ECP_DP_SECP384R1,      /*!< Domain parameters for the 384-bit curve defined by FIPS 186-4 and SEC1. */
-    MBEDTLS_ECP_DP_SECP521R1,      /*!< Domain parameters for the 521-bit curve defined by FIPS 186-4 and SEC1. */
-    MBEDTLS_ECP_DP_BP256R1,        /*!< Domain parameters for 256-bit Brainpool curve. */
-    MBEDTLS_ECP_DP_BP384R1,        /*!< Domain parameters for 384-bit Brainpool curve. */
-    MBEDTLS_ECP_DP_BP512R1,        /*!< Domain parameters for 512-bit Brainpool curve. */
-    MBEDTLS_ECP_DP_CURVE25519,     /*!< Domain parameters for Curve25519. */
-    MBEDTLS_ECP_DP_SECP192K1,      /*!< Domain parameters for 192-bit "Koblitz" curve. */
-    MBEDTLS_ECP_DP_SECP224K1,      /*!< Domain parameters for 224-bit "Koblitz" curve. */
-    MBEDTLS_ECP_DP_SECP256K1,      /*!< Domain parameters for 256-bit "Koblitz" curve. */
-    MBEDTLS_ECP_DP_CURVE448,       /*!< Domain parameters for Curve448. */
-} mbedtls_ecp_group_id;
-
-/**
- * The number of supported curves, plus one for #MBEDTLS_ECP_DP_NONE.
- */
-#define MBEDTLS_ECP_DP_MAX     14
+typedef enum mbedtls_ecp_group_id mbedtls_ecp_group_id;
 
 /*
  * Curve types
@@ -137,11 +102,6 @@ struct mbedtls_ecp_curve_info {
  *                  coordinates.
  */
 typedef struct mbedtls_ecp_point mbedtls_ecp_point;
-struct mbedtls_ecp_point {
-    mbedtls_mpi MBEDTLS_PRIVATE(X);          /*!< The X coordinate of the ECP point. */
-    mbedtls_mpi MBEDTLS_PRIVATE(Y);          /*!< The Y coordinate of the ECP point. */
-    mbedtls_mpi MBEDTLS_PRIVATE(Z);          /*!< The Z coordinate of the ECP point. */
-};
 
 /**
  * \brief           The ECP group structure.
@@ -203,33 +163,6 @@ struct mbedtls_ecp_point {
  *                They do not need to be at the same offset in the structure.
  */
 typedef struct mbedtls_ecp_group mbedtls_ecp_group;
-struct mbedtls_ecp_group {
-    mbedtls_ecp_group_id id;    /*!< An internal group identifier. */
-    mbedtls_mpi P;              /*!< The prime modulus of the base field. */
-    mbedtls_mpi A;              /*!< For Short Weierstrass: \p A in the equation. Note that
-                                     \p A is not set to the authentic value in some cases.
-                                     Refer to detailed description of ::mbedtls_ecp_group if
-                                     using domain parameters in the structure.
-                                     For Montgomery curves: <code>(A + 2) / 4</code>. */
-    mbedtls_mpi B;              /*!< For Short Weierstrass: \p B in the equation.
-                                     For Montgomery curves: unused. */
-    mbedtls_ecp_point G;        /*!< The generator of the subgroup used. */
-    mbedtls_mpi N;              /*!< The order of \p G. */
-    size_t pbits;               /*!< The number of bits in \p P.*/
-    size_t nbits;               /*!< For Short Weierstrass: The number of bits in \p P.
-                                     For Montgomery curves: the number of bits in the
-                                     private keys. */
-    /* End of public fields */
-
-    unsigned int MBEDTLS_PRIVATE(h);             /*!< \internal 1 if the constants are static. */
-    int(*MBEDTLS_PRIVATE(modp))(mbedtls_mpi *);  /*!< The function for fast pseudo-reduction
-                                                    mod \p P (see above).*/
-    int(*MBEDTLS_PRIVATE(t_pre))(mbedtls_ecp_point *, void *);   /*!< Unused. */
-    int(*MBEDTLS_PRIVATE(t_post))(mbedtls_ecp_point *, void *);  /*!< Unused. */
-    void *MBEDTLS_PRIVATE(t_data);               /*!< Unused. */
-    mbedtls_ecp_point *MBEDTLS_PRIVATE(T);       /*!< Pre-computed points for ecp_mul_comb(). */
-    size_t MBEDTLS_PRIVATE(T_size);              /*!< The number of dynamic allocated pre-computed points. */
-};
 
 /**
  * \name SECTION: Module settings
@@ -394,11 +327,6 @@ typedef void mbedtls_ecp_restart_ctx;
  *          ::mbedtls_ecdsa_context structure.
  */
 typedef struct mbedtls_ecp_keypair mbedtls_ecp_keypair;
-struct mbedtls_ecp_keypair {
-    mbedtls_ecp_group MBEDTLS_PRIVATE(grp);      /*!<  Elliptic curve and base point     */
-    mbedtls_mpi MBEDTLS_PRIVATE(d);              /*!<  our secret value                  */
-    mbedtls_ecp_point MBEDTLS_PRIVATE(Q);        /*!<  our public value                  */
-};
 
 /**
  * The uncompressed point format for Short Weierstrass curves

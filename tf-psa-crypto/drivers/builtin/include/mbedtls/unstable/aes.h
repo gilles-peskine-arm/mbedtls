@@ -32,6 +32,8 @@
 #include "mbedtls/build_info.h"
 #include "mbedtls/platform_util.h"
 
+#include "mbedtls/opaque/cipher_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -57,32 +59,12 @@ extern "C" {
  * \brief The AES context-type definition.
  */
 typedef struct mbedtls_aes_context mbedtls_aes_context;
-struct mbedtls_aes_context {
-    int MBEDTLS_PRIVATE(nr);                     /*!< The number of rounds. */
-    size_t MBEDTLS_PRIVATE(rk_offset);           /*!< The offset in array elements to AES
-                                                    round keys in the buffer. */
-#if defined(MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH)
-    uint32_t MBEDTLS_PRIVATE(buf)[44];           /*!< Aligned data buffer to hold
-                                                    10 round keys for 128-bit case. */
-#else
-    uint32_t MBEDTLS_PRIVATE(buf)[68];           /*!< Unaligned data buffer. This buffer can
-                                                    hold 32 extra Bytes, which can be used for
-                                                    simplifying key expansion in the 256-bit
-                                                    case by generating an extra round key. */
-#endif /* MBEDTLS_AES_ONLY_128_BIT_KEY_LENGTH */
-};
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
 /**
  * \brief The AES XTS context-type definition.
  */
 typedef struct mbedtls_aes_xts_context mbedtls_aes_xts_context;
-struct mbedtls_aes_xts_context {
-    mbedtls_aes_context MBEDTLS_PRIVATE(crypt); /*!< The AES context to use for AES block
-                                                   encryption or decryption. */
-    mbedtls_aes_context MBEDTLS_PRIVATE(tweak); /*!< The AES context used for tweak
-                                                   computation. */
-};
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
 /**

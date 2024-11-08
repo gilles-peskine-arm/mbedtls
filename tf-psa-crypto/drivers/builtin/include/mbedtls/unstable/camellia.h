@@ -13,6 +13,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/cipher_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -35,10 +37,6 @@ extern "C" {
  * \brief          CAMELLIA context structure
  */
 typedef struct mbedtls_camellia_context mbedtls_camellia_context;
-struct mbedtls_camellia_context {
-    int MBEDTLS_PRIVATE(nr);                     /*!<  number of rounds  */
-    uint32_t MBEDTLS_PRIVATE(rk)[68];            /*!<  CAMELLIA round keys    */
-};
 
 /**
  * \brief          Initialize a CAMELLIA context.

@@ -23,6 +23,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/cipher_contexts.h"
+
 /* for shared error codes */
 #include "mbedtls/unstable/poly1305.h"
 
@@ -35,23 +37,11 @@
 extern "C" {
 #endif
 
-typedef enum {
-    MBEDTLS_CHACHAPOLY_ENCRYPT,     /**< The mode value for performing encryption. */
-    MBEDTLS_CHACHAPOLY_DECRYPT      /**< The mode value for performing decryption. */
-}
-mbedtls_chachapoly_mode_t;
+typedef enum mbedtls_chachapoly_mode_t mbedtls_chachapoly_mode_t;
 
 #include "mbedtls/unstable/chacha20.h"
 
 typedef struct mbedtls_chachapoly_context mbedtls_chachapoly_context;
-struct mbedtls_chachapoly_context {
-    mbedtls_chacha20_context MBEDTLS_PRIVATE(chacha20_ctx);  /**< The ChaCha20 context. */
-    mbedtls_poly1305_context MBEDTLS_PRIVATE(poly1305_ctx);  /**< The Poly1305 context. */
-    uint64_t MBEDTLS_PRIVATE(aad_len);                       /**< The length (bytes) of the Additional Authenticated Data. */
-    uint64_t MBEDTLS_PRIVATE(ciphertext_len);                /**< The length (bytes) of the ciphertext. */
-    int MBEDTLS_PRIVATE(state);                              /**< The current state of the context. */
-    mbedtls_chachapoly_mode_t MBEDTLS_PRIVATE(mode);         /**< Cipher mode (encrypt or decrypt). */
-};
 
 /**
  * \brief           This function initializes the specified ChaCha20-Poly1305 context.

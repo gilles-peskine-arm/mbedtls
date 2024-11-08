@@ -23,6 +23,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/cipher_contexts.h"
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -34,11 +36,6 @@ extern "C" {
 #endif
 
 typedef struct mbedtls_chacha20_context mbedtls_chacha20_context;
-struct mbedtls_chacha20_context {
-    uint32_t MBEDTLS_PRIVATE(state)[16];          /*! The state (before round operations). */
-    uint8_t  MBEDTLS_PRIVATE(keystream8)[64];     /*! Leftover keystream bytes. */
-    size_t MBEDTLS_PRIVATE(keystream_bytes_used); /*! Number of keystream bytes already used. */
-};
 
 /**
  * \brief           This function initializes the specified ChaCha20 context.

@@ -38,6 +38,7 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/mode_contexts.h"
 #include "mbedtls/unstable/cipher.h"
 
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
@@ -63,32 +64,6 @@ extern "C" {
  *           to the APIs called.
  */
 typedef struct mbedtls_ccm_context mbedtls_ccm_context;
-struct mbedtls_ccm_context {
-    unsigned char MBEDTLS_PRIVATE(y)[16];    /*!< The Y working buffer */
-    unsigned char MBEDTLS_PRIVATE(ctr)[16];  /*!< The counter buffer */
-    size_t MBEDTLS_PRIVATE(plaintext_len);   /*!< Total plaintext length */
-    size_t MBEDTLS_PRIVATE(add_len);         /*!< Total authentication data length */
-    size_t MBEDTLS_PRIVATE(tag_len);         /*!< Total tag length */
-    size_t MBEDTLS_PRIVATE(processed);       /*!< Track how many bytes of input data
-                                                  were processed (chunked input).
-                                                  Used independently for both auth data
-                                                  and plaintext/ciphertext.
-                                                  This variable is set to zero after
-                                                  auth data input is finished. */
-    unsigned int MBEDTLS_PRIVATE(q);         /*!< The Q working value */
-    unsigned int MBEDTLS_PRIVATE(mode);      /*!< The operation to perform:
-                                              #MBEDTLS_CCM_ENCRYPT or
-                                              #MBEDTLS_CCM_DECRYPT or
-                                              #MBEDTLS_CCM_STAR_ENCRYPT or
-                                              #MBEDTLS_CCM_STAR_DECRYPT. */
-#if defined(MBEDTLS_BLOCK_CIPHER_C)
-    mbedtls_block_cipher_context_t MBEDTLS_PRIVATE(block_cipher_ctx);    /*!< The cipher context used. */
-#else
-    mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher_ctx);    /*!< The cipher context used. */
-#endif
-    int MBEDTLS_PRIVATE(state);              /*!< Working value holding context's
-                                                  state. Used for chunked data input */
-};
 
 /**
  * \brief           This function initializes the specified CCM context,

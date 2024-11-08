@@ -13,6 +13,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/hash_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,11 +26,6 @@ extern "C" {
  * \brief          RIPEMD-160 context structure
  */
 typedef struct mbedtls_ripemd160_context mbedtls_ripemd160_context;
-struct mbedtls_ripemd160_context {
-    uint32_t MBEDTLS_PRIVATE(total)[2];          /*!< number of bytes processed  */
-    uint32_t MBEDTLS_PRIVATE(state)[5];          /*!< intermediate digest state  */
-    unsigned char MBEDTLS_PRIVATE(buffer)[64];   /*!< data block being processed */
-};
 
 /**
  * \brief          Initialize RIPEMD-160 context

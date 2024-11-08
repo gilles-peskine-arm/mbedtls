@@ -18,6 +18,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/mode_contexts.h"
+
 #include "mbedtls/unstable/cipher.h"
 
 #ifdef __cplusplus
@@ -26,13 +28,6 @@ extern "C" {
 
 #define MBEDTLS_AES_BLOCK_SIZE          16
 #define MBEDTLS_DES3_BLOCK_SIZE         8
-
-/* We don't support Camellia or ARIA in this module */
-#if defined(MBEDTLS_AES_C)
-#define MBEDTLS_CMAC_MAX_BLOCK_SIZE      16  /**< The longest block used by CMAC is that of AES. */
-#else
-#define MBEDTLS_CMAC_MAX_BLOCK_SIZE      8   /**< The longest block used by CMAC is that of 3DES. */
-#endif
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
 /** The longest block supported by the cipher module.
@@ -50,21 +45,6 @@ extern "C" {
  * backward compatibility. */
 #define MBEDTLS_CIPHER_BLKSIZE_MAX MBEDTLS_MAX_BLOCK_LENGTH
 #endif /* MBEDTLS_DEPRECATED_REMOVED */
-
-/**
- * The CMAC context structure.
- */
-struct mbedtls_cmac_context_t {
-    /** The internal state of the CMAC algorithm.  */
-    unsigned char       MBEDTLS_PRIVATE(state)[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
-
-    /** Unprocessed data - either data that was not block aligned and is still
-     *  pending processing, or the final block. */
-    unsigned char       MBEDTLS_PRIVATE(unprocessed_block)[MBEDTLS_CMAC_MAX_BLOCK_SIZE];
-
-    /** The length of data pending processing. */
-    size_t              MBEDTLS_PRIVATE(unprocessed_len);
-};
 
 /**
  * \brief               This function starts a new CMAC computation

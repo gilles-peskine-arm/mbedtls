@@ -19,6 +19,8 @@
 #include "mbedtls/build_info.h"
 #include "mbedtls/platform_util.h"
 
+#include "mbedtls/opaque/cipher_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -42,9 +44,6 @@ extern "C" {
  *                 instead.
  */
 typedef struct mbedtls_des_context mbedtls_des_context;
-struct mbedtls_des_context {
-    uint32_t MBEDTLS_PRIVATE(sk)[32];            /*!<  DES subkeys       */
-};
 
 /**
  * \brief          Triple-DES context structure
@@ -54,9 +53,6 @@ struct mbedtls_des_context {
  *                 instead.
  */
 typedef struct mbedtls_des3_context mbedtls_des3_context;
-struct mbedtls_des3_context {
-    uint32_t MBEDTLS_PRIVATE(sk)[96];            /*!<  3DES subkeys      */
-};
 
 
 /**

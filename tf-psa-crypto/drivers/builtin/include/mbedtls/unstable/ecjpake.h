@@ -29,6 +29,7 @@
  */
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/ecc_contexts.h"
 #include "mbedtls/unstable/ecp.h"
 #include "mbedtls/md.h"
 
@@ -39,11 +40,7 @@ extern "C" {
 /**
  * Roles in the EC J-PAKE exchange
  */
-typedef enum {
-    MBEDTLS_ECJPAKE_CLIENT = 0,         /**< Client                         */
-    MBEDTLS_ECJPAKE_SERVER,             /**< Server                         */
-    MBEDTLS_ECJPAKE_NONE,               /**< Undefined                      */
-} mbedtls_ecjpake_role;
+typedef enum mbedtls_ecjpake_role mbedtls_ecjpake_role;
 
 /**
  * EC J-PAKE context structure.
@@ -57,23 +54,6 @@ typedef enum {
  * description as a pair C: client name, S: server name
  */
 typedef struct mbedtls_ecjpake_context mbedtls_ecjpake_context;
-struct mbedtls_ecjpake_context {
-    mbedtls_md_type_t MBEDTLS_PRIVATE(md_type);          /**< Hash to use                    */
-    mbedtls_ecp_group MBEDTLS_PRIVATE(grp);              /**< Elliptic curve                 */
-    mbedtls_ecjpake_role MBEDTLS_PRIVATE(role);          /**< Are we client or server?       */
-    int MBEDTLS_PRIVATE(point_format);                   /**< Format for point export        */
-
-    mbedtls_ecp_point MBEDTLS_PRIVATE(Xm1);              /**< My public key 1   C: X1, S: X3 */
-    mbedtls_ecp_point MBEDTLS_PRIVATE(Xm2);              /**< My public key 2   C: X2, S: X4 */
-    mbedtls_ecp_point MBEDTLS_PRIVATE(Xp1);              /**< Peer public key 1 C: X3, S: X1 */
-    mbedtls_ecp_point MBEDTLS_PRIVATE(Xp2);              /**< Peer public key 2 C: X4, S: X2 */
-    mbedtls_ecp_point MBEDTLS_PRIVATE(Xp);               /**< Peer public key   C: Xs, S: Xc */
-
-    mbedtls_mpi MBEDTLS_PRIVATE(xm1);                    /**< My private key 1  C: x1, S: x3 */
-    mbedtls_mpi MBEDTLS_PRIVATE(xm2);                    /**< My private key 2  C: x2, S: x4 */
-
-    mbedtls_mpi MBEDTLS_PRIVATE(s);                      /**< Pre-shared secret (passphrase) */
-};
 
 /**
  * \brief           Initialize an ECJPAKE context.
