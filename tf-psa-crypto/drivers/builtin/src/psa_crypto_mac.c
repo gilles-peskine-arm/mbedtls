@@ -20,6 +20,10 @@
 #include "mbedtls/constant_time.h"
 #include <string.h>
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC)
+#include "mbedtls/unstable/cmac.h"
+#endif
+
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC)
 static psa_status_t psa_hmac_abort_internal(
     mbedtls_psa_hmac_operation_t *hmac)

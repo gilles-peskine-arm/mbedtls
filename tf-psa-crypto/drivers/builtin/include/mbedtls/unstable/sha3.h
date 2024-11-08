@@ -18,6 +18,8 @@
 
 #include "mbedtls/build_info.h"
 
+#include "mbedtls/opaque/hash_contexts.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -47,13 +49,7 @@ typedef enum {
  *
  *                 The structure is used SHA-3 checksum calculations.
  */
-typedef struct {
-    uint64_t MBEDTLS_PRIVATE(state[25]);
-    uint32_t MBEDTLS_PRIVATE(index);
-    uint16_t MBEDTLS_PRIVATE(olen);
-    uint16_t MBEDTLS_PRIVATE(max_block_size);
-}
-mbedtls_sha3_context;
+typedef struct mbedtls_sha3_context mbedtls_sha3_context;
 
 /**
  * \brief          This function initializes a SHA-3 context.

@@ -4,6 +4,8 @@
 #include "mbedtls/pem.h"
 #include "mbedtls/unstable/oid.h"
 #include "mbedtls/unstable/ecp.h"
+#include "mbedtls/unstable/ecdsa.h"
+#include "mbedtls/unstable/rsa.h"
 #include "mbedtls/psa_util.h"
 #include "pk_internal.h"
 

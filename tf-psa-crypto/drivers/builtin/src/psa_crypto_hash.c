@@ -18,6 +18,14 @@
 #include <string.h>
 
 #if defined(MBEDTLS_PSA_BUILTIN_HASH)
+
+#include "mbedtls/unstable/md5.h"
+#include "mbedtls/unstable/ripemd160.h"
+#include "mbedtls/unstable/sha1.h"
+#include "mbedtls/unstable/sha256.h"
+#include "mbedtls/unstable/sha512.h"
+#include "mbedtls/unstable/sha3.h"
+
 psa_status_t mbedtls_psa_hash_abort(
     mbedtls_psa_hash_operation_t *operation)
 {

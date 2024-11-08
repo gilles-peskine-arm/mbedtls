@@ -1,4 +1,5 @@
 #include "mbedtls/ssl.h"
+#include "mbedtls/unstable/cipher.h"
 #include "mbedtls/unstable/entropy.h"
 #include "mbedtls/unstable/ctr_drbg.h"
 #include "mbedtls/ssl_ticket.h"

@@ -30,6 +30,8 @@ int main(void)
 
 #include "mbedtls/unstable/entropy.h"
 #include "mbedtls/unstable/ctr_drbg.h"
+#include "mbedtls/unstable/ecp.h"
+#include "mbedtls/unstable/rsa.h"
 
 #include <stdio.h>
 #include <string.h>

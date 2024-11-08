@@ -24,14 +24,7 @@
 
 #include <psa/crypto_driver_common.h>
 
-#include "mbedtls/unstable/cmac.h"
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
-#include "mbedtls/unstable/gcm.h"
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
-#include "mbedtls/unstable/ccm.h"
-#endif
-#include "mbedtls/unstable/chachapoly.h"
+#include "mbedtls/opaque/cipher_contexts.h"
 
 /*
  * MAC multi-part operation definitions.
@@ -62,7 +55,7 @@ typedef struct {
         mbedtls_psa_hmac_operation_t MBEDTLS_PRIVATE(hmac);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
-        mbedtls_cipher_context_t MBEDTLS_PRIVATE(cmac);
+        struct mbedtls_cipher_context_t MBEDTLS_PRIVATE(cmac);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CMAC */
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_mac_operation_t;
@@ -87,13 +80,13 @@ typedef struct {
     union {
         unsigned dummy; /* Enable easier initializing of the union. */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CCM)
-        mbedtls_ccm_context MBEDTLS_PRIVATE(ccm);
+        struct mbedtls_ccm_context MBEDTLS_PRIVATE(ccm);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CCM */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM)
-        mbedtls_gcm_context MBEDTLS_PRIVATE(gcm);
+        struct mbedtls_gcm_context MBEDTLS_PRIVATE(gcm);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_GCM */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305)
-        mbedtls_chachapoly_context MBEDTLS_PRIVATE(chachapoly);
+        struct mbedtls_chachapoly_context MBEDTLS_PRIVATE(chachapoly);
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305 */
 
     } ctx;
@@ -102,7 +95,7 @@ typedef struct {
 
 #define MBEDTLS_PSA_AEAD_OPERATION_INIT { 0, 0, 0, 0, { 0 } }
 
-#include "mbedtls/unstable/ecdsa.h"
+#include "mbedtls/opaque/ecc_contexts.h"
 
 /* Context structure for the Mbed TLS interruptible sign hash implementation. */
 typedef struct {
@@ -144,16 +137,16 @@ typedef struct {
     defined(MBEDTLS_PSA_BUILTIN_ALG_DETERMINISTIC_ECDSA)) && \
     defined(MBEDTLS_ECP_RESTARTABLE)
 
-    mbedtls_ecdsa_context *MBEDTLS_PRIVATE(ctx);
-    mbedtls_ecdsa_restart_ctx MBEDTLS_PRIVATE(restart_ctx);
+    struct mbedtls_ecdsa_context *MBEDTLS_PRIVATE(ctx);
+    struct mbedtls_ecdsa_restart_ctx MBEDTLS_PRIVATE(restart_ctx);
 
     uint32_t MBEDTLS_PRIVATE(num_ops);
 
     uint8_t MBEDTLS_PRIVATE(hash)[PSA_BITS_TO_BYTES(PSA_VENDOR_ECC_MAX_CURVE_BITS)];
     size_t MBEDTLS_PRIVATE(hash_length);
 
-    mbedtls_mpi MBEDTLS_PRIVATE(r);
-    mbedtls_mpi MBEDTLS_PRIVATE(s);
+    struct mbedtls_mpi MBEDTLS_PRIVATE(r);
+    struct mbedtls_mpi MBEDTLS_PRIVATE(s);
 
 #else
     /* Make the struct non-empty if algs not supported. */
@@ -177,8 +170,6 @@ typedef struct {
 
 /* EC-JPAKE operation definitions */
 
-#include "mbedtls/unstable/ecjpake.h"
-
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
 #define MBEDTLS_PSA_BUILTIN_PAKE  1
 #endif
@@ -194,7 +185,7 @@ typedef struct {
     uint8_t *MBEDTLS_PRIVATE(password);
     size_t MBEDTLS_PRIVATE(password_len);
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
-    mbedtls_ecjpake_role MBEDTLS_PRIVATE(role);
+    enum mbedtls_ecjpake_role MBEDTLS_PRIVATE(role);
     uint8_t MBEDTLS_PRIVATE(buffer[MBEDTLS_PSA_JPAKE_BUFFER_SIZE]);
     size_t MBEDTLS_PRIVATE(buffer_length);
     size_t MBEDTLS_PRIVATE(buffer_offset);
@@ -203,7 +194,7 @@ typedef struct {
     union {
         unsigned int MBEDTLS_PRIVATE(dummy);
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_JPAKE)
-        mbedtls_ecjpake_context MBEDTLS_PRIVATE(jpake);
+        struct mbedtls_ecjpake_context MBEDTLS_PRIVATE(jpake);
 #endif
     } MBEDTLS_PRIVATE(ctx);
 

@@ -28,12 +28,7 @@
  * Hash multi-part operation definitions.
  */
 
-#include "mbedtls/unstable/md5.h"
-#include "mbedtls/unstable/ripemd160.h"
-#include "mbedtls/unstable/sha1.h"
-#include "mbedtls/unstable/sha256.h"
-#include "mbedtls/unstable/sha512.h"
-#include "mbedtls/unstable/sha3.h"
+#include "mbedtls/opaque/hash_contexts.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_RIPEMD160) || \
@@ -54,27 +49,27 @@ typedef struct {
     union {
         unsigned dummy; /* Make the union non-empty even with no supported algorithms. */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5)
-        mbedtls_md5_context md5;
+        struct mbedtls_md5_context md5;
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_RIPEMD160)
-        mbedtls_ripemd160_context ripemd160;
+        struct mbedtls_ripemd160_context ripemd160;
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_1)
-        mbedtls_sha1_context sha1;
+        struct mbedtls_sha1_context sha1;
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_256) || \
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_224)
-        mbedtls_sha256_context sha256;
+        struct mbedtls_sha256_context sha256;
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_512) || \
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_384)
-        mbedtls_sha512_context sha512;
+        struct mbedtls_sha512_context sha512;
 #endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_224) || \
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_256) || \
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
-        mbedtls_sha3_context sha3;
+        struct mbedtls_sha3_context sha3;
 #endif
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_hash_operation_t;
@@ -85,7 +80,7 @@ typedef struct {
  * Cipher multi-part operation definitions.
  */
 
-#include "mbedtls/unstable/cipher.h"
+#include "mbedtls/opaque/mode_contexts.h"
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_STREAM_CIPHER) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_CTR) || \
@@ -105,7 +100,7 @@ typedef struct {
     uint8_t MBEDTLS_PRIVATE(block_length);
     union {
         unsigned int MBEDTLS_PRIVATE(dummy);
-        mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher);
+        struct mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher);
     } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_cipher_operation_t;
 

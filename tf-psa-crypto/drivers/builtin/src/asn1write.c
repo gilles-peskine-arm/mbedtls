@@ -21,6 +21,10 @@
 #include "mbedtls/asn1.h"
 #endif
 
+#if defined(MBEDTLS_BIGNUM_C)
+#include "mbedtls/unstable/bignum.h"
+#endif
+
 int mbedtls_asn1_write_len(unsigned char **p, const unsigned char *start, size_t len)
 {
 #if SIZE_MAX > 0xFFFFFFFF

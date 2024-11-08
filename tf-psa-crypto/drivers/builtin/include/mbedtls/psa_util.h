@@ -70,7 +70,7 @@ int mbedtls_psa_get_random(void *p_rng,
  * @{
  */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
-#include <mbedtls/unstable/ecp.h>
+#include <mbedtls/opaque/mode_contexts.h>
 
 /** Convert an ECC curve identifier from the Mbed TLS encoding to PSA.
  *
@@ -84,7 +84,7 @@ int mbedtls_psa_get_random(void *p_rng,
  *                      not supported by the ECP module.
  * \return              \c 0 if the curve is not supported in the PSA API.
  */
-psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
+psa_ecc_family_t mbedtls_ecc_group_to_psa(enum mbedtls_ecp_group_id grpid,
                                           size_t *bits);
 
 /** Convert an ECC curve identifier from the PSA encoding to Mbed TLS.
@@ -99,7 +99,7 @@ psa_ecc_family_t mbedtls_ecc_group_to_psa(mbedtls_ecp_group_id grpid,
  * \return              #MBEDTLS_ECP_DP_NONE if the combination of \c curve
  *                      and \p bits is not supported.
  */
-mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
+enum mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
                                                 size_t bits);
 #endif /* PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY */
 
@@ -118,7 +118,7 @@ mbedtls_ecp_group_id mbedtls_ecc_group_from_psa(psa_ecc_family_t family,
  * \return          The PSA algorithm identifier associated with \p md_type,
  *                  regardless of whether it is supported or not.
  */
-static inline psa_algorithm_t mbedtls_md_psa_alg_from_type(mbedtls_md_type_t md_type)
+static inline psa_algorithm_t mbedtls_md_psa_alg_from_type(enum mbedtls_md_type_t md_type)
 {
     return PSA_ALG_CATEGORY_HASH | (psa_algorithm_t) md_type;
 }
@@ -135,9 +135,9 @@ static inline psa_algorithm_t mbedtls_md_psa_alg_from_type(mbedtls_md_type_t md_
  * \return          The MD type associated with \p psa_alg,
  *                  regardless of whether it is supported or not.
  */
-static inline mbedtls_md_type_t mbedtls_md_type_from_psa_alg(psa_algorithm_t psa_alg)
+static inline enum mbedtls_md_type_t mbedtls_md_type_from_psa_alg(psa_algorithm_t psa_alg)
 {
-    return (mbedtls_md_type_t) (psa_alg & PSA_ALG_HASH_MASK);
+    return (enum mbedtls_md_type_t) (psa_alg & PSA_ALG_HASH_MASK);
 }
 #endif /* MBEDTLS_PSA_CRYPTO_CLIENT */
 

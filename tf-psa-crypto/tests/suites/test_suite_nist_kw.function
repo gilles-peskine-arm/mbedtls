@@ -1,5 +1,6 @@
 /* BEGIN_HEADER */
 #include "mbedtls/nist_kw.h"
+#include "mbedtls/unstable/cipher.h"
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES

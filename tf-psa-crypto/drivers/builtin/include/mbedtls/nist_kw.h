@@ -26,7 +26,8 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/unstable/cipher.h"
+#include "mbedtls/opaque/cipher_contexts.h"
+#include "mbedtls/opaque/mode_contexts.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,7 +46,7 @@ typedef enum {
  *           Don't make any assumptions on this context!
  */
 typedef struct {
-    mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher_ctx);    /*!< The cipher context used. */
+    struct mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher_ctx);    /*!< The cipher context used. */
 } mbedtls_nist_kw_context;
 
 /**
@@ -75,7 +76,7 @@ void mbedtls_nist_kw_init(mbedtls_nist_kw_context *ctx);
  * \return          cipher-specific error code on failure of the underlying cipher.
  */
 int mbedtls_nist_kw_setkey(mbedtls_nist_kw_context *ctx,
-                           mbedtls_cipher_id_t cipher,
+                           enum mbedtls_cipher_id_t cipher,
                            const unsigned char *key,
                            unsigned int keybits,
                            const int is_wrap);

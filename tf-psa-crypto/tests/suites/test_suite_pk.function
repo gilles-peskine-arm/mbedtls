@@ -2,6 +2,7 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/psa_util.h"
 #include "pk_internal.h"
+#include "mbedtls/unstable/ecdsa.h"
 
 /* For error codes */
 #include "mbedtls/asn1.h"

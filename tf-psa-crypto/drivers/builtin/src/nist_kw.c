@@ -20,6 +20,7 @@
 #if defined(MBEDTLS_NIST_KW_C)
 
 #include "mbedtls/nist_kw.h"
+#include "mbedtls/unstable/cipher.h"
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
 #include "mbedtls/constant_time.h"

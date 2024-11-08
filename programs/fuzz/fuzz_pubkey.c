@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "mbedtls/pk.h"
+#include "mbedtls/unstable/ecp.h"
+#include "mbedtls/unstable/rsa.h"
 #include "common.h"
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size)

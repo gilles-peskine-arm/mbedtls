@@ -18,6 +18,10 @@
 #ifndef PSA_CRYPTO_COMPAT_H
 #define PSA_CRYPTO_COMPAT_H
 
+#include "mbedtls/private_access.h"
+#include "crypto_types.h"
+#include "mbedtls/platform_util.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

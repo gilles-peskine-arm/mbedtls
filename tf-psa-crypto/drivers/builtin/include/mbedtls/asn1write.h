@@ -101,7 +101,7 @@ int mbedtls_asn1_write_raw_buffer(unsigned char **p, const unsigned char *start,
  * \return          A negative \c MBEDTLS_ERR_ASN1_XXX error code on failure.
  */
 int mbedtls_asn1_write_mpi(unsigned char **p, const unsigned char *start,
-                           const mbedtls_mpi *X);
+                           const struct mbedtls_mpi *X);
 #endif /* MBEDTLS_BIGNUM_C */
 
 /**

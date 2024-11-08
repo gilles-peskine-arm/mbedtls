@@ -35,6 +35,7 @@ int main(void)
 #include "mbedtls/ssl.h"
 #include "mbedtls/error.h"
 #include "mbedtls/unstable/base64.h"
+#include "mbedtls/unstable/cipher.h"
 #include "mbedtls/md.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/ssl_ciphersuites.h"

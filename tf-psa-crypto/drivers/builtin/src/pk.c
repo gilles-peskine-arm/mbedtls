@@ -9,9 +9,6 @@
 
 #if defined(MBEDTLS_PK_C)
 #include "mbedtls/pk.h"
-#include "pk_wrap.h"
-#include "pkwrite.h"
-#include "pk_internal.h"
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/error_common.h"
@@ -31,6 +28,10 @@
 #include "psa_util_internal.h"
 #include "mbedtls/psa_util.h"
 #endif
+
+#include "pk_wrap.h"
+#include "pkwrite.h"
+#include "pk_internal.h"
 
 #include <limits.h>
 #include <stdint.h>

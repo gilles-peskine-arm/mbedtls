@@ -63,6 +63,13 @@ struct mbedtls_sha512_context {
 #endif
 };
 
+struct mbedtls_sha3_context {
+    uint64_t MBEDTLS_PRIVATE(state[25]);
+    uint32_t MBEDTLS_PRIVATE(index);
+    uint16_t MBEDTLS_PRIVATE(olen);
+    uint16_t MBEDTLS_PRIVATE(max_block_size);
+};
+
 /* Note: these are aligned with the definitions of PSA_ALG_ macros for hashes,
  * in order to enable an efficient implementation of conversion functions.
  * This is tested by md_to_from_psa() in test_suite_md. */

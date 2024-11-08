@@ -22,6 +22,10 @@
 #include "mbedtls/unstable/cipher.h"
 #endif
 
+#if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
+#include "mbedtls/unstable/ecp.h"
+#endif
+
 #include "mbedtls/md.h"
 
 /** OID is not found. */

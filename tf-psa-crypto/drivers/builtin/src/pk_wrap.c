@@ -10,10 +10,6 @@
 #include "mbedtls/platform_util.h"
 
 #if defined(MBEDTLS_PK_C)
-#include "pk_wrap.h"
-#include "pk_internal.h"
-#include "mbedtls/error_common.h"
-#include "mbedtls/psa_util.h"
 
 /* Even if RSA not activated, for the sake of RSA-alt */
 #include "mbedtls/unstable/rsa.h"
@@ -25,6 +21,11 @@
 #if defined(MBEDTLS_ECDSA_C)
 #include "mbedtls/unstable/ecdsa.h"
 #endif
+
+#include "pk_wrap.h"
+#include "pk_internal.h"
+#include "mbedtls/error_common.h"
+#include "mbedtls/psa_util.h"
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
 #include "psa_util_internal.h"

@@ -17,7 +17,7 @@
 #include <stddef.h>
 
 #if defined(MBEDTLS_BIGNUM_C)
-#include "mbedtls/unstable/bignum.h"
+#include "mbedtls/opaque/mpi_contexts.h"
 #endif
 
 /**
@@ -540,7 +540,7 @@ int mbedtls_asn1_traverse_sequence_of(
  */
 int mbedtls_asn1_get_mpi(unsigned char **p,
                          const unsigned char *end,
-                         mbedtls_mpi *X);
+                         struct mbedtls_mpi *X);
 #endif /* MBEDTLS_BIGNUM_C */
 
 /**

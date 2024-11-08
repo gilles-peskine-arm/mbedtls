@@ -4,6 +4,8 @@
 #include "mbedtls/pk.h"
 #include "mbedtls/unstable/entropy.h"
 #include "mbedtls/unstable/ctr_drbg.h"
+#include "mbedtls/unstable/ecp.h"
+#include "mbedtls/unstable/rsa.h"
 #include "common.h"
 
 //4 Kb should be enough for every bug ;-)

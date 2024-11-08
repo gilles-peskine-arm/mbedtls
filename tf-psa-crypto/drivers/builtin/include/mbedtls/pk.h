@@ -16,17 +16,7 @@
 
 #include "mbedtls/md.h"
 
-#if defined(MBEDTLS_RSA_C)
-#include "mbedtls/unstable/rsa.h"
-#endif
-
-#if defined(MBEDTLS_ECP_C)
-#include "mbedtls/unstable/ecp.h"
-#endif
-
-#if defined(MBEDTLS_ECDSA_C)
-#include "mbedtls/unstable/ecdsa.h"
-#endif
+//TODO need MBEDTLS_ECDSA_MAX_LEN
 
 #if defined(MBEDTLS_PSA_CRYPTO_CLIENT)
 #include "psa/crypto.h"
@@ -1034,11 +1024,12 @@ mbedtls_pk_type_t mbedtls_pk_get_type(const mbedtls_pk_context *ctx);
  *
  * \return The internal RSA context held by the PK context, or NULL.
  */
-static inline mbedtls_rsa_context *mbedtls_pk_rsa(const mbedtls_pk_context pk)
+struct mbedtls_rsa_context;
+static inline struct mbedtls_rsa_context *mbedtls_pk_rsa(const mbedtls_pk_context pk)
 {
     switch (mbedtls_pk_get_type(&pk)) {
         case MBEDTLS_PK_RSA:
-            return (mbedtls_rsa_context *) (pk).MBEDTLS_PRIVATE(pk_ctx);
+            return (struct mbedtls_rsa_context *) (pk).MBEDTLS_PRIVATE(pk_ctx);
         default:
             return NULL;
     }
@@ -1057,13 +1048,14 @@ static inline mbedtls_rsa_context *mbedtls_pk_rsa(const mbedtls_pk_context pk)
  *
  * \return The internal EC context held by the PK context, or NULL.
  */
-static inline mbedtls_ecp_keypair *mbedtls_pk_ec(const mbedtls_pk_context pk)
+struct mbedtls_ecp_keypair;
+static inline struct mbedtls_ecp_keypair *mbedtls_pk_ec(const mbedtls_pk_context pk)
 {
     switch (mbedtls_pk_get_type(&pk)) {
         case MBEDTLS_PK_ECKEY:
         case MBEDTLS_PK_ECKEY_DH:
         case MBEDTLS_PK_ECDSA:
-            return (mbedtls_ecp_keypair *) (pk).MBEDTLS_PRIVATE(pk_ctx);
+            return (struct mbedtls_ecp_keypair *) (pk).MBEDTLS_PRIVATE(pk_ctx);
         default:
             return NULL;
     }
