@@ -98,6 +98,17 @@ struct mbedtls_des3_context {
     uint32_t MBEDTLS_PRIVATE(sk)[96];            /*!<  3DES subkeys      */
 };
 
+enum mbedtls_cipher_id_t {
+    MBEDTLS_CIPHER_ID_NONE = 0,  /**< Placeholder to mark the end of cipher ID lists. */
+    MBEDTLS_CIPHER_ID_NULL,      /**< The identity cipher, treated as a stream cipher. */
+    MBEDTLS_CIPHER_ID_AES,       /**< The AES cipher. */
+    MBEDTLS_CIPHER_ID_DES,       /**< The DES cipher. \warning DES is considered weak. */
+    MBEDTLS_CIPHER_ID_3DES,      /**< The Triple DES cipher. \warning 3DES is considered weak. */
+    MBEDTLS_CIPHER_ID_CAMELLIA,  /**< The Camellia cipher. */
+    MBEDTLS_CIPHER_ID_ARIA,      /**< The Aria cipher. */
+    MBEDTLS_CIPHER_ID_CHACHA20,  /**< The ChaCha20 cipher. */
+};
+
 #ifdef __cplusplus
 }
 #endif
