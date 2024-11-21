@@ -24,6 +24,8 @@ endif
 .SILENT:
 
 .PHONY: all no_test programs lib tests install uninstall clean test check lcov apidoc apidoc_clean
+.PHONY: FORCE
+FORCE:
 
 all: programs tests
 	$(MAKE) post_build
@@ -49,11 +51,11 @@ tests: mbedtls_test
 mbedtls_test:
 	$(MAKE) -C tests mbedtls_test
 
-library/%:
+library/%: FORCE
 	$(MAKE) -C library $*
-programs/%:
+programs/%: FORCE
 	$(MAKE) -C programs $*
-tests/%:
+tests/%: FORCE
 	$(MAKE) -C tests $*
 
 .PHONY: generated_files
