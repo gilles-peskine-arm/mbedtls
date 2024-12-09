@@ -28,7 +28,10 @@ add_dependencies(${programs_target} ${executables_with_common_c})
 
 foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
-    set(exe_sources ${exe}.c $<TARGET_OBJECTS:tf_psa_crypto_test>)
+    set(exe_sources
+        ${exe}.c
+        $<TARGET_OBJECTS:mbedtls_test_helpers>
+        $<TARGET_OBJECTS:tf_psa_crypto_test>)
     if(NOT FUZZINGENGINE_LIB)
         list(APPEND exe_sources onefile.c)
     endif()
@@ -41,7 +44,8 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     add_executable(${exe} ${exe_sources})
     set_base_compile_options(${exe})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include
+                                              ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 
     if (NOT FUZZINGENGINE_LIB)
         target_link_libraries(${exe} ${libs})

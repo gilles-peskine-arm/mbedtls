@@ -68,7 +68,6 @@ O_SRV="$OPENSSL s_server -www -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILE
 O_CLI="echo 'GET / HTTP/1.0' | $OPENSSL s_client"
 G_SRV="$GNUTLS_SERV --x509certfile $DATA_FILES_PATH/server5.crt --x509keyfile $DATA_FILES_PATH/server5.key"
 G_CLI="echo 'GET / HTTP/1.0' | $GNUTLS_CLI --x509cafile $DATA_FILES_PATH/test-ca_cat12.crt"
-TCP_CLIENT="$PERL scripts/tcp_client.pl"
 
 # alternative versions of OpenSSL and GnuTLS (no default path)
 
@@ -233,9 +232,11 @@ get_options "$@"
 # Read boolean configuration options from mbedtls_config.h for easy and quick
 # testing. Skip non-boolean options (with something other than spaces
 # and a comment after "#define SYMBOL"). The variable contains a
-# space-separated list of symbols.
+# space-separated list of symbols. The list should always be
+# terminated by a single whitespace character, otherwise the last entry
+# will not get matched by the parsing regex.
 if [ "$LIST_TESTS" -eq 0 ];then
-    CONFIGS_ENABLED=" $(echo `$P_QUERY -l` )"
+    CONFIGS_ENABLED=" $(echo `$P_QUERY -l` ) "
 else
     P_QUERY=":"
     CONFIGS_ENABLED=""

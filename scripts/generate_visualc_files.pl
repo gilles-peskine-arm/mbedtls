@@ -21,17 +21,21 @@ my $vsx_main_file = "$vsx_dir/mbedTLS.$vsx_ext";
 my $vsx_sln_tpl_file = "scripts/data_files/vs2017-sln-template.sln";
 my $vsx_sln_file = "$vsx_dir/mbedTLS.sln";
 
-my $programs_dir = 'programs';
+my $mbedtls_programs_dir = "programs";
+my $tfpsacrypto_programs_dir = "tf-psa-crypto/programs";
+
 my $mbedtls_header_dir = 'include/mbedtls';
 my $drivers_builtin_header_dir = 'tf-psa-crypto/drivers/builtin/include/mbedtls';
 my $psa_header_dir = 'tf-psa-crypto/include/psa';
 my $tls_source_dir = 'library';
 my $crypto_core_source_dir = 'tf-psa-crypto/core';
 my $crypto_source_dir = 'tf-psa-crypto/drivers/builtin/src';
-my $test_source_dir = 'tests/src';
-my $test_header_dir = 'tests/include/test';
-my $test_drivers_header_dir = 'tests/include/test/drivers';
-my $test_drivers_source_dir = 'tests/src/drivers';
+my $tls_test_source_dir = 'tests/src';
+my $tls_test_header_dir = 'tests/include/test';
+my $test_source_dir = 'framework/tests/src';
+my $test_header_dir = 'framework/tests/include/test';
+my $test_drivers_header_dir = 'framework/tests/include/test/drivers';
+my $test_drivers_source_dir = 'framework/tests/src/drivers';
 
 my @thirdparty_header_dirs = qw(
     tf-psa-crypto/drivers/everest/include/everest
@@ -54,6 +58,7 @@ my @include_directories = qw(
     tf-psa-crypto/drivers/everest/include/everest/vs2013
     tf-psa-crypto/drivers/everest/include/everest/kremlib
     tests/include
+    framework/tests/include
 );
 my $include_directories = join(';', map {"../../$_"} @include_directories);
 
@@ -114,10 +119,13 @@ sub check_dirs {
         && -d $crypto_core_source_dir
         && -d $crypto_source_dir
         && -d $test_source_dir
+        && -d $tls_test_source_dir
         && -d $test_drivers_source_dir
         && -d $test_header_dir
+        && -d $tls_test_header_dir
         && -d $test_drivers_header_dir
-        && -d $programs_dir;
+        && -d $mbedtls_programs_dir
+        && -d $tfpsacrypto_programs_dir;
 }
 
 sub slurp_file {
@@ -270,6 +278,7 @@ sub main {
                        $drivers_builtin_header_dir,
                        $psa_header_dir,
                        $test_header_dir,
+                       $tls_test_header_dir,
                        $test_drivers_header_dir,
                        $tls_source_dir,
                        $crypto_core_source_dir,
@@ -282,6 +291,7 @@ sub main {
                        $crypto_core_source_dir,
                        $crypto_source_dir,
                        $test_source_dir,
+                       $tls_test_source_dir,
                        $test_drivers_source_dir,
                        @thirdparty_source_dirs,
                       );

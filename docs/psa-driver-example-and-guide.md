@@ -43,7 +43,7 @@ There are three deliverables for creating such a driver. These are:
  - C header files defining the types required by the driver description. The names of these header files are declared in the driver description file.
  - An object file compiled for the target platform defining the functions required by the driver description. Implementations may allow drivers to be provided as source files and compiled with the core instead of being pre-compiled.
 
-The Mbed TLS driver tests for the aforementioned entry points provide examples of how these deliverables can be implemented. For sample driver description JSON files, see [`mbedtls_test_transparent_driver.json`](https://github.com/Mbed-TLS/mbedtls/blob/development/scripts/data_files/driver_jsons/mbedtls_test_transparent_driver.json) or [`mbedtls_test_opaque_driver.json`](https://github.com/Mbed-TLS/mbedtls/blob/development/scripts/data_files/driver_jsons/mbedtls_test_transparent_driver.json). The header file required by the driver description is [`test_driver.h`](https://github.com/Mbed-TLS/mbedtls/blob/development/tests/include/test/drivers/test_driver.h). As Mbed TLS tests are built from source, there is no object file for the test driver. However, the source for the test driver can be found under `tests/src/drivers`.
+The Mbed TLS driver tests for the aforementioned entry points provide examples of how these deliverables can be implemented. For sample driver description JSON files, see [`mbedtls_test_transparent_driver.json`](https://github.com/Mbed-TLS/mbedtls/blob/development/tf-psa-crypto/scripts/data_files/driver_jsons/mbedtls_test_transparent_driver.json) or [`mbedtls_test_opaque_driver.json`](https://github.com/Mbed-TLS/mbedtls/blob/development/tf-psa-crypto/scripts/data_files/driver_jsons/mbedtls_test_transparent_driver.json). The header file required by the driver description is [`test_driver.h`](https://github.com/Mbed-TLS/mbedtls/blob/development/framework/tests/include/test/drivers/test_driver.h). As Mbed TLS tests are built from source, there is no object file for the test driver. However, the source for the test driver can be found under `framework/tests/src/drivers`.
 
 ### Process for Entry Points where auto-generation is not implemented
 
@@ -142,7 +142,6 @@ This guide assumes you are building Mbed TLS from source alongside your project.
 
 The Mbed TLS build system includes the instructions needed to build p256-m. To build with and use p256-m, set the macro `MBEDTLS_PSA_P256M_DRIVER_ENABLED` using `config.py`, then build as usual using make/cmake. From the root of the `mbedtls/` directory, run:
 
-    python3 scripts/config.py set MBEDTLS_PSA_CRYPTO_CONFIG
     python3 scripts/config.py set MBEDTLS_PSA_P256M_DRIVER_ENABLED
     make
 

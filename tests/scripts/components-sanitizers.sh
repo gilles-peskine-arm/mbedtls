@@ -12,7 +12,7 @@
 skip_suites_without_constant_flow () {
     # Skip the test suites that don't have any constant-flow annotations.
     # This will need to be adjusted if we ever start declaring things as
-    # secret from macros or functions inside tests/include or tests/src.
+    # secret from macros or functions inside framework/tests/include or framework/tests/src.
     SKIP_TEST_SUITES=$(
         git -C tests/suites grep -L TEST_CF_ 'test_suite_*.function' |
             sed 's/test_suite_//; s/\.function$//' |
@@ -49,7 +49,7 @@ component_test_memsan_constant_flow_psa () {
     scripts/config.py set MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN
     scripts/config.py unset MBEDTLS_AESNI_C # memsan doesn't grok asm
     scripts/config.py unset MBEDTLS_HAVE_ASM
-    CC=clang cmake -D CMAKE_BUILD_TYPE:String=MemSan .
+    CC=clang cmake -D GEN_FILES=Off -D CMAKE_BUILD_TYPE:String=MemSan .
     make
 
     msg "test: main suites (Msan + constant flow)"

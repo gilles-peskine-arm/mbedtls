@@ -333,11 +333,11 @@ function(set_config_files_compile_definitions target)
     endif()
     if(TF_PSA_CRYPTO_CONFIG_FILE)
         target_compile_definitions(${target}
-            PUBLIC MBEDTLS_PSA_CRYPTO_CONFIG_FILE="${TF_PSA_CRYPTO_CONFIG_FILE}")
+            PUBLIC TF_PSA_CRYPTO_CONFIG_FILE="${TF_PSA_CRYPTO_CONFIG_FILE}")
     endif()
     if(TF_PSA_CRYPTO_USER_CONFIG_FILE)
         target_compile_definitions(${target}
-            PUBLIC MBEDTLS_PSA_CRYPTO_USER_CONFIG_FILE="${TF_PSA_CRYPTO_USER_CONFIG_FILE}")
+            PUBLIC TF_PSA_CRYPTO_USER_CONFIG_FILE="${TF_PSA_CRYPTO_USER_CONFIG_FILE}")
     endif()
 endfunction(set_config_files_compile_definitions)
 
@@ -398,7 +398,7 @@ add_subdirectory(library)
 add_subdirectory(pkgconfig)
 
 #
-# The C files in tests/src directory contain test code shared among test suites
+# The C files in framework/tests/src directory contain test code shared among test suites
 # and programs. This shared test code is compiled and linked to test suites and
 # programs objects as a set of compiled objects. The compiled objects are NOT
 # built into a library that the test suite and program objects would link
@@ -413,10 +413,32 @@ add_subdirectory(pkgconfig)
 #
 if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     file(GLOB MBEDTLS_TEST_HELPER_FILES
+         ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/*.c
          ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/test_helpers/*.c)
     add_library(mbedtls_test_helpers OBJECT ${MBEDTLS_TEST_HELPER_FILES})
     set_base_compile_options(mbedtls_test_helpers)
+
+    if(GEN_FILES)
+        add_custom_command(
+            OUTPUT
+                ${MBEDTLS_DIR}/tests/src/test_certs.h
+            WORKING_DIRECTORY
+                ${MBEDTLS_DIR}/tests
+            COMMAND
+                "${MBEDTLS_PYTHON_EXECUTABLE}"
+                "${MBEDTLS_FRAMEWORK_DIR}/scripts/generate_test_cert_macros.py"
+                "--output"
+                "${MBEDTLS_DIR}/tests/src/test_certs.h"
+            DEPENDS
+                ${MBEDTLS_FRAMEWORK_DIR}/scripts/generate_test_cert_macros.py
+        )
+        add_custom_target(mbedtls_test_certs_header
+            DEPENDS ${MBEDTLS_DIR}/tests/src/test_certs.h)
+        add_dependencies(mbedtls_test_helpers mbedtls_test_certs_header)
+    endif()
+
     target_include_directories(mbedtls_test_helpers
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tf-psa-crypto/include

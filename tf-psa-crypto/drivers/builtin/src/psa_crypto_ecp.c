@@ -596,11 +596,17 @@ exit:
 
 #if defined(MBEDTLS_ECP_RESTARTABLE)
 
-psa_status_t mbedtls_psa_generate_key_iop_setup(
+uint32_t mbedtls_psa_generate_key_iop_get_num_ops(
+    mbedtls_psa_generate_key_iop_t *operation)
+{
+    return operation->num_ops;
+}
+
+psa_status_t mbedtls_psa_ecp_generate_key_iop_setup(
     mbedtls_psa_generate_key_iop_t *operation,
     const psa_key_attributes_t *attributes)
 {
-    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    int status = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
     mbedtls_ecp_keypair_init(&operation->ecp);
 
@@ -617,10 +623,78 @@ psa_status_t mbedtls_psa_generate_key_iop_setup(
     return mbedtls_to_psa_error(status);
 }
 
-psa_status_t mbedtls_psa_generate_key_iop_abort(
+psa_status_t mbedtls_psa_ecp_generate_key_iop_complete(
+    mbedtls_psa_generate_key_iop_t *operation,
+    uint8_t *key_output,
+    size_t key_output_size,
+    size_t *key_len)
+{
+    *key_len = 0;
+    int status = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+
+    *key_len = PSA_BITS_TO_BYTES(operation->ecp.grp.nbits);
+
+    if (*key_len > key_output_size) {
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    status = mbedtls_ecp_gen_privkey(&operation->ecp.grp, &operation->ecp.d,
+                                     mbedtls_psa_get_random, MBEDTLS_PSA_RANDOM_STATE);
+
+    if (status != 0) {
+        return mbedtls_to_psa_error(status);
+    }
+
+    /* Our implementation of key generation only generates the private key
+       which doesn't invlolve any ECC arithmetic operations so number of ops
+       is less than 1 but we round up to 1 to differentiate between num ops of
+       0 which means no work has been done this facilitates testing. */
+    operation->num_ops = 1;
+
+    status = mbedtls_mpi_write_binary(&operation->ecp.d, key_output, key_output_size);
+
+    return mbedtls_to_psa_error(status);
+}
+
+psa_status_t mbedtls_psa_ecp_generate_key_iop_abort(
     mbedtls_psa_generate_key_iop_t *operation)
 {
     mbedtls_ecp_keypair_free(&operation->ecp);
+    operation->num_ops = 0;
+    return PSA_SUCCESS;
+}
+
+psa_status_t mbedtls_psa_ecp_export_public_key_iop_setup(
+    mbedtls_psa_export_public_key_iop_operation_t *operation,
+    uint8_t *private_key,
+    size_t private_key_len,
+    const psa_key_attributes_t *private_key_attributes)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    status = mbedtls_psa_ecp_load_representation(
+        psa_get_key_type(private_key_attributes),
+        psa_get_key_bits(private_key_attributes),
+        private_key,
+        private_key_len,
+        &operation->key);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    mbedtls_ecp_restart_init(&operation->restart_ctx);
+    operation->num_ops = 0;
+
+exit:
+    return status;
+}
+
+psa_status_t mbedtls_psa_ecp_export_public_key_iop_abort(
+    mbedtls_psa_export_public_key_iop_operation_t *operation)
+{
+    mbedtls_ecp_keypair_free(operation->key);
+    mbedtls_free(operation->key);
+    mbedtls_ecp_restart_free(&operation->restart_ctx);
     operation->num_ops = 0;
     return PSA_SUCCESS;
 }

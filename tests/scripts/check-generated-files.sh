@@ -22,13 +22,7 @@ EOF
     exit
 fi
 
-in_mbedtls_repo () {
-    test -d include -a -d library -a -d programs -a -d tests
-}
-
-in_tf_psa_crypto_repo () {
-    test -d include -a -d core -a -d drivers -a -d programs -a -d tests
-}
+. framework/scripts/project_detection.sh
 
 if in_mbedtls_repo; then
     if [ -d tf-psa-crypto ]; then
@@ -146,11 +140,14 @@ check()
 # directory in Mbed TLS that is not just a TF-PSA-Crypto submodule.
 if [ -d tf-psa-crypto ]; then
     cd tf-psa-crypto
+    check scripts/generate_psa_constants.py ./programs/psa/psa_constant_names_generated.c
     check ../framework/scripts/generate_bignum_tests.py $(../framework/scripts/generate_bignum_tests.py --list)
     check ../framework/scripts/generate_config_tests.py tests/suites/test_suite_config.psa_boolean.data
     check ../framework/scripts/generate_ecp_tests.py $(../framework/scripts/generate_ecp_tests.py --list)
     check ../framework/scripts/generate_psa_tests.py $(../framework/scripts/generate_psa_tests.py --list)
     cd ..
+    check tf-psa-crypto/scripts/generate_driver_wrappers.py ${crypto_core_dir}/psa_crypto_driver_wrappers.h \
+                                                            ${crypto_core_dir}/psa_crypto_driver_wrappers_no_static.c
     check framework/scripts/generate_config_tests.py tests/suites/test_suite_config.mbedtls_boolean.data
 else
     check framework/scripts/generate_bignum_tests.py $(framework/scripts/generate_bignum_tests.py --list)
@@ -161,12 +158,11 @@ else
     fi
     check framework/scripts/generate_ecp_tests.py $(framework/scripts/generate_ecp_tests.py --list)
     check framework/scripts/generate_psa_tests.py $(framework/scripts/generate_psa_tests.py --list)
+    check scripts/generate_driver_wrappers.py ${crypto_core_dir}/psa_crypto_driver_wrappers.h \
+                                              ${crypto_core_dir}/psa_crypto_driver_wrappers_no_static.c
 fi
 
-check scripts/generate_psa_constants.py programs/psa/psa_constant_names_generated.c
-check framework/scripts/generate_test_keys.py tests/src/test_keys.h
-check scripts/generate_driver_wrappers.py ${crypto_core_dir}/psa_crypto_driver_wrappers.h \
-                                          ${crypto_core_dir}/psa_crypto_driver_wrappers_no_static.c
+check framework/scripts/generate_test_keys.py framework/tests/src/test_keys.h
 
 # Additional checks for Mbed TLS only
 if in_mbedtls_repo; then
@@ -185,4 +181,4 @@ fi
 # Generated files that are present in the repository even in the development
 # branch. (This is intended to be temporary, until the generator scripts are
 # fully reviewed and the build scripts support a generated header file.)
-check framework/scripts/generate_psa_wrappers.py tests/include/test/psa_test_wrappers.h tests/src/psa_test_wrappers.c
+check framework/scripts/generate_psa_wrappers.py tf-psa-crypto/tests/include/test/psa_test_wrappers.h tf-psa-crypto/tests/src/psa_test_wrappers.c

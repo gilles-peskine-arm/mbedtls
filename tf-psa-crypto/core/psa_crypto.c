@@ -11,10 +11,7 @@
 
 #if defined(MBEDTLS_PSA_CRYPTO_C)
 
-#if defined(MBEDTLS_PSA_CRYPTO_CONFIG)
 #include "check_crypto_config.h"
-#endif
-
 #include "psa/crypto.h"
 #include "psa/crypto_values.h"
 
@@ -1662,6 +1659,127 @@ exit:
 
     LOCAL_OUTPUT_FREE(data_external, data);
     return (status == PSA_SUCCESS) ? unlock_status : status;
+}
+
+/****************************************************************/
+/* Interruptible ECC Export Public-key */
+/****************************************************************/
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+static psa_status_t psa_export_public_key_iop_abort_internal(psa_export_public_key_iop_t *operation)
+{
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    if (operation->id == 0) {
+        return PSA_SUCCESS;
+    }
+
+    status = mbedtls_psa_ecp_export_public_key_iop_abort(&operation->ctx);
+
+    operation->id = 0;
+
+    return status;
+}
+#endif
+
+uint32_t psa_export_public_key_iop_get_num_ops(psa_export_public_key_iop_t *operation)
+{
+    (void) operation;
+    return 0;
+}
+
+psa_status_t psa_export_public_key_iop_setup(psa_export_public_key_iop_t *operation,
+                                             mbedtls_svc_key_id_t key)
+{
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+    psa_status_t unlock_status = PSA_ERROR_CORRUPTION_DETECTED;
+    size_t key_size = 0;
+    psa_key_attributes_t private_key_attributes;
+    psa_key_type_t private_key_type;
+    psa_key_slot_t *slot = NULL;
+
+    if (operation->id != 0 || operation->error_occurred) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    /* We only support the builtin/Mbed TLS driver for now. */
+    operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
+
+    status = psa_get_and_lock_transparent_key_slot_with_policy(key, &slot,
+                                                               0,
+                                                               0);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    private_key_attributes = slot->attr;
+
+    private_key_type = psa_get_key_type(&private_key_attributes);
+
+    if (!PSA_KEY_TYPE_IS_KEY_PAIR(private_key_type)) {
+        status = PSA_ERROR_INVALID_ARGUMENT;
+        goto exit;
+    }
+
+    if (!PSA_KEY_TYPE_IS_ECC_KEY_PAIR(private_key_type)) {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+
+    key_size = PSA_EXPORT_KEY_OUTPUT_SIZE(private_key_type,
+                                          psa_get_key_bits(&private_key_attributes));
+    if (key_size == 0) {
+        status = PSA_ERROR_NOT_SUPPORTED;
+        goto exit;
+    }
+
+    status = mbedtls_psa_ecp_export_public_key_iop_setup(&operation->ctx, slot->key.data,
+                                                         slot->key.bytes, &private_key_attributes);
+
+exit:
+    unlock_status = psa_unregister_read_under_mutex(slot);
+    if (status != PSA_SUCCESS) {
+        psa_export_public_key_iop_abort_internal(operation);
+        operation->error_occurred = 1;
+        return status;
+    }
+    return unlock_status;
+#else
+    (void) operation;
+    (void) key;
+    return PSA_ERROR_NOT_SUPPORTED;
+#endif
+}
+
+psa_status_t psa_export_public_key_iop_complete(psa_export_public_key_iop_t *operation,
+                                                uint8_t *data,
+                                                size_t data_size,
+                                                size_t *data_length)
+{
+    (void) operation;
+    (void) data;
+    (void) data_size;
+    (void) data_length;
+
+    return PSA_ERROR_NOT_SUPPORTED;
+}
+
+psa_status_t psa_export_public_key_iop_abort(psa_export_public_key_iop_t *operation)
+{
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+
+    status = psa_export_public_key_iop_abort_internal(operation);
+
+    operation->num_ops = 0;
+    operation->error_occurred = 0;
+
+    return status;
+#else
+    (void) operation;
+    return PSA_SUCCESS;
+#endif
 }
 
 /** Validate that a key policy is internally well-formed.
@@ -8386,7 +8504,9 @@ static psa_status_t psa_generate_key_iop_abort_internal(
         return PSA_SUCCESS;
     }
 
-    status = mbedtls_psa_generate_key_iop_abort(&operation->ctx);
+    status = mbedtls_psa_ecp_generate_key_iop_abort(&operation->ctx);
+
+    psa_reset_key_attributes(&operation->attributes);
 
     operation->id = 0;
 
@@ -8397,8 +8517,7 @@ static psa_status_t psa_generate_key_iop_abort_internal(
 uint32_t psa_generate_key_iop_get_num_ops(
     psa_generate_key_iop_t *operation)
 {
-    (void) operation;
-    return 0;
+    return operation->num_ops;
 }
 
 psa_status_t psa_generate_key_iop_setup(
@@ -8438,7 +8557,7 @@ psa_status_t psa_generate_key_iop_setup(
     /* We only support the builtin/Mbed TLS driver for now. */
     operation->id = PSA_CRYPTO_MBED_TLS_DRIVER_ID;
 
-    status = mbedtls_psa_generate_key_iop_setup(&operation->ctx, attributes);
+    status = mbedtls_psa_ecp_generate_key_iop_setup(&operation->ctx, attributes);
 
 exit:
     if (status != PSA_SUCCESS) {
@@ -8458,10 +8577,44 @@ psa_status_t psa_generate_key_iop_complete(
     psa_generate_key_iop_t *operation,
     mbedtls_svc_key_id_t *key)
 {
+#if defined(MBEDTLS_ECP_RESTARTABLE)
+    psa_status_t status;
+    uint8_t key_data[PSA_KEY_EXPORT_ECC_KEY_PAIR_MAX_SIZE(PSA_VENDOR_ECC_MAX_CURVE_BITS)+1] = { 0 };
+    size_t key_len = 0;
+
+    if (operation->id == 0 || operation->error_occurred) {
+        return PSA_ERROR_BAD_STATE;
+    }
+
+    status = mbedtls_psa_ecp_generate_key_iop_complete(&operation->ctx, key_data,
+                                                       sizeof(key_data), &key_len);
+    if (status != PSA_SUCCESS) {
+        goto exit;
+    }
+
+    operation->num_ops = mbedtls_psa_generate_key_iop_get_num_ops(&operation->ctx);
+
+    status = psa_import_key(&operation->attributes,
+                            key_data + (sizeof(key_data) - key_len),
+                            key_len,
+                            key);
+
+exit:
+    if (status != PSA_OPERATION_INCOMPLETE) {
+        if (status != PSA_SUCCESS) {
+            operation->error_occurred = 1;
+        }
+        psa_generate_key_iop_abort_internal(operation);
+    }
+
+    mbedtls_platform_zeroize(key_data, sizeof(key_data));
+    return status;
+#else
     (void) operation;
     (void) key;
 
-    return PSA_ERROR_NOT_SUPPORTED;
+    return PSA_ERROR_BAD_STATE;
+#endif
 }
 
 psa_status_t psa_generate_key_iop_abort(
@@ -8480,7 +8633,6 @@ psa_status_t psa_generate_key_iop_abort(
     return PSA_SUCCESS;
 #endif
 }
-
 
 /****************************************************************/
 /* Module setup */

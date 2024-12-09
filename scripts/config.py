@@ -220,6 +220,7 @@ def include_in_crypto(name):
             'MBEDTLS_DEBUG_C', # part of libmbedtls
             'MBEDTLS_NET_C', # part of libmbedtls
             'MBEDTLS_PKCS7_C', # part of libmbedx509
+            'MBEDTLS_TIMING_C', # part of libmbedtls
             'MBEDTLS_ERROR_C', # part of libmbedx509
             'MBEDTLS_ERROR_STRERROR_DUMMY', # part of libmbedx509
     ]:
@@ -397,7 +398,7 @@ class CombinedConfig(config_common.Config):
                               for configfile in [self.mbedtls_configfile, self.crypto_configfile]
                               for (active, name, value, section) in configfile.parse_file()})
 
-    _crypto_regexp = re.compile(r'$PSA_.*')
+    _crypto_regexp = re.compile(r'^PSA_.*')
     def _get_configfile(self, name=None):
         """Find a config type for a setting name"""
 
@@ -420,7 +421,7 @@ class CombinedConfig(config_common.Config):
                 raise ValueError(f'Feature is unstable: \'{name}\'')
 
             # The default value in the crypto config is '1'
-            if not value:
+            if not value and re.match(self._crypto_regexp, name):
                 value = '1'
 
         if name not in self.settings:

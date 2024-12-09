@@ -4,6 +4,7 @@ set(libs
 
 set(executables_libs
     metatest
+    query_compile_time_config
     query_included_headers
     selftest
     udp_proxy
@@ -13,7 +14,6 @@ add_dependencies(${ssl_opt_target} udp_proxy)
 
 set(executables_mbedcrypto
     benchmark
-    query_compile_time_config
     zeroize
 )
 add_dependencies(${programs_target} ${executables_mbedcrypto})
@@ -86,7 +86,7 @@ foreach(exe IN LISTS executables_libs executables_mbedcrypto)
         ${extra_sources})
     set_base_compile_options(${exe})
     target_include_directories(${exe}
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include)
     target_include_directories(${exe}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../library
                 ${CMAKE_CURRENT_SOURCE_DIR}/../../tf-psa-crypto/core)
