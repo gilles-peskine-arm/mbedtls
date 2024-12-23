@@ -6,7 +6,7 @@ ifneq (,$(filter-out lib library/%,$(or $(MAKECMDGOALS),all)))
     ifeq (,$(wildcard framework/exported.make))
         # Use the define keyword to get a multi-line message.
         # GNU make appends ".  Stop.", so tweak the ending of our message accordingly.
-        ifeq (,$(wildcard .git))
+        ifneq (,$(wildcard .git))
             define error_message
 ${MBEDTLS_PATH}/framework/exported.make not found (and does appear to be a git checkout). Run `git submodule update --init` from the source tree to fetch the submodule contents.
 This is a fatal error
@@ -94,6 +94,8 @@ visualc_files: $(VISUALC_FILES)
 # present before it runs. It doesn't matter if the files aren't up-to-date,
 # they just need to be present.
 $(VISUALC_FILES): | library/generated_files
+$(VISUALC_FILES): | programs/generated_files
+$(VISUALC_FILES): | tests/generated_files
 $(VISUALC_FILES): $(gen_file_dep) scripts/generate_visualc_files.pl
 $(VISUALC_FILES): $(gen_file_dep) scripts/data_files/vs2017-app-template.vcxproj
 $(VISUALC_FILES): $(gen_file_dep) scripts/data_files/vs2017-main-template.vcxproj

@@ -315,7 +315,7 @@ if(LIB_INSTALL_DIR)
 endif()
 
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/framework/CMakeLists.txt")
-    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git/")
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
         message(FATAL_ERROR "${CMAKE_CURRENT_SOURCE_DIR}CMakeLists.txt not found (and does appear to be a git checkout). Run `git submodule update --init` from the source tree to fetch the submodule contents.")
     else ()
         message(FATAL_ERROR "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt not found (and does not appear to be a git checkout). Please ensure you have downloaded the right archive from the release page on GitHub.")
@@ -354,18 +354,18 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     if(GEN_FILES)
         add_custom_command(
             OUTPUT
-                ${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/src/test_keys.h
+                ${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/include/test/test_keys.h
             WORKING_DIRECTORY
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests
             COMMAND
                 "${MBEDTLS_PYTHON_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/framework/scripts/generate_test_keys.py"
                 "--output"
-                "${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/src/test_keys.h"
+                "${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/include/test/test_keys.h"
             DEPENDS
                 ${CMAKE_CURRENT_SOURCE_DIR}/framework/scripts/generate_test_keys.py
         )
-        add_custom_target(test_keys_header DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/src/test_keys.h)
+        add_custom_target(test_keys_header DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/framework/tests/include/test/test_keys.h)
         add_custom_command(
             OUTPUT
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/src/test_certs.h
