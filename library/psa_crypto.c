@@ -2693,6 +2693,8 @@ static psa_status_t psa_mac_setup(psa_mac_operation_t *operation,
         goto exit;
     }
 
+    memset(operation, 0, sizeof(*operation));
+
     status = psa_get_and_lock_key_slot_with_policy(
         key,
         &slot,
@@ -3778,6 +3780,8 @@ psa_status_t psa_verify_hash_start(
     if (operation->id != 0 || operation->error_occurred) {
         return PSA_ERROR_BAD_STATE;
     }
+
+    memset(operation, 0, sizeof(*operation));
 
     status = psa_sign_verify_check_alg(0, alg);
     if (status != PSA_SUCCESS) {

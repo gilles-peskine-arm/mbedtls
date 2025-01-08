@@ -205,6 +205,8 @@ static psa_status_t mac_init(
 {
     psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
 
+    memset(operation, 0, sizeof(*operation));
+
     operation->alg = alg;
 
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_CMAC)
