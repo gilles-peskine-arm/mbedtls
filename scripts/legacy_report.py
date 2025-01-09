@@ -113,6 +113,8 @@ class UnstableTypes(Ast):
         super().__init__(options)
         self.uses_of_unstable_types = {} \
             #type: Dict[typing.Hashable, Tuple[clang.cindex.Type, SourceLocation, str]]
+        self.uses_of_unstable_functions = [] \
+            #type: List[Tuple[SourceLocation, str]]
 
     @staticmethod
     def location_key(location: SourceLocation) -> Tuple[str, int, int]:
@@ -143,14 +145,17 @@ class UnstableTypes(Ast):
         return core
 
     QUALIFIERS_RE = re.compile(r'.* ')
-    def get_type_core(self, type_: clang.cindex.Type) -> str:
-        """Get the base name of a type, without typedefs, qualifiers or pointers."""
+    def get_unqualified_type(self, type_: clang.cindex.Type) -> str:
         # There's no API function to remove qualifiers from a type,
         # so do it textually. Remove 'const', 'restrict', etc.
         # Also remove 'struct', so we'll get the struct name from struct
         # definitions.
+        return re.sub(self.QUALIFIERS_RE, r'', type_.spelling)
+
+    def get_type_core(self, type_: clang.cindex.Type) -> str:
+        """Get the base name of a type, without typedefs, qualifiers or pointers."""
         core = self.get_type_qualified_core(type_)
-        return re.sub(self.QUALIFIERS_RE, r'', core.spelling)
+        return self.get_unqualified_type(core)
 
     @staticmethod
     def get_base_type(type_: clang.cindex.Type) -> Optional[clang.cindex.Type]:
@@ -213,11 +218,10 @@ class UnstableTypes(Ast):
         if declaration_location.file is None:
             # Built-in type, e.g. int
             return
-        if type_base.spelling in self.NOT_ACTUALLY_PRIVATE_TYPES:
+        if self.get_unqualified_type(type_base) in self.NOT_ACTUALLY_PRIVATE_TYPES:
             return
         if not self.is_private_header(declaration_location.file.name):
             return
-        #print(descriptor, type_base.spelling, declaration_location.file.name)
         key = self.location_key(location)
         self.uses_of_unstable_types[key] = (type_, location, descriptor)
 
@@ -227,18 +231,72 @@ class UnstableTypes(Ast):
         if hasattr(node, 'get_arguments'):
             yield from node.get_arguments()
 
+    def read_public_function_declaration(self, node: Cursor) -> None:
+        """Process a public function declaration.
+
+        Look for uses of private types.
+        """
+        for num, argument in enumerate(node.get_arguments(), 1):
+            self.read_use_of_type(argument.type,
+                                  argument.location,
+                                  f'{node.spelling}#{num}={argument.spelling}')
+        self.read_use_of_type(node.result_type,
+                              node.location,
+                              f'{node.spelling}#return')
+
+    PUBLIC_FUNCTION_SET = frozenset([
+        'mbedtls_calloc',
+        'mbedtls_error_add',
+        'mbedtls_exit',
+        'mbedtls_free',
+        'mbedtls_md_psa_alg_from_type',
+        'mbedtls_ms_time',
+        'mbedtls_svc_key_id_is_null',
+        'mbedtls_zeroize_and_free',
+    ])
+    PUBLIC_FUNCTION_RE = re.compile('|'.join([
+        'mbedtls_asn1',
+        'mbedtls_ct_',
+        'mbedtls_debug_',
+        'mbedtls_net_',
+        'mbedtls_oid_',
+        'mbedtls_pem_',
+        'mbedtls_pk_',
+        'mbedtls_platform_',
+        'mbedtls_ssl_',
+        'mbedtls_timing_',
+        'mbedtls_x509',
+    ]))
+    def is_private_crypto_function(self, name: str) -> bool:
+        """Whether the given name is a private crypto function."""
+        if not name.startswith('mbedtls_'):
+            # PSA, static or standard library function
+            return False
+        if name in self.PUBLIC_FUNCTION_SET:
+            return False
+        if self.PUBLIC_FUNCTION_RE.match(name):
+            return False
+        return True
+
+    def read_called_function(self, node: Cursor) -> None:
+        """Process a call to a function."""
+        # I can't find an easy way to look up where a named function was called.
+        # So just use the function's name and some ad hoc analysis to determine
+        # which functions are public.
+        if self.is_private_crypto_function(node.spelling):
+            self.uses_of_unstable_functions.append((node.location, node.spelling))
+
     def read_node(self, node: Cursor) -> None:
         """Collect information from the given node."""
         # In public headers, collect function argument types and return types
         # where the type is defined in a private header.
-        if node.kind == CursorKind.FUNCTION_DECL:
-            for num, argument in enumerate(node.get_arguments(), 1):
-                self.read_use_of_type(argument.type,
-                                      argument.location,
-                                      f'{node.spelling}#{num}={argument.spelling}')
-            self.read_use_of_type(node.result_type,
-                                  node.location,
-                                  f'{node.spelling}#return')
+        if node.kind == CursorKind.FUNCTION_DECL and \
+           node.location.file.name.endswith('.h'):
+            self.read_public_function_declaration(node)
+        elif node.kind == CursorKind.CALL_EXPR and \
+             node.location.file.name.endswith('.c'):
+            func = next(node.get_children())
+            self.read_called_function(func)
 
     def run_analysis(self, files: List[str],
                      log: Optional[typing_util.Writable] = None) -> None:
@@ -249,11 +307,17 @@ class UnstableTypes(Ast):
         self.read_files(files)
         self.sanity_checks(log)
 
+    def report_line(self, out:typing_util.Writable, location: SourceLocation,
+                    thing: str) -> None:
+        print(f'{location.file.name}:{location.line}:{location.column}: {thing}')
+
     def report(self, out: typing_util.Writable) -> None:
         """Report on the use of unstable types."""
         for (type_, location, descriptor) in self.uses_of_unstable_types.values():
-            print(f'{location.file.name}:{location.line}:{location.column}: '
-                  f'{descriptor}: {type_.spelling}')
+            self.report_line(out, location,
+                             f'{descriptor}: {type_.spelling}')
+        for (location, name) in self.uses_of_unstable_functions:
+            self.report_line(out, location, name)
 
 
 def main():
