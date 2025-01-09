@@ -173,9 +173,19 @@ class UnstableTypes(Ast):
 
     PUBLIC_HEADERS = frozenset([
         'mbedtls/asn1.h',
+        'mbedtls/asn1write.h',
+        'mbedtls/base64.h',
+        'mbedtls/constant_time.h',
+        'mbedtls/lms.h',
+        'mbedtls/memory_buffer_alloc.h',
+        'mbedtls/nist_kw.h',
+        'mbedtls/pem.h',
+        'mbedtls/pk.h',
         'mbedtls/platform.h',
         'mbedtls/platform_time.h',
         'mbedtls/platform_util.h',
+        'mbedtls/psa_util.h',
+        'mbedtls/threading.h',
     ])
 
     def is_private_header(self, filename: str) -> bool:
@@ -191,8 +201,6 @@ class UnstableTypes(Ast):
 
     NOT_ACTUALLY_PRIVATE_TYPES = frozenset([
         'mbedtls_md_type_t',
-        'mbedtls_pem_context',
-        'mbedtls_pk_context',
     ])
 
     def read_use_of_type(self,
