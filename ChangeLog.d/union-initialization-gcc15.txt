@@ -1,0 +1,6 @@
+Bugfix
+   * Fix a potential use of uninitialized memory in PSA multipart MAC
+     operations and PSA interruptible signature operations. This could happen
+     when the context structure was allocated on the stack with a compiler
+     where {0} does not initialize all members of a union to 0, such as
+     CompCert, some builds of Clang 18, and GCC 15. Fixes #9814.
