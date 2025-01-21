@@ -29,8 +29,6 @@ if ! cd "$(dirname "$0")"; then
     exit 125
 fi
 
-DATA_FILES_PATH=../framework/data_files
-
 # default values, can be overridden by the environment
 : ${P_SRV:=../programs/ssl/ssl_server2}
 : ${P_CLI:=../programs/ssl/ssl_client2}
@@ -40,6 +38,9 @@ DATA_FILES_PATH=../framework/data_files
 : ${GNUTLS_CLI:=gnutls-cli}
 : ${GNUTLS_SERV:=gnutls-serv}
 : ${PERL:=perl}
+
+: ${MBEDTLS_FRAMEWORK:=../framework}
+: ${DATA_FILES_PATH:=$MBEDTLS_FRAMEWORK/data_files}
 
 # The OPENSSL variable used to be OPENSSL_CMD for historical reasons.
 # To help the migration, error out if the old variable is set,
@@ -567,7 +568,7 @@ adapt_cmd_for_psk () {
         *openssl*s_server*) s='-psk 73776f726466697368 -nocert';;
         *openssl*) s='-psk 73776f726466697368';;
         *gnutls-cli*) s='--pskusername=Client_identity --pskkey=73776f726466697368';;
-        *gnutls-serv*) s='--pskpasswd=../framework/data_files/simplepass.psk';;
+        *gnutls-serv*) s="--pskpasswd=$MBEDTLS_FRAMEWORK/data_files/simplepass.psk";;
         *) s='psk=73776f726466697368';;
     esac
     eval $1='"$2 $s"'

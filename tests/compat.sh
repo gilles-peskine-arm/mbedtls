@@ -36,6 +36,9 @@ SRVMEM=0
 : ${GNUTLS_CLI:=gnutls-cli}
 : ${GNUTLS_SERV:=gnutls-serv}
 
+: ${MBEDTLS_FRAMEWORK:=../framework}
+: ${DATA_FILES_PATH:=$MBEDTLS_FRAMEWORK/data_files}
+
 # The OPENSSL variable used to be OPENSSL_CMD for historical reasons.
 # To help the migration, error out if the old variable is set,
 # but only if it has a different value than the new one.
@@ -290,7 +293,7 @@ reset_ciphersuites()
 # list of entries of the form "STANDARD_NAME=PROGRAM_NAME".
 translate_ciphers()
 {
-    ciphers=$(../framework/scripts/translate_ciphers.py "$@")
+    ciphers=$("$MBEDTLS_FRAMEWORK/scripts/translate_ciphers.py" "$@")
     if [ $? -ne 0 ]; then
         echo "translate_ciphers.py failed with exit code $1" >&2
         echo "$2" >&2
@@ -591,8 +594,6 @@ o_check_ciphersuite()
 
 setup_arguments()
 {
-    DATA_FILES_PATH="../framework/data_files"
-
     O_MODE=""
     G_MODE=""
     case "$MODE" in
