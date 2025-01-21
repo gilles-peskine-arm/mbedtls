@@ -7,22 +7,22 @@ MBEDTLS_FRAMEWORK := framework
 endif
 
 ifneq (,$(filter-out lib library/%,$(or $(MAKECMDGOALS),all)))
-    ifeq (,$(wildcard framework/exported.make))
+    ifeq (,$(wildcard $(MBEDTLS_FRAMEWORK)/exported.make))
         # Use the define keyword to get a multi-line message.
         # GNU make appends ".  Stop.", so tweak the ending of our message accordingly.
         ifneq (,$(wildcard .git))
             define error_message
-${MBEDTLS_PATH}/framework/exported.make not found (and does appear to be a git checkout). Run `git submodule update --init` from the source tree to fetch the submodule contents.
+${MBEDTLS_PATH}/$(MBEDTLS_FRAMEWORK)/exported.make not found (and does appear to be a git checkout). Run `git submodule update --init` from the source tree to fetch the submodule contents.
 This is a fatal error
             endef
         else
             define error_message
-${MBEDTLS_PATH}/framework/exported.make not found (and does not appear to be a git checkout). Please ensure you have downloaded the right archive from the release page on GitHub.
+${MBEDTLS_PATH}/$(MBEDTLS_FRAMEWORK)/exported.make not found (and does not appear to be a git checkout). Please ensure you have downloaded the right archive from the release page on GitHub.
             endef
         endif
         $(error $(error_message))
     endif
-    include framework/exported.make
+    include $(MBEDTLS_FRAMEWORK)/exported.make
 endif
 
 .SILENT:
@@ -228,8 +228,8 @@ C_SOURCE_FILES = $(wildcard \
 	tf-psa-crypto/drivers/*/*/*/*.c \
 	tf-psa-crypto/drivers/*/*/*/*/*.c \
 	programs/*/*.[hc] \
-	framework/tests/include/*/*.h framework/tests/include/*/*/*.h \
-	framework/tests/src/*.c framework/tests/src/*/*.c \
+	$(MBEDTLS_FRAMEWORK)/tests/include/*/*.h $(MBEDTLS_FRAMEWORK)/tests/include/*/*/*.h \
+	$(MBEDTLS_FRAMEWORK)/tests/src/*.c $(MBEDTLS_FRAMEWORK)/tests/src/*/*.c \
 	tests/suites/*.function \
 	tf-psa-crypto/tests/suites/*.function \
 )
@@ -247,5 +247,5 @@ cscope.in.out cscope.po.out cscope.out: $(C_SOURCE_FILES)
 	cscope -bq -u -Iinclude -Ilibrary -Itf-psa-crypto/core \
         -Itf-psa-crypto/include \
 	-Itf-psa-crypto/drivers/builtin/src \
-	$(patsubst %,-I%,$(wildcard tf-psa-crypto/drivers/*/include)) -Iframework/tests/include $(C_SOURCE_FILES)
+	$(patsubst %,-I%,$(wildcard tf-psa-crypto/drivers/*/include)) -I$(MBEDTLS_FRAMEWORK)/tests/include $(C_SOURCE_FILES)
 .PHONY: cscope global

@@ -44,7 +44,7 @@ foreach(exe IN LISTS executables_no_common_c executables_with_common_c)
 
     add_executable(${exe} ${exe_sources})
     set_base_compile_options(${exe})
-    target_include_directories(${exe} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../framework/tests/include
+    target_include_directories(${exe} PRIVATE ${MBEDTLS_FRAMEWORK_DIR}/tests/include
                                               ${CMAKE_CURRENT_SOURCE_DIR}/../../tests/include)
 
     if (NOT FUZZINGENGINE_LIB)

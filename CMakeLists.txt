@@ -361,7 +361,7 @@ if (NOT EXISTS "${MBEDTLS_FRAMEWORK_DIR}/CMakeLists.txt")
         message(FATAL_ERROR "${MBEDTLS_FRAMEWORK_DIR}/CMakeLists.txt not found (and does not appear to be a git checkout). Please ensure you have downloaded the right archive from the release page on GitHub.")
     endif()
 endif()
-add_subdirectory(framework)
+add_subdirectory("${MBEDTLS_FRAMEWORK_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/framework")
 
 add_subdirectory(include)
 

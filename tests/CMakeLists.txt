@@ -64,9 +64,9 @@ if(GEN_FILES)
             ${CMAKE_CURRENT_SOURCE_DIR}/..
         COMMAND
             "${MBEDTLS_PYTHON_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../framework/scripts/generate_tls13_compat_tests.py"
+            "${MBEDTLS_FRAMEWORK_DIR}/scripts/generate_tls13_compat_tests.py"
         DEPENDS
-            ${CMAKE_CURRENT_SOURCE_DIR}/../framework/scripts/generate_tls13_compat_tests.py
+            ${MBEDTLS_FRAMEWORK_DIR}/scripts/generate_tls13_compat_tests.py
     )
     add_custom_target(tls13-compat.sh
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/opt-testcases/tls13-compat.sh)
@@ -166,7 +166,7 @@ function(add_test_suite suite_name)
     # them as PUBLIC.
     target_include_directories(test_suite_${data_name}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../framework/tests/include
+        PRIVATE ${MBEDTLS_FRAMEWORK_DIR}/tests/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../library
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tf-psa-crypto/core
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tf-psa-crypto/drivers/builtin/src)
@@ -217,7 +217,7 @@ if (NOT ${CMAKE_CURRENT_BINARY_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     link_to_source(Descriptions.txt)
     link_to_source(compat.sh)
     link_to_source(context-info.sh)
-    link_to_source(../framework/data_files)
+    link_to_source("${MBEDTLS_FRAMEWORK_DIR}/data_files")
     link_to_source(scripts)
     link_to_source(ssl-opt.sh)
     link_to_source(opt-testcases)

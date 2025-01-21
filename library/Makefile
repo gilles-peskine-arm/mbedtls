@@ -17,17 +17,17 @@ GENERATED_FILES := \
 	$(TF_PSA_CRYPTO_CORE_PATH)/psa_crypto_driver_wrappers_no_static.c
 
 ifneq ($(GENERATED_FILES),$(wildcard $(GENERATED_FILES)))
-    ifeq (,$(wildcard $(MBEDTLS_PATH)/framework/exported.make))
+    ifeq (,$(wildcard $(MBEDTLS_FRAMEWORK)/exported.make))
         # Use the define keyword to get a multi-line message.
         # GNU make appends ".  Stop.", so tweak the ending of our message accordingly.
         define error_message
-$(MBEDTLS_PATH)/framework/exported.make not found.
+$(MBEDTLS_FRAMEWORK)/exported.make not found.
 Run `git submodule update --init` to fetch the submodule contents.
 This is a fatal error
         endef
         $(error $(error_message))
     endif
-    include $(MBEDTLS_PATH)/framework/exported.make
+    include $(MBEDTLS_FRAMEWORK)/exported.make
 endif
 
 # Also see "include/mbedtls/mbedtls_config.h"
@@ -372,11 +372,11 @@ error.c:
 	echo "  Gen   $@"
 	$(PERL) ../scripts/generate_errors.pl
 
-ssl_debug_helpers_generated.c: $(gen_file_dep) ../framework/scripts/generate_ssl_debug_helpers.py
+ssl_debug_helpers_generated.c: $(gen_file_dep) $(MBEDTLS_FRAMEWORK)/scripts/generate_ssl_debug_helpers.py
 ssl_debug_helpers_generated.c: $(gen_file_dep) $(filter-out %config%,$(wildcard ../include/mbedtls/*.h))
 ssl_debug_helpers_generated.c:
 	echo "  Gen   $@"
-	$(PYTHON) ../framework/scripts/generate_ssl_debug_helpers.py --mbedtls-root .. .
+	$(PYTHON) $(MBEDTLS_FRAMEWORK)/scripts/generate_ssl_debug_helpers.py --mbedtls-root .. .
 
 version_features.c: $(gen_file_dep) ../scripts/generate_features.pl
 version_features.c: $(gen_file_dep) ../scripts/data_files/version_features.fmt
