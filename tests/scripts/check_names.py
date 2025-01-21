@@ -248,7 +248,7 @@ class CodeParser():
             "library/*.h",
             "tf-psa-crypto/core/*.h",
             "tf-psa-crypto/drivers/builtin/src/*.h",
-            "framework/tests/include/test/drivers/*.h",
+            build_tree.framework_directory() + "/tests/include/test/drivers/*.h",
         ])
         all_macros["private"] = self.parse_macros([
             "library/*.c",
