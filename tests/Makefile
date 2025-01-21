@@ -178,10 +178,6 @@ $(MBEDTLS_FRAMEWORK)/tests/include/test/test_keys.h: $(MBEDTLS_FRAMEWORK)/script
 	echo "  Gen   $@"
 	$(PYTHON) $(MBEDTLS_FRAMEWORK)/scripts/generate_test_keys.py --output $@
 
-$(MBEDTLS_FRAMEWORK)/tests/include/test/test_keys.h: $(MBEDTLS_FRAMEWORK)/scripts/generate_test_keys.py
-	echo "  Gen   $@"
-	$(PYTHON) $(MBEDTLS_FRAMEWORK)/scripts/generate_test_keys.py --output $@
-
 TEST_OBJS_DEPS = $(wildcard include/test/*.h include/test/*/*.h)
 ifdef RECORD_PSA_STATUS_COVERAGE_LOG
 # Explicitly depend on this header because on a clean copy of the source tree,
@@ -261,8 +257,7 @@ LOCAL_CRYPTO_CFLAGS = $(patsubst -I./include, -I../../tests/include, $(patsubst 
 LOCAL_CRYPTO_LDFLAGS = $(patsubst -L../library, -L../../library, \
                        $(patsubst -L../tests/%, -L../../tests/%, \
                        $(patsubst ./src/%,../../tests/src/%, \
-                       $(patsubst $(MBEDTLS_FRAMEWORK)/tests/src/%,$(MBEDTLS_FRAMEWORK)/tests/src/%, \
-					   $(LOCAL_LDFLAGS)))))
+					   $(LOCAL_LDFLAGS))))
 $(CRYPTO_BINARIES): %$(EXEXT): %.c $(MBEDLIBS) $(TEST_OBJS_DEPS) $(MBEDTLS_TEST_OBJS)
 	echo "  CC   $<"
 	cd ../tf-psa-crypto/tests && $(CC) $(LOCAL_CRYPTO_CFLAGS) $(CFLAGS) $(subst $(EXEXT),,$(@F)).c $(LOCAL_CRYPTO_LDFLAGS) $(LDFLAGS) -o $(@F)
