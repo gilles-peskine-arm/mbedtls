@@ -67,12 +67,12 @@ component_build_psa_crypto_spm () {
     # We can only compile, not link, since our test and sample programs
     # aren't equipped for the modified names used when MBEDTLS_PSA_CRYPTO_SPM
     # is active.
-    make CC=gcc CFLAGS='-Werror -Wall -Wextra -I../framework/tests/include/spe' lib
+    make CC=gcc CFLAGS='-Werror -Wall -Wextra -I${MBEDTLS_FRAMEWORK}/tests/include/spe' lib
 
     # Check that if a symbol is renamed by crypto_spe.h, the non-renamed
     # version is not present.
     echo "Checking for renamed symbols in the library"
-    check_renamed_symbols framework/tests/include/spe/crypto_spe.h library/libmbedcrypto.a
+    check_renamed_symbols ${MBEDTLS_FRAMEWORK}/tests/include/spe/crypto_spe.h library/libmbedcrypto.a
 }
 
 # The goal of this component is to build a configuration where:
@@ -512,7 +512,7 @@ component_test_crypto_for_psa_service () {
 component_build_crypto_baremetal () {
   msg "build: make, crypto only, baremetal config"
   scripts/config.py crypto_baremetal
-  make CFLAGS="-O1 -Werror -I$PWD/framework/tests/include/baremetal-override/"
+  make CFLAGS="-O1 -Werror -I${MBEDTLS_FRAMEWORK}/tests/include/baremetal-override/"
   are_empty_libraries library/libmbedx509.* library/libmbedtls.*
 }
 
@@ -1369,7 +1369,7 @@ component_test_tfm_config_p256m_driver_accel_ec () {
     common_tfm_config
 
     # Build crypto library
-    make CC=$ASAN_CC CFLAGS="$ASAN_CFLAGS -I../framework/tests/include/spe" LDFLAGS="$ASAN_CFLAGS"
+    make CC=$ASAN_CC CFLAGS="$ASAN_CFLAGS -I${MBEDTLS_FRAMEWORK}/tests/include/spe" LDFLAGS="$ASAN_CFLAGS"
 
     # Make sure any built-in EC alg was not re-enabled by accident (additive config)
     not grep mbedtls_ecdsa_ ${BUILTIN_SRC_PATH}/ecdsa.o
@@ -1403,7 +1403,7 @@ component_test_tfm_config_no_p256m () {
     sed -i '/PROFILE_M_PSA_CRYPTO_CONFIG_H/i #undef MBEDTLS_PSA_P256M_DRIVER_ENABLED' "$CRYPTO_CONFIG_H"
 
     msg "build: TF-M config without p256m"
-    make CFLAGS='-Werror -Wall -Wextra -I../framework/tests/include/spe' tests
+    make CFLAGS='-Werror -Wall -Wextra -I${MBEDTLS_FRAMEWORK}/tests/include/spe' tests
 
     # Check that p256m was not built
     not grep p256_ecdsa_ library/libmbedcrypto.a
@@ -2566,7 +2566,7 @@ component_test_psa_crypto_drivers () {
     msg "build: full + test drivers dispatching to builtins"
     scripts/config.py full
     loc_cflags="$ASAN_CFLAGS -DPSA_CRYPTO_DRIVER_TEST -DMBEDTLS_CONFIG_ADJUST_TEST_ACCELERATORS"
-    loc_cflags="${loc_cflags} -I../framework/tests/include"
+    loc_cflags="${loc_cflags} -I${MBEDTLS_FRAMEWORK}/tests/include"
 
     make CC=$ASAN_CC CFLAGS="${loc_cflags}" LDFLAGS="$ASAN_CFLAGS"
 
@@ -2601,13 +2601,13 @@ component_build_psa_alt_headers () {
 
     # Generate alternative versions of the substitutable headers with the
     # same content except different include guards.
-    make -C tests ../framework/tests/include/alt-extra/psa/crypto_platform_alt.h ../framework/tests/include/alt-extra/psa/crypto_struct_alt.h
+    make -C tests ${MBEDTLS_FRAMEWORK}/tests/include/alt-extra/psa/crypto_platform_alt.h ${MBEDTLS_FRAMEWORK}/tests/include/alt-extra/psa/crypto_struct_alt.h
 
     # Build the library and some programs.
     # Don't build the fuzzers to avoid having to go through hoops to set
     # a correct include path for programs/fuzz/Makefile.
-    make CFLAGS="-I ../framework/tests/include/alt-extra -DMBEDTLS_PSA_CRYPTO_PLATFORM_FILE='\"psa/crypto_platform_alt.h\"' -DMBEDTLS_PSA_CRYPTO_STRUCT_FILE='\"psa/crypto_struct_alt.h\"'" lib
-    make -C programs -o fuzz CFLAGS="-I ../framework/tests/include/alt-extra -DMBEDTLS_PSA_CRYPTO_PLATFORM_FILE='\"psa/crypto_platform_alt.h\"' -DMBEDTLS_PSA_CRYPTO_STRUCT_FILE='\"psa/crypto_struct_alt.h\"'"
+    make CFLAGS="-I ${MBEDTLS_FRAMEWORK}/tests/include/alt-extra -DMBEDTLS_PSA_CRYPTO_PLATFORM_FILE='\"psa/crypto_platform_alt.h\"' -DMBEDTLS_PSA_CRYPTO_STRUCT_FILE='\"psa/crypto_struct_alt.h\"'" lib
+    make -C programs -o fuzz CFLAGS="-I ${MBEDTLS_FRAMEWORK}/tests/include/alt-extra -DMBEDTLS_PSA_CRYPTO_PLATFORM_FILE='\"psa/crypto_platform_alt.h\"' -DMBEDTLS_PSA_CRYPTO_STRUCT_FILE='\"psa/crypto_struct_alt.h\"'"
 
     # Check that we're getting the alternative include guards and not the
     # original include guards.

@@ -43,7 +43,7 @@ component_check_doxy_blocks () {
 
 component_check_files () {
     msg "Check: file sanity checks (permissions, encodings)" # < 1s
-    framework/scripts/check_files.py
+    ${MBEDTLS_FRAMEWORK}/scripts/check_files.py
 }
 
 component_check_changelog () {
@@ -70,7 +70,7 @@ component_check_test_cases () {
     else
         opt=''
     fi
-    framework/scripts/check_test_cases.py -q $opt
+    ${MBEDTLS_FRAMEWORK}/scripts/check_test_cases.py -q $opt
     unset opt
 }
 
@@ -140,7 +140,7 @@ component_check_doxygen_warnings () {
 
 component_check_code_style () {
     msg "Check C code style"
-    ./framework/scripts/code_style.py
+    ${MBEDTLS_FRAMEWORK}/scripts/code_style.py
 }
 
 support_check_code_style () {
@@ -160,8 +160,8 @@ component_check_test_helpers () {
     # unittest writes out mundane stuff like number or tests run on stderr.
     # Our convention is to reserve stderr for actual errors, and write
     # harmless info on stdout so it can be suppress with --quiet.
-    ./framework/scripts/test_generate_test_code.py 2>&1
+    ${MBEDTLS_FRAMEWORK}/scripts/test_generate_test_code.py 2>&1
 
     msg "unit test: translate_ciphers.py"
-    python3 -m unittest framework/scripts/translate_ciphers.py 2>&1
+    python3 -m unittest ${MBEDTLS_FRAMEWORK}/scripts/translate_ciphers.py 2>&1
 }
