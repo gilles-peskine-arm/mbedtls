@@ -12,6 +12,11 @@ Usage:
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__),
-                             os.path.pardir,
-                             'framework', 'scripts'))
+_FRAMEWORK_DIR = os.getenv('MBEDTLS_FRAMEWORK')
+if _FRAMEWORK_DIR is None:
+    _FRAMEWORK_DIR = os.path.join(os.path.dirname(__file__),
+                                  os.path.pardir, 'framework')
+else:
+    _FRAMEWORK_DIR = os.path.abspath(_FRAMEWORK_DIR)
+
+sys.path.append(os.path.join(_FRAMEWORK_DIR, 'scripts'))
