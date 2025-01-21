@@ -2,6 +2,10 @@ ifndef MBEDTLS_PATH
 MBEDTLS_PATH := ..
 endif
 
+ifndef MBEDTLS_FRAMEWORK
+MBEDTLS_FRAMEWORK := $(MBEDTLS_PATH)/framework
+endif
+
 TF_PSA_CRYPTO_CORE_PATH = $(MBEDTLS_PATH)/tf-psa-crypto/core
 TF_PSA_CRYPTO_DRIVERS_BUILTIN_SRC_PATH = $(MBEDTLS_PATH)/tf-psa-crypto/drivers/builtin/src
 

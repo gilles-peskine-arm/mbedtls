@@ -2,6 +2,10 @@ DESTDIR=/usr/local
 PREFIX=mbedtls_
 PERL ?= perl
 
+ifndef MBEDTLS_FRAMEWORK
+MBEDTLS_FRAMEWORK := framework
+endif
+
 ifneq (,$(filter-out lib library/%,$(or $(MAKECMDGOALS),all)))
     ifeq (,$(wildcard framework/exported.make))
         # Use the define keyword to get a multi-line message.

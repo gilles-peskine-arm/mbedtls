@@ -61,7 +61,11 @@ endif()
 
 # Set the project and framework root directory.
 set(MBEDTLS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(MBEDTLS_FRAMEWORK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/framework)
+if (DEFINED ENV{MBEDTLS_FRAMEWORK})
+    get_filename_component(MBEDTLS_FRAMEWORK_DIR "$ENV{MBEDTLS_FRAMEWORK}" ABSOLUTE)
+else()
+    set(MBEDTLS_FRAMEWORK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/framework")
+endif()
 
 option(ENABLE_PROGRAMS "Build Mbed TLS programs." ON)
 
