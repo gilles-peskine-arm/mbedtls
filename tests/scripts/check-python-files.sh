@@ -10,6 +10,8 @@
 # We'll keep going on errors and report the status at the end.
 ret=0
 
+. "${MBEDTLS_FRAMEWORK:-framework}/scripts/project_detection.sh"
+
 if type python3 >/dev/null 2>/dev/null; then
     PYTHON=python3
 else
@@ -55,14 +57,15 @@ elif [ "$1" = "--can-mypy" ]; then
 fi
 
 echo 'Running pylint ...'
-$PYTHON -m pylint framework/scripts/*.py framework/scripts/mbedtls_framework/*.py scripts/*.py tests/scripts/*.py || {
+$PYTHON -m pylint ${MBEDTLS_FRAMEWORK}/scripts/*.py ${MBEDTLS_FRAMEWORK}/scripts/mbedtls_framework/*.py scripts/*.py tests/scripts/*.py || {
     echo >&2 "pylint reported errors"
     ret=1
 }
 
 echo
 echo 'Running mypy ...'
-$PYTHON -m mypy framework/scripts/*.py framework/scripts/mbedtls_framework/*.py scripts/*.py tests/scripts/*.py ||
+export MYPYPATH="${MBEDTLS_FRAMEWORK}/scripts:${MYPYPATH:-}"
+$PYTHON -m mypy ${MBEDTLS_FRAMEWORK}/scripts/*.py ${MBEDTLS_FRAMEWORK}/scripts/mbedtls_framework/*.py scripts/*.py tests/scripts/*.py ||
   ret=1
 
 exit $ret

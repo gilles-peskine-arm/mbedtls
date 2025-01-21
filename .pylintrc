@@ -1,5 +1,5 @@
 [MASTER]
-init-hook='import sys; sys.path.append("scripts"); sys.path.append("framework/scripts")'
+init-hook='import os, sys; sys.path.append("scripts"); sys.path.append(os.path.join(os.getenv("MBEDTLS_FRAMEWORK", "framework"), "scripts"))'
 min-similarity-lines=10
 
 [BASIC]
