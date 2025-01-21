@@ -13,6 +13,8 @@ use warnings;
 use strict;
 use Digest::MD5 'md5_hex';
 
+my $framework_dir = $ENV{MBEDTLS_FRAMEWORK} || 'framework';
+
 my $vsx_dir = "visualc/VS2017";
 my $vsx_ext = "vcxproj";
 my $vsx_app_tpl_file = "scripts/data_files/vs2017-app-template.$vsx_ext";
@@ -32,10 +34,10 @@ my $crypto_core_source_dir = 'tf-psa-crypto/core';
 my $crypto_source_dir = 'tf-psa-crypto/drivers/builtin/src';
 my $tls_test_source_dir = 'tests/src';
 my $tls_test_header_dir = 'tests/include/test';
-my $test_source_dir = 'framework/tests/src';
-my $test_header_dir = 'framework/tests/include/test';
-my $test_drivers_header_dir = 'framework/tests/include/test/drivers';
-my $test_drivers_source_dir = 'framework/tests/src/drivers';
+my $test_source_dir = $framework_dir . '/tests/src';
+my $test_header_dir = $framework_dir . '/tests/include/test';
+my $test_drivers_header_dir = $framework_dir . '/tests/include/test/drivers';
+my $test_drivers_source_dir = $framework_dir . '/tests/src/drivers';
 
 my @thirdparty_header_dirs = qw(
     tf-psa-crypto/drivers/everest/include/everest
@@ -49,7 +51,7 @@ my @thirdparty_source_dirs = qw(
 # Directories to add to the include path.
 # Order matters in case there are files with the same name in more than
 # one directory: the compiler will use the first match.
-my @include_directories = qw(
+my @include_directories = (qw(
     include
     tf-psa-crypto/include
     tf-psa-crypto/drivers/builtin/include
@@ -58,8 +60,8 @@ my @include_directories = qw(
     tf-psa-crypto/drivers/everest/include/everest/vs2013
     tf-psa-crypto/drivers/everest/include/everest/kremlib
     tests/include
-    framework/tests/include
-);
+                            ),
+                           "$framework_dir/tests/include");
 my $include_directories = join(';', map {"../../$_"} @include_directories);
 
 # Directories to add to the include path when building the libraries, but not
