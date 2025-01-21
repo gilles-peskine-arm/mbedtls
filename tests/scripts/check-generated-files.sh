@@ -22,7 +22,7 @@ EOF
     exit
 fi
 
-. framework/scripts/project_detection.sh
+. "${MBEDTLS_FRAMEWORK:-framework}/scripts/project_detection.sh"
 
 if in_mbedtls_repo; then
     if [ -d tf-psa-crypto ]; then
@@ -141,46 +141,46 @@ check()
 if [ -d tf-psa-crypto ]; then
     cd tf-psa-crypto
     check scripts/generate_psa_constants.py ./programs/psa/psa_constant_names_generated.c
-    check ../framework/scripts/generate_bignum_tests.py $(../framework/scripts/generate_bignum_tests.py --list)
-    check ../framework/scripts/generate_config_tests.py tests/suites/test_suite_config.psa_boolean.data
-    check ../framework/scripts/generate_ecp_tests.py $(../framework/scripts/generate_ecp_tests.py --list)
-    check ../framework/scripts/generate_psa_tests.py $(../framework/scripts/generate_psa_tests.py --list)
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_bignum_tests.py $(${MBEDTLS_FRAMEWORK}/scripts/generate_bignum_tests.py --list)
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_config_tests.py tests/suites/test_suite_config.psa_boolean.data
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_ecp_tests.py $(${MBEDTLS_FRAMEWORK}/scripts/generate_ecp_tests.py --list)
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_psa_tests.py $(${MBEDTLS_FRAMEWORK}/scripts/generate_psa_tests.py --list)
     cd ..
     # Generated files that are present in the repository even in the development
     # branch. (This is intended to be temporary, until the generator scripts are
     # fully reviewed and the build scripts support a generated header file.)
-    check framework/scripts/generate_psa_wrappers.py tf-psa-crypto/tests/include/test/psa_test_wrappers.h tf-psa-crypto/tests/src/psa_test_wrappers.c
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_psa_wrappers.py tf-psa-crypto/tests/include/test/psa_test_wrappers.h tf-psa-crypto/tests/src/psa_test_wrappers.c
     check tf-psa-crypto/scripts/generate_driver_wrappers.py ${crypto_core_dir}/psa_crypto_driver_wrappers.h \
                                                             ${crypto_core_dir}/psa_crypto_driver_wrappers_no_static.c
-    check framework/scripts/generate_config_tests.py tests/suites/test_suite_config.mbedtls_boolean.data
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_config_tests.py tests/suites/test_suite_config.mbedtls_boolean.data
 else
     check scripts/generate_psa_constants.py ./programs/psa/psa_constant_names_generated.c
-    check framework/scripts/generate_bignum_tests.py $(framework/scripts/generate_bignum_tests.py --list)
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_bignum_tests.py $(${MBEDTLS_FRAMEWORK}/scripts/generate_bignum_tests.py --list)
     if in_tf_psa_crypto_repo; then
-        check framework/scripts/generate_config_tests.py tests/suites/test_suite_config.psa_boolean.data
+        check ${MBEDTLS_FRAMEWORK}/scripts/generate_config_tests.py tests/suites/test_suite_config.psa_boolean.data
     else
-        check framework/scripts/generate_config_tests.py tests/suites/test_suite_config.mbedtls_boolean.data
+        check ${MBEDTLS_FRAMEWORK}/scripts/generate_config_tests.py tests/suites/test_suite_config.mbedtls_boolean.data
     fi
-    check framework/scripts/generate_ecp_tests.py $(framework/scripts/generate_ecp_tests.py --list)
-    check framework/scripts/generate_psa_tests.py $(framework/scripts/generate_psa_tests.py --list)
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_ecp_tests.py $(${MBEDTLS_FRAMEWORK}/scripts/generate_ecp_tests.py --list)
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_psa_tests.py $(${MBEDTLS_FRAMEWORK}/scripts/generate_psa_tests.py --list)
     check scripts/generate_driver_wrappers.py ${crypto_core_dir}/psa_crypto_driver_wrappers.h \
                                               ${crypto_core_dir}/psa_crypto_driver_wrappers_no_static.c
     # Generated files that are present in the repository even in the development
     # branch. (This is intended to be temporary, until the generator scripts are
     # fully reviewed and the build scripts support a generated header file.)
-    check framework/scripts/generate_psa_wrappers.py tests/include/test/psa_test_wrappers.h tests/src/psa_test_wrappers.c
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_psa_wrappers.py tests/include/test/psa_test_wrappers.h tests/src/psa_test_wrappers.c
 fi
 
-check framework/scripts/generate_test_keys.py framework/tests/include/test/test_keys.h
+check ${MBEDTLS_FRAMEWORK}/scripts/generate_test_keys.py ${MBEDTLS_FRAMEWORK}/tests/include/test/test_keys.h
 
 # Additional checks for Mbed TLS only
 if in_mbedtls_repo; then
     check scripts/generate_errors.pl library/error.c
     check scripts/generate_query_config.pl programs/test/query_config.c
     check scripts/generate_features.pl library/version_features.c
-    check framework/scripts/generate_ssl_debug_helpers.py library/ssl_debug_helpers_generated.c
-    check framework/scripts/generate_tls13_compat_tests.py tests/opt-testcases/tls13-compat.sh
-    check framework/scripts/generate_test_cert_macros.py tests/src/test_certs.h
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_ssl_debug_helpers.py library/ssl_debug_helpers_generated.c
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_tls13_compat_tests.py tests/opt-testcases/tls13-compat.sh
+    check ${MBEDTLS_FRAMEWORK}/scripts/generate_test_cert_macros.py tests/src/test_certs.h
     # generate_visualc_files enumerates source files (library/*.c). It doesn't
     # care about their content, but the files must exist. So it must run after
     # the step that creates or updates these files.
