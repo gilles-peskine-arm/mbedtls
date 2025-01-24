@@ -108,14 +108,30 @@ log_outcome () {
             "clean"|"neat") continue;; # Boring
             cmTC_*) continue;; # Weirdness from CMake
         esac
-        echo >>"${MBEDTLS_TEST_OUTCOME_FILE}" \
-             "${MBEDTLS_TEST_PLATFORM};${MBEDTLS_TEST_CONFIGURATION};${TOOL};${target};${result};${cause}"
+        line="${MBEDTLS_TEST_PLATFORM};${MBEDTLS_TEST_CONFIGURATION};${TOOL};${modifier}${target};${result};${cause}"
+        lines=$lines$line$nl
+        line_count=$((line_count + 1))
+        echo "$line" >>"${MBEDTLS_TEST_OUTCOME_FILE}"
     done
 }
 
+lines= line_count=0
 if [ -n "${MBEDTLS_TEST_OUTCOME_FILE}" ] &&
    [ -n "${MBEDTLS_TEST_CONFIGURATION}" ]; then
     log_outcome "$@"
 fi
+
+{
+    date +%s.%N
+    pwd
+    printf '%s\n$#=%s\n$*=%s\n' "$0" "$#" "$*"
+    printf 'MBEDTLS_TEST_CONFIGURATION=%s\n' "$MBEDTLS_TEST_CONFIGURATION"
+    printf '%s outcome lines:\n%s' "$line_count" "$lines"
+    echo "$$ -> $EXIT_STATUS"
+    pstree -s -p $$
+    ps lww $PPID
+    pstree -p $PPID
+    echo
+} >>"$(dirname -- "${MBEDTLS_TEST_OUTCOME_FILE:-.}")/make-${MBEDTLS_TEST_PLATFORM}.log"
 
 exit $EXIT_STATUS

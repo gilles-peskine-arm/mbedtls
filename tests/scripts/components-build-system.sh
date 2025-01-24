@@ -123,18 +123,24 @@ support_test_cmake_as_subdirectory () {
 }
 
 component_test_cmake_as_package () {
+    MBEDTLS_TEST_CONFIGURATION=$current_component/neat
     # Remove existing generated files so that we use the ones CMake
     # generates
     make neat
+    make TAGS
 
+    MBEDTLS_TEST_CONFIGURATION=$current_component/cmake
     msg "build: cmake 'as-package' build"
     root_dir="$(pwd)"
     cd programs/test/cmake_package
     build_variant_dir="$(pwd)"
     cmake .
+    MBEDTLS_TEST_CONFIGURATION=$current_component/make
     make
+    MBEDTLS_TEST_CONFIGURATION=$current_component/cmake_package
     ./cmake_package
     if [[ "$OSTYPE" == linux* ]]; then
+        MBEDTLS_TEST_CONFIGURATION=$current_component/pkgconfig.sh
         PKG_CONFIG_PATH="${build_variant_dir}/mbedtls/pkgconfig" \
         ${root_dir}/tests/scripts/pkgconfig.sh \
         mbedtls mbedx509 mbedcrypto
