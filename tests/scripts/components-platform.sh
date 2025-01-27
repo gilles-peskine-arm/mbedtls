@@ -277,7 +277,6 @@ support_build_sha_armce () {
 }
 
 component_build_sha_armce () {
-    scripts/config.py unset MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
 
     # Test variations of SHA256 Armv8 crypto extensions
     scripts/config.py set MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
@@ -290,7 +289,6 @@ component_build_sha_armce () {
         make -B library/../${BUILTIN_SRC_PATH}/sha256.o library/../${BUILTIN_SRC_PATH}/sha256.s CC=clang CFLAGS="--target=arm-linux-gnueabihf -mcpu=cortex-a72+crypto -marm"
         msg "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY clang, test A32 crypto instructions built"
         grep -E 'sha256[a-z0-9]+.32\s+[qv]' ${BUILTIN_SRC_PATH}/sha256.s
-    scripts/config.py unset MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_ONLY
 
 
     # test the deprecated form of the config option
@@ -306,7 +304,6 @@ component_build_sha_armce () {
         make -B library/../${BUILTIN_SRC_PATH}/sha256.o library/../${BUILTIN_SRC_PATH}/sha256.s CC=clang CFLAGS="--target=aarch64-linux-gnu -march=armv8-a+crypto"
         msg "MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT clang, test aarch64 crypto instructions built"
         grep -E 'sha256[a-z0-9]+\s+[qv]' ${BUILTIN_SRC_PATH}/sha256.s
-    scripts/config.py unset MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
 
 
     # test the deprecated form of the config option
@@ -563,7 +560,6 @@ component_build_armcc () {
     # unavailable, and the user is notified via a #warning. So enabling
     # this feature would prevent us from building with -Werror on
     # armclang. Tracked in #7198.
-    scripts/config.py unset MBEDTLS_SHA256_USE_ARMV8_A_CRYPTO_IF_PRESENT
 
     scripts/config.py set MBEDTLS_HAVE_ASM
 
