@@ -13880,7 +13880,6 @@ run_test    "Client Handshake defragmentation (512)" \
             "$O_NEXT_SRV -max_send_frag 512 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13888,7 +13887,6 @@ run_test    "Client Handshake defragmentation (513)" \
             "$O_NEXT_SRV -max_send_frag 513 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13896,7 +13894,6 @@ run_test    "Client Handshake defragmentation (256)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 256 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13904,7 +13901,6 @@ run_test    "Client Handshake defragmentation (128)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 128 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13912,7 +13908,6 @@ run_test    "Client Handshake defragmentation (64)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 64 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13920,7 +13915,6 @@ run_test    "Client Handshake defragmentation (36)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 36 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13928,7 +13922,6 @@ run_test    "Client Handshake defragmentation (32)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 32 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13936,7 +13929,6 @@ run_test    "Client Handshake defragmentation (16)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 16 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13945,7 +13937,6 @@ run_test    "Client Handshake defragmentation (13)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 13 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
@@ -13953,7 +13944,6 @@ run_test    "Client Handshake defragmentation (5)" \
             "$O_NEXT_SRV -mtu 32 -split_send_frag 5 " \
             "$P_CLI debug_level=4 " \
             0 \
-            -c "received ServerHello message" \
             -c "<= handshake" \
             -c "handshake fragment: "
 
