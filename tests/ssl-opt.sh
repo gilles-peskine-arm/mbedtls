@@ -13895,8 +13895,12 @@ run_test    "Client Handshake defragmentation (513)" \
 # OpenSSL does not allow max_send_frag to be less than 512
 # so we use split_send_frag instead for tests lower than 512 below.
 
+# There is an issue with OpenSSL when fragmenting with values less
+# than 512 bytes in TLS 1.2 so we require TLS 1.3 with these values.
+
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (256)" \
             "$O_NEXT_SRV -split_send_frag 256 " \
             "$P_CLI debug_level=4 " \
@@ -13906,6 +13910,7 @@ run_test    "Client Handshake defragmentation (256)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (128)" \
             "$O_NEXT_SRV -split_send_frag 128 " \
             "$P_CLI debug_level=4 " \
@@ -13915,6 +13920,7 @@ run_test    "Client Handshake defragmentation (128)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (64)" \
             "$O_NEXT_SRV -split_send_frag 64 " \
             "$P_CLI debug_level=4 " \
@@ -13924,6 +13930,7 @@ run_test    "Client Handshake defragmentation (64)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (36)" \
             "$O_NEXT_SRV -split_send_frag 36 " \
             "$P_CLI debug_level=4 " \
@@ -13933,6 +13940,7 @@ run_test    "Client Handshake defragmentation (36)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (32)" \
             "$O_NEXT_SRV -split_send_frag 32 " \
             "$P_CLI debug_level=4 " \
@@ -13942,6 +13950,7 @@ run_test    "Client Handshake defragmentation (32)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (16)" \
             "$O_NEXT_SRV -split_send_frag 16 " \
             "$P_CLI debug_level=4 " \
@@ -13951,6 +13960,7 @@ run_test    "Client Handshake defragmentation (16)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (13)" \
             "$O_NEXT_SRV -split_send_frag 13 " \
             "$P_CLI debug_level=4 " \
@@ -13960,6 +13970,7 @@ run_test    "Client Handshake defragmentation (13)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (5)" \
             "$O_NEXT_SRV -split_send_frag 5 " \
             "$P_CLI debug_level=4 " \
@@ -13987,6 +13998,7 @@ run_test    "Server Handshake defragmentation (513)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (256)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 256 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -13996,6 +14008,7 @@ run_test    "Server Handshake defragmentation (256)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (128)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 128 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -14005,6 +14018,7 @@ run_test    "Server Handshake defragmentation (128)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (64)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 64 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -14014,6 +14028,7 @@ run_test    "Server Handshake defragmentation (64)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (36)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 36 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -14023,6 +14038,7 @@ run_test    "Server Handshake defragmentation (36)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (32)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 32 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -14032,6 +14048,7 @@ run_test    "Server Handshake defragmentation (32)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (16)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 16 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -14041,6 +14058,7 @@ run_test    "Server Handshake defragmentation (16)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (13)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 13 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
@@ -14050,6 +14068,7 @@ run_test    "Server Handshake defragmentation (13)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Server Handshake defragmentation (5)" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -split_send_frag 5 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
