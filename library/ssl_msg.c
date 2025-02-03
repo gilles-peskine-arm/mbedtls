@@ -4696,7 +4696,10 @@ static int ssl_consume_current_message(mbedtls_ssl_context *ssl)
             return MBEDTLS_ERR_SSL_INTERNAL_ERROR;
         }
 
-        if (ssl->handshake->in_hsfraglen != 0) {
+        /* If this is the very first handshake fragment, we may not have
+         * a handshake structure yet, but we can keep going because there
+         * is no handshake fragment to append to yet. */
+        if (ssl->handshake != NULL && ssl->handshake->in_hsfraglen != 0) {
             /* Not all handshake fragments have arrived, do not consume. */
             MBEDTLS_SSL_DEBUG_MSG(3,
                                   ("waiting for more fragments (%" MBEDTLS_PRINTF_SIZET " of %"
