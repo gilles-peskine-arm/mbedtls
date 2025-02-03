@@ -1120,6 +1120,8 @@ int mbedtls_ssl_handshake_init(mbedtls_ssl_context *ssl)
         return MBEDTLS_ERR_SSL_ALLOC_FAILED;
     }
 
+    ssl->handshake->in_hshdr = ssl->in_buf;
+
 #if defined(MBEDTLS_SSL_EARLY_DATA)
 #if defined(MBEDTLS_SSL_CLI_C)
     ssl->early_data_state = MBEDTLS_SSL_EARLY_DATA_STATE_IDLE;
@@ -1497,8 +1499,6 @@ void mbedtls_ssl_session_reset_msg_layer(mbedtls_ssl_context *ssl,
     ssl->in_hslen   = 0;
     ssl->keep_current_message = 0;
     ssl->transform_in  = NULL;
-    ssl->handshake->in_hshdr = NULL;
-    ssl->handshake->in_hsfraglen = 0;
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
     ssl->next_record_offset = 0;
