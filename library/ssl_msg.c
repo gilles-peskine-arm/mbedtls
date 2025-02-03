@@ -3227,6 +3227,26 @@ int mbedtls_ssl_prepare_handshake_record(mbedtls_ssl_context *ssl)
         return MBEDTLS_ERR_SSL_INVALID_RECORD;
     }
 
+    /* Normally, we already have a handshake structure at this point, because
+     * it was allocated during session setup.
+     *
+     * However, we can receive a legitimate handshake message after the
+     * initial handhake is over and the handshake structure has been
+     * freed: that happens if our peer sends a renegotiation attempt.
+     *
+     * We need to allocate the structure now, before we have determined
+     * whether the renegotiation attempt is valid, because at this point
+     * we may have only a fragment of the first handshake message, hence
+     * no way to determine its validity.
+     */
+    if (ssl->handshake == NULL) {
+        int ret = mbedtls_ssl_handshake_init(ssl);
+        if (ret != 0) {
+            MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_ssl_handshake_init", ret);
+            return ret;
+        }
+    }
+
     if (ssl->in_hslen == 0) {
         ssl->in_hslen = mbedtls_ssl_hs_hdr_len(ssl) + ssl_get_hs_total_len(ssl);
         ssl->handshake->in_hsfraglen = 0;

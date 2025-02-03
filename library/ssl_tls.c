@@ -4667,10 +4667,6 @@ int mbedtls_ssl_start_renegotiation(mbedtls_ssl_context *ssl)
 
     MBEDTLS_SSL_DEBUG_MSG(2, ("=> renegotiate"));
 
-    if ((ret = mbedtls_ssl_handshake_init(ssl)) != 0) {
-        return ret;
-    }
-
     /* RFC 6347 4.2.2: "[...] the HelloRequest will have message_seq = 0 and
      * the ServerHello will have message_seq = 1" */
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -4735,6 +4731,12 @@ int mbedtls_ssl_renegotiate(mbedtls_ssl_context *ssl)
     if (ssl->renego_status != MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS) {
         if (mbedtls_ssl_is_handshake_over(ssl) == 0) {
             return MBEDTLS_ERR_SSL_BAD_INPUT_DATA;
+        }
+
+        ret = mbedtls_ssl_handshake_init(ssl);
+        if (ret != 0) {
+            MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_ssl_handshake_init", ret);
+            return ret;
         }
 
         if ((ret = mbedtls_ssl_start_renegotiation(ssl)) != 0) {

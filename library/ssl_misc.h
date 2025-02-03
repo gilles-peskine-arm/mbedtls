@@ -1890,6 +1890,9 @@ void mbedtls_ssl_handshake_wrapup_free_hs_transform(mbedtls_ssl_context *ssl);
  * If the handshake doesn't complete due to waiting for I/O, it will continue
  * during the next calls to mbedtls_ssl_renegotiate() or mbedtls_ssl_read()
  * respectively.
+ *
+ * The handshake structure must be present and newly initialized
+ * (call mbedtls_ssl_handshake_init() before calling this function).
  */
 MBEDTLS_CHECK_RETURN_CRITICAL
 int mbedtls_ssl_start_renegotiation(mbedtls_ssl_context *ssl);
