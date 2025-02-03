@@ -1313,6 +1313,16 @@ unsigned int mbedtls_ssl_tls12_get_preferred_hash_for_sig_alg(
 void mbedtls_ssl_transform_free(mbedtls_ssl_transform *transform);
 
 /**
+ * \brief           Allocate and prepare the handshake context.
+ *
+ *                  If there is already a handshake context, clear it.
+ *
+ * \param ssl       SSL context
+ */
+MBEDTLS_CHECK_RETURN_CRITICAL
+int mbedtls_ssl_handshake_init(mbedtls_ssl_context *ssl);
+
+/**
  * \brief           Free referenced items in an SSL handshake context and clear
  *                  memory
  *
