@@ -645,6 +645,9 @@ struct mbedtls_ssl_handshake_params {
     uint8_t resume;                     /*!<  session resume indicator*/
     uint8_t cli_exts;                   /*!< client extension presence*/
 
+    unsigned char *MBEDTLS_PRIVATE(in_hshdr);    /*!< original handshake header start  */
+    size_t MBEDTLS_PRIVATE(in_hsfraglen);        /*!< accumulated hs fragments length  */
+
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
     uint8_t sni_authmode;               /*!< authmode from SNI callback     */
 #endif
