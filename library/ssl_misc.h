@@ -1865,6 +1865,19 @@ void mbedtls_ssl_dtls_replay_reset(mbedtls_ssl_context *ssl);
 void mbedtls_ssl_handshake_wrapup_free_hs_transform(mbedtls_ssl_context *ssl);
 
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
+/**
+ * \brief Start a renegotiation and process the new handshake.
+ *
+ * Actually renegotiate current connection, triggered by either:
+ * - any side: calling mbedtls_ssl_renegotiate(),
+ * - client: receiving a HelloRequest during mbedtls_ssl_read(),
+ * - server: receiving any handshake message on server during mbedtls_ssl_read() after
+ *   the initial handshake is completed.
+ *
+ * If the handshake doesn't complete due to waiting for I/O, it will continue
+ * during the next calls to mbedtls_ssl_renegotiate() or mbedtls_ssl_read()
+ * respectively.
+ */
 MBEDTLS_CHECK_RETURN_CRITICAL
 int mbedtls_ssl_start_renegotiation(mbedtls_ssl_context *ssl);
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
