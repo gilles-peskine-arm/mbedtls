@@ -3229,8 +3229,13 @@ int mbedtls_ssl_prepare_handshake_record(mbedtls_ssl_context *ssl)
 
     if (ssl->in_hslen == 0) {
         ssl->in_hslen = mbedtls_ssl_hs_hdr_len(ssl) + ssl_get_hs_total_len(ssl);
-        ssl->handshake->in_hsfraglen = 0;
-        ssl->handshake->in_hshdr = ssl->in_hdr;
+        /* This is a new handshake, so reset the handshake fragmentation
+         * tracking data. If the handshake structure hasn't been allocated
+         * yet, that's ok: ssl_handshake_init() will take care of it. */
+        if (ssl->handshake != NULL) {
+            ssl->handshake->in_hsfraglen = 0;
+            ssl->handshake->in_hshdr = ssl->in_hdr;
+        }
     }
 
     MBEDTLS_SSL_DEBUG_MSG(3, ("handshake message: msglen ="
@@ -3298,7 +3303,8 @@ int mbedtls_ssl_prepare_handshake_record(mbedtls_ssl_context *ssl)
     } else
 #endif /* MBEDTLS_SSL_PROTO_DTLS */
     {
-        if (ssl->handshake->in_hsfraglen > ssl->in_hslen) {
+        if (ssl->handshake != NULL &&
+            ssl->handshake->in_hsfraglen > ssl->in_hslen) {
             return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
         }
         int ret;
@@ -4696,7 +4702,8 @@ static int ssl_consume_current_message(mbedtls_ssl_context *ssl)
             return MBEDTLS_ERR_SSL_INTERNAL_ERROR;
         }
 
-        if (ssl->handshake->in_hsfraglen != 0) {
+        /* TODO explain why it's ok to continue when handshake is NULL */
+        if (ssl->handshake != NULL && ssl->handshake->in_hsfraglen != 0) {
             /* Not all handshake fragments have arrived, do not consume. */
             MBEDTLS_SSL_DEBUG_MSG(3,
                                   ("waiting for more fragments (%" MBEDTLS_PRINTF_SIZET " of %"
