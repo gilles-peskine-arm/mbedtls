@@ -13932,6 +13932,15 @@ run_test    "Client Handshake defragmentation (64)" \
 
 requires_openssl_tls1_3
 requires_certificate_authentication
+run_test    "Client Handshake defragmentation TLS 1.2 (64)" \
+            "$O_NEXT_SRV -split_send_frag 64 " \
+            "$P_CLI force_version=tls12 debug_level=4 " \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: "
+
+requires_openssl_tls1_3
+requires_certificate_authentication
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 run_test    "Client Handshake defragmentation (36)" \
             "$O_NEXT_SRV -split_send_frag 36 " \
@@ -14077,6 +14086,124 @@ run_test    "Server Handshake defragmentation (5)" \
             0 \
             -s "<= handshake" \
             -s "handshake fragment: "
+
+# The next test cases assume that the handshake is more than one fragment,
+# otherwise the pattern that expects a first full-length fragment won't match.
+# This may not be true in all cases, especially PSK-only configurations.
+
+run_test    "Handshake defragmentation on client: len=256, TLS 1.2" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 256" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: 0 \\.\\. 256 of [0-9]\\+ msglen 256\$"
+
+requires_openssl_tls1_3
+run_test    "Handshake defragmentation on client: len=256, TLS 1.3" \
+            "$O_NEXT_SRV -tls1_3 -split_send_frag 256" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: 0 \\.\\. 256 of [0-9]\\+ msglen 256\$"
+
+run_test    "Handshake defragmentation on client: len=41, TLS 1.2" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 41" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: 0 \\.\\. 41 of [0-9]\\+ msglen 41\$"
+
+requires_openssl_tls1_3
+run_test    "Handshake defragmentation on client: len=41, TLS 1.3" \
+            "$O_NEXT_SRV -tls1_3 -split_send_frag 41" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: 0 \\.\\. 41 of [0-9]\\+ msglen 41\$"
+
+run_test    "Handshake defragmentation on client: len=4, TLS 1.2" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 4" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4\$" \
+            -c "handshake fragment: 4 \\.\\. 8 of [0-9]\\+ msglen 4\$" \
+            -c "handshake fragment: [0-9]\\+ \\.\\. \\([0-9]\\+\\) of \\1 msglen [1-4]\$"
+
+requires_openssl_tls1_3
+run_test    "Handshake defragmentation on client: len=4, TLS 1.3" \
+            "$O_NEXT_SRV -tls1_3 -split_send_frag 4" \
+            "$P_CLI debug_level=4" \
+            0 \
+            -c "<= handshake" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4\$" \
+            -c "handshake fragment: 4 \\.\\. 8 of [0-9]\\+ msglen 4\$" \
+            -c "handshake fragment: [0-9]\\+ \\.\\. \\([0-9]\\+\\) of \\1 msglen [1-4]\$"
+
+run_test    "Handshake defragmentation on server: len=512, TLS 1.2, cert" \
+            "$P_SRV force_version=tls12 auth_mode=required debug_level=4" \
+            "$O_NEXT_CLI -max_send_frag 512 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512\$"
+
+run_test    "Handshake defragmentation on server: len=512, TLS 1.3, cert" \
+            "$P_SRV force_version=tls12 auth_mode=required debug_level=4" \
+            "$O_NEXT_CLI -max_send_frag 512 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512\$"
+
+psk_identity_32=4141414141414141414141414141414141414141414141414141414141414141
+psk_identity_128=$psk_identity_32$psk_identity_32$psk_identity_32$psk_identity_32
+psk_identity_512=$psk_identity_128$psk_identity_128$psk_identity_128$psk_identity_128
+
+run_test    "Handshake defragmentation on server: unlimited, TLS 1.3, PSK" \
+            "$P_SRV force_version=tls13 psk=73776f726466697368 psk_identity=$psk_identity_512 debug_level=4" \
+            "$O_NEXT_CLI -psk 73776f726466697368 -psk_identity $psk_identity_512" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. \\([0-9]\\+\\) of \\1 msglen \\1\$"
+
+run_test    "Handshake defragmentation on server: len=512, TLS 1.3, PSK" \
+            "$P_SRV force_version=tls13 psk=73776f726466697368 psk_identity=$psk_identity_512 debug_level=4" \
+            "$O_NEXT_CLI -split_send_frag 512 -psk 73776f726466697368 -psk_identity $psk_identity_512" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512\$"
+
+run_test    "Handshake defragmentation on server: unlimited, TLS 1.2, PSK" \
+            "$P_SRV force_version=tls12 psk=73776f726466697368 psk_identity=$psk_identity_512 debug_level=4" \
+            "$O_NEXT_CLI -psk 73776f726466697368 -psk_identity $psk_identity_512" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. \\([0-9]\\+\\) of \\1 msglen \\1\$"
+
+run_test    "Handshake defragmentation on server: len=512, TLS 1.2, PSK" \
+            "$P_SRV force_version=tls12 psk=73776f726466697368 psk_identity=$psk_identity_512 debug_level=4" \
+            "$O_NEXT_CLI -split_send_frag 512 -psk 73776f726466697368 -psk_identity $psk_identity_512" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512\$"
+
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2" \
+            "$P_SRV force_version=tls12 debug_level=4" \
+            "$O_NEXT_CLI -split_send_frag 4" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4\$" \
+            -s "handshake fragment: 4 \\.\\. 8 of [0-9]\\+ msglen 4\$" \
+            -s "handshake fragment: [0-9]\\+ \\.\\. \\([0-9]\\+\\) of \\1 msglen [1-4]\$"
+
+requires_openssl_tls1_3
+run_test    "Handshake defragmentation on server: len=4, TLS 1.3" \
+            "$P_SRV force_version=tls13 debug_level=4" \
+            "$O_NEXT_CLI -split_send_frag 4" \
+            0 \
+            -s "<= handshake" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4\$" \
+            -s "handshake fragment: 4 \\.\\. 8 of [0-9]\\+ msglen 4\$" \
+            -s "handshake fragment: [0-9]\\+ \\.\\. \\([0-9]\\+\\) of \\1 msglen [1-4]\$"
 
 # Test heap memory usage after handshake
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
