@@ -14114,6 +14114,49 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
             -c "waiting for more fragments (4"
 
+run_test    "Handshake defragmentation on client: len=4, TLS 1.2, null" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
+            "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-NULL-SHA debug_level=4 " \
+            0 \
+            -c "reassembled record" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -c "waiting for more fragments (4"
+
+run_test    "Handshake defragmentation on client: len=4, TLS 1.2, ChachaPoly" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
+            "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256 debug_level=4 " \
+            0 \
+            -c "reassembled record" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -c "waiting for more fragments (4"
+
+run_test    "Handshake defragmentation on client: len=4, TLS 1.2, GCM" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
+            "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 debug_level=4 " \
+            0 \
+            -c "reassembled record" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -c "waiting for more fragments (4"
+
+run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=n" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
+            "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256 etm=0 debug_level=4 " \
+            0 \
+            -C "using encrypt then mac" \
+            -c "reassembled record" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -c "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
+run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=y" \
+            "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
+            "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256 etm=1 debug_level=4 " \
+            0 \
+            -c "using encrypt then mac" \
+            -c "reassembled record" \
+            -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -c "waiting for more fragments (4"
+
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
 run_test    "Handshake defragmentation on client: len=3, TLS 1.3" \
@@ -14367,10 +14410,73 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.3" \
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
-run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support" \
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, default" \
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -tls1_2 -split_send_frag 4 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
+            -s "reassembled record" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -s "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
+requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-NULL-SHA
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, null" \
+            "$P_SRV debug_level=4" \
+            "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-NULL-SHA -split_send_frag 4" \
+            0 \
+            -s "reassembled record" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -s "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
+requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, ChachaPoly" \
+            "$P_SRV debug_level=4" \
+            "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-CHACHA20-POLY1305 -split_send_frag 4" \
+            0 \
+            -s "reassembled record" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -s "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
+requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, GCM" \
+            "$P_SRV debug_level=4" \
+            "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-AES128-GCM-SHA256 -split_send_frag 4" \
+            0 \
+            -s "reassembled record" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -s "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
+requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-CCM-SHA256
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, GCM" \
+            "$P_SRV debug_level=4" \
+            "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-AES128-CCM-SHA256 -split_send_frag 4" \
+            0 \
+            -s "reassembled record" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -s "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
+requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, CBC, etm=n" \
+            "$P_SRV etm=0 debug_level=4" \
+            "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-AES128-SHA256 -split_send_frag 4" \
+            0 \
+            -S "using encrypt then mac" \
+            -s "reassembled record" \
+            -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
+            -s "waiting for more fragments (4"
+
+requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
+requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
+run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 support, CBC, etm=y" \
+            "$P_SRV etm=1 debug_level=4" \
+            "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-AES128-SHA256 -split_send_frag 4" \
+            0 \
+            -s "using encrypt then mac" \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
             -s "waiting for more fragments (4"
