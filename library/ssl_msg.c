@@ -3095,14 +3095,19 @@ int mbedtls_ssl_prepare_handshake_record(mbedtls_ssl_context *ssl)
          *   after the explicit IV, but here we move it to start where the
          *   IV was.
          */
-        if (payload_end + ssl->in_hsfraglen > ssl->in_buf + ssl->in_buf_len) {
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+        size_t const in_buf_len = ssl->in_buf_len;
+#else
+        size_t const in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
+#endif
+        if (payload_end + ssl->in_hsfraglen > ssl->in_buf + in_buf_len) {
             MBEDTLS_SSL_DEBUG_MSG(1,
                                   ("Shouldn't happen: no room to move handshake fragment %"
                                    MBEDTLS_PRINTF_SIZET " from %p to %p (buf=%p len=%"
                                    MBEDTLS_PRINTF_SIZET ")",
                                    ssl->in_msglen,
                                    ssl->in_msg, payload_end,
-                                   ssl->in_buf, ssl->in_buf_len));
+                                   ssl->in_buf, in_buf_len));
             return MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
         }
         memmove(payload_end, ssl->in_msg, ssl->in_msglen);
