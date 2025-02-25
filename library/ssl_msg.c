@@ -3077,6 +3077,7 @@ int mbedtls_ssl_prepare_handshake_record(mbedtls_ssl_context *ssl)
         } else {
             /* This is the first fragment. */
             const size_t hs_remain = ssl->in_hslen;
+            (void) hs_remain;   /* unused when not debugging */
             MBEDTLS_SSL_DEBUG_MSG(3,
                                   ("handshake fragment: 0 .. %"
                                    MBEDTLS_PRINTF_SIZET " of %"
