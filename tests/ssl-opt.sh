@@ -14177,6 +14177,7 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=n" \
             -c "waiting for more fragments (4"
 
 requires_certificate_authentication
+requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=y" \
             "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256 etm=1 debug_level=4 " \
