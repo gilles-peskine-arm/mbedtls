@@ -13892,7 +13892,8 @@ run_test    "Handshake defragmentation on client: len=512, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -c "initial handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 512\.\." \
             -c "Prepare: waiting for more handshake fragments 512/" \
             -c "Consume: waiting for more handshake fragments 512/"
 
@@ -13905,7 +13906,8 @@ run_test    "Handshake defragmentation on client: len=512, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -c "initial handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 512\.\." \
             -c "Prepare: waiting for more handshake fragments 512/" \
             -c "Consume: waiting for more handshake fragments 512/"
 
@@ -13916,7 +13918,8 @@ run_test    "Handshake defragmentation on client: len=513, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -c "initial handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 513\.\." \
             -c "Prepare: waiting for more handshake fragments 513/" \
             -c "Consume: waiting for more handshake fragments 513/"
 
@@ -13928,7 +13931,8 @@ run_test    "Handshake defragmentation on client: len=513, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -c "initial handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 513\.\." \
             -c "Prepare: waiting for more handshake fragments 513/" \
             -c "Consume: waiting for more handshake fragments 513/"
 
@@ -13939,7 +13943,8 @@ run_test    "Handshake defragmentation on client: len=256, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -c "initial handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 256\.\." \
             -c "Prepare: waiting for more handshake fragments 256/" \
             -c "Consume: waiting for more handshake fragments 256/"
 
@@ -13951,7 +13956,8 @@ run_test    "Handshake defragmentation on client: len=256, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -c "initial handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 256\.\." \
             -c "Prepare: waiting for more handshake fragments 256/" \
             -c "Consume: waiting for more handshake fragments 256/"
 
@@ -13962,7 +13968,8 @@ run_test    "Handshake defragmentation on client: len=128, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -c "initial handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 128\.\." \
             -c "Prepare: waiting for more handshake fragments 128/" \
             -c "Consume: waiting for more handshake fragments 128/"
 
@@ -13974,7 +13981,8 @@ run_test    "Handshake defragmentation on client: len=128, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -c "initial handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 128\.\." \
             -c "Prepare: waiting for more handshake fragments 128/" \
             -c "Consume: waiting for more handshake fragments 128/"
 
@@ -13985,7 +13993,8 @@ run_test    "Handshake defragmentation on client: len=64, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -c "initial handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 64\.\." \
             -c "Prepare: waiting for more handshake fragments 64/" \
             -c "Consume: waiting for more handshake fragments 64/"
 
@@ -13997,7 +14006,8 @@ run_test    "Handshake defragmentation on client: len=64, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -c "initial handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 64\.\." \
             -c "Prepare: waiting for more handshake fragments 64/" \
             -c "Consume: waiting for more handshake fragments 64/"
 
@@ -14008,7 +14018,8 @@ run_test    "Handshake defragmentation on client: len=36, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -c "initial handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 36\.\." \
             -c "Prepare: waiting for more handshake fragments 36/" \
             -c "Consume: waiting for more handshake fragments 36/"
 
@@ -14020,7 +14031,8 @@ run_test    "Handshake defragmentation on client: len=36, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -c "initial handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 36\.\." \
             -c "Prepare: waiting for more handshake fragments 36/" \
             -c "Consume: waiting for more handshake fragments 36/"
 
@@ -14031,7 +14043,8 @@ run_test    "Handshake defragmentation on client: len=32, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -c "initial handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 32\.\." \
             -c "Prepare: waiting for more handshake fragments 32/" \
             -c "Consume: waiting for more handshake fragments 32/"
 
@@ -14043,7 +14056,8 @@ run_test    "Handshake defragmentation on client: len=32, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -c "initial handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 32\.\." \
             -c "Prepare: waiting for more handshake fragments 32/" \
             -c "Consume: waiting for more handshake fragments 32/"
 
@@ -14054,7 +14068,8 @@ run_test    "Handshake defragmentation on client: len=16, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -c "initial handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 16\.\." \
             -c "Prepare: waiting for more handshake fragments 16/" \
             -c "Consume: waiting for more handshake fragments 16/"
 
@@ -14066,7 +14081,8 @@ run_test    "Handshake defragmentation on client: len=16, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -c "initial handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 16\.\." \
             -c "Prepare: waiting for more handshake fragments 16/" \
             -c "Consume: waiting for more handshake fragments 16/"
 
@@ -14077,7 +14093,8 @@ run_test    "Handshake defragmentation on client: len=13, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -c "initial handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 13\.\." \
             -c "Prepare: waiting for more handshake fragments 13/" \
             -c "Consume: waiting for more handshake fragments 13/"
 
@@ -14088,7 +14105,8 @@ run_test    "Handshake defragmentation on client: len=13, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -c "initial handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 13\.\." \
             -c "Prepare: waiting for more handshake fragments 13/" \
             -c "Consume: waiting for more handshake fragments 13/"
 
@@ -14099,7 +14117,8 @@ run_test    "Handshake defragmentation on client: len=5, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -c "initial handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 5\.\." \
             -c "Prepare: waiting for more handshake fragments 5/" \
             -c "Consume: waiting for more handshake fragments 5/"
 
@@ -14110,7 +14129,8 @@ run_test    "Handshake defragmentation on client: len=5, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -c "initial handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 5\.\." \
             -c "Prepare: waiting for more handshake fragments 5/" \
             -c "Consume: waiting for more handshake fragments 5/"
 
@@ -14121,7 +14141,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.3" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14132,7 +14153,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2" \
             "$P_CLI debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14141,7 +14163,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, null" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-NULL-SHA debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14150,7 +14173,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, ChachaPoly" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256 debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14159,7 +14183,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, GCM" \
             "$P_CLI force_ciphersuite=TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256 debug_level=4 " \
             0 \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14169,7 +14194,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=n" \
             0 \
             -C "using encrypt then mac" \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14180,7 +14206,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=y" \
             0 \
             -c "using encrypt then mac" \
             -c "reassembled record" \
-            -c "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -c "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -c "Prepare: waiting for more handshake fragments 4/" \
             -c "Consume: waiting for more handshake fragments 4/"
 
@@ -14217,7 +14244,8 @@ run_test    "Handshake defragmentation on server: len=512, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 512 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -s "initial handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 512\.\." \
             -s "Prepare: waiting for more handshake fragments 512/" \
             -s "Consume: waiting for more handshake fragments 512/"
 
@@ -14228,7 +14256,8 @@ run_test    "Handshake defragmentation on server: len=512, TLS 1.2" \
             "$O_NEXT_CLI -tls1_2 -split_send_frag 512 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -s "initial handshake fragment: 512, 0\.\.512 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 512\.\." \
             -s "Prepare: waiting for more handshake fragments 512/" \
             -s "Consume: waiting for more handshake fragments 512/"
 
@@ -14239,7 +14268,8 @@ run_test    "Handshake defragmentation on server: len=513, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 513 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -s "initial handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 513\.\." \
             -s "Prepare: waiting for more handshake fragments 513/" \
             -s "Consume: waiting for more handshake fragments 513/"
 
@@ -14250,7 +14280,8 @@ run_test    "Handshake defragmentation on server: len=513, TLS 1.2" \
             "$O_NEXT_CLI -tls1_2 -split_send_frag 513 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -s "initial handshake fragment: 513, 0\.\.513 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 513\.\." \
             -s "Prepare: waiting for more handshake fragments 513/" \
             -s "Consume: waiting for more handshake fragments 513/"
 
@@ -14261,7 +14292,8 @@ run_test    "Handshake defragmentation on server: len=256, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 256 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -s "initial handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 256\.\." \
             -s "Prepare: waiting for more handshake fragments 256/" \
             -s "Consume: waiting for more handshake fragments 256/"
 
@@ -14272,7 +14304,8 @@ run_test    "Handshake defragmentation on server: len=256, TLS 1.2" \
             "$O_NEXT_CLI -tls1_2 -split_send_frag 256 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -s "initial handshake fragment: 256, 0\.\.256 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 256\.\." \
             -s "Prepare: waiting for more handshake fragments 256/" \
             -s "Consume: waiting for more handshake fragments 256/"
 
@@ -14283,7 +14316,8 @@ run_test    "Handshake defragmentation on server: len=128, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 128 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -s "initial handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 128\.\." \
             -s "Prepare: waiting for more handshake fragments 128/" \
             -s "Consume: waiting for more handshake fragments 128/"
 
@@ -14302,7 +14336,8 @@ run_test    "Handshake defragmentation on server: len=128, TLS 1.2 with 1.3 supp
             "$O_NEXT_CLI -tls1_2 -split_send_frag 128 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -s "initial handshake fragment: 128, 0\.\.128 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 128\.\." \
             -s "Prepare: waiting for more handshake fragments 128/" \
             -s "Consume: waiting for more handshake fragments 128/"
 
@@ -14313,7 +14348,8 @@ run_test    "Handshake defragmentation on server: len=64, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 64 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -s "initial handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 64\.\." \
             -s "Prepare: waiting for more handshake fragments 64/" \
             -s "Consume: waiting for more handshake fragments 64/"
 
@@ -14325,7 +14361,8 @@ run_test    "Handshake defragmentation on server: len=64, TLS 1.2 with 1.3 suppo
             "$O_NEXT_CLI -tls1_2 -split_send_frag 64 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -s "initial handshake fragment: 64, 0\.\.64 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 64\.\." \
             -s "Prepare: waiting for more handshake fragments 64/" \
             -s "Consume: waiting for more handshake fragments 64/"
 
@@ -14336,7 +14373,8 @@ run_test    "Handshake defragmentation on server: len=36, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 36 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -s "initial handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 36\.\." \
             -s "Prepare: waiting for more handshake fragments 36/" \
             -s "Consume: waiting for more handshake fragments 36/"
 
@@ -14348,7 +14386,8 @@ run_test    "Handshake defragmentation on server: len=36, TLS 1.2 with 1.3 suppo
             "$O_NEXT_CLI -tls1_2 -split_send_frag 36 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -s "initial handshake fragment: 36, 0\.\.36 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 36\.\." \
             -s "Prepare: waiting for more handshake fragments 36/" \
             -s "Consume: waiting for more handshake fragments 36/"
 
@@ -14359,7 +14398,8 @@ run_test    "Handshake defragmentation on server: len=32, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 32 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -s "initial handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 32\.\." \
             -s "Prepare: waiting for more handshake fragments 32/" \
             -s "Consume: waiting for more handshake fragments 32/"
 
@@ -14371,7 +14411,8 @@ run_test    "Handshake defragmentation on server: len=32, TLS 1.2 with 1.3 suppo
             "$O_NEXT_CLI -tls1_2 -split_send_frag 32 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -s "initial handshake fragment: 32, 0\.\.32 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 32\.\." \
             -s "Prepare: waiting for more handshake fragments 32/" \
             -s "Consume: waiting for more handshake fragments 32/"
 
@@ -14382,7 +14423,8 @@ run_test    "Handshake defragmentation on server: len=16, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 16 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -s "initial handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 16\.\." \
             -s "Prepare: waiting for more handshake fragments 16/" \
             -s "Consume: waiting for more handshake fragments 16/"
 
@@ -14394,7 +14436,8 @@ run_test    "Handshake defragmentation on server: len=16, TLS 1.2 with 1.3 suppo
             "$O_NEXT_CLI -tls1_2 -split_send_frag 16 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -s "initial handshake fragment: 16, 0\.\.16 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 16\.\." \
             -s "Prepare: waiting for more handshake fragments 16/" \
             -s "Consume: waiting for more handshake fragments 16/"
 
@@ -14405,7 +14448,8 @@ run_test    "Handshake defragmentation on server: len=13, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 13 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -s "initial handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 13\.\." \
             -s "Prepare: waiting for more handshake fragments 13/" \
             -s "Consume: waiting for more handshake fragments 13/"
 
@@ -14417,7 +14461,8 @@ run_test    "Handshake defragmentation on server: len=13, TLS 1.2 with 1.3 suppo
             "$O_NEXT_CLI -tls1_2 -split_send_frag 13 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -s "initial handshake fragment: 13, 0\.\.13 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 13\.\." \
             -s "Prepare: waiting for more handshake fragments 13/" \
             -s "Consume: waiting for more handshake fragments 13/"
 
@@ -14428,7 +14473,8 @@ run_test    "Handshake defragmentation on server: len=5, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 5 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -s "initial handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 5\.\." \
             -s "Prepare: waiting for more handshake fragments 5/" \
             -s "Consume: waiting for more handshake fragments 5/"
 
@@ -14440,7 +14486,8 @@ run_test    "Handshake defragmentation on server: len=5, TLS 1.2 with 1.3 suppor
             "$O_NEXT_CLI -tls1_2 -split_send_frag 5 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -s "initial handshake fragment: 5, 0\.\.5 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 5\.\." \
             -s "Prepare: waiting for more handshake fragments 5/" \
             -s "Consume: waiting for more handshake fragments 5/"
 
@@ -14451,7 +14498,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.3" \
             "$O_NEXT_CLI -tls1_3 -split_send_frag 4 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14463,7 +14511,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             "$O_NEXT_CLI -tls1_2 -split_send_frag 4 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14474,7 +14523,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-NULL-SHA -split_send_frag 4" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14485,7 +14535,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-CHACHA20-POLY1305 -split_send_frag 4" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14496,7 +14547,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-AES128-GCM-SHA256 -split_send_frag 4" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14507,7 +14559,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             "$O_NEXT_CLI -tls1_2 -cipher ECDHE-ECDSA-AES128-CCM-SHA256 -split_send_frag 4" \
             0 \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14519,7 +14572,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -S "using encrypt then mac" \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
@@ -14532,7 +14586,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -s "using encrypt then mac" \
             -s "reassembled record" \
-            -s "handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "initial handshake fragment: 4, 0\.\.4 of [0-9]\\+" \
+            -s "subsequent handshake fragment: [0-9]\\+, 4\.\." \
             -s "Prepare: waiting for more handshake fragments 4/" \
             -s "Consume: waiting for more handshake fragments 4/"
 
