@@ -14064,7 +14064,6 @@ run_test    "Handshake defragmentation on client: len=13, TLS 1.3" \
             -c "handshake fragment: 0 \\.\\. 13 of [0-9]\\+ msglen 13" \
             -c "waiting for more fragments (13"
 
-skip_next_test
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
 run_test    "Handshake defragmentation on client: len=13, TLS 1.2" \
@@ -14085,7 +14084,6 @@ run_test    "Handshake defragmentation on client: len=5, TLS 1.3" \
             -c "handshake fragment: 0 \\.\\. 5 of [0-9]\\+ msglen 5" \
             -c "waiting for more fragments (5"
 
-skip_next_test
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
 run_test    "Handshake defragmentation on client: len=5, TLS 1.2" \
@@ -14106,7 +14104,6 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.3" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
             -c "waiting for more fragments (4"
 
-skip_next_test
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2" \
