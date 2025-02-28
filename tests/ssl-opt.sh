@@ -13883,7 +13883,8 @@ run_test    "Handshake defragmentation on client (no fragmentation, for referenc
             "$P_CLI debug_level=4 " \
             0 \
             -C "reassembled record" \
-            -C "waiting for more fragments"
+            -C "Prepare: waiting for more handshake fragments" \
+            -C "Consume: waiting for more handshake fragments"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -13893,7 +13894,8 @@ run_test    "Handshake defragmentation on client: len=512, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512" \
-            -c "waiting for more fragments (512 of [0-9]\\+"
+            -c "Prepare: waiting for more handshake fragments 512/" \
+            -c "Consume: waiting for more handshake fragments 512/"
 
 #The server uses an ECDSA cert, so make sure we have a compatible key exchange
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
@@ -13905,7 +13907,8 @@ run_test    "Handshake defragmentation on client: len=512, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512" \
-            -c "waiting for more fragments (512 of [0-9]\\+"
+            -c "Prepare: waiting for more handshake fragments 512/" \
+            -c "Consume: waiting for more handshake fragments 512/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -13915,7 +13918,8 @@ run_test    "Handshake defragmentation on client: len=513, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 513 of [0-9]\\+ msglen 513" \
-            -c "waiting for more fragments (513 of [0-9]\\+"
+            -c "Prepare: waiting for more handshake fragments 513/" \
+            -c "Consume: waiting for more handshake fragments 513/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -13926,7 +13930,8 @@ run_test    "Handshake defragmentation on client: len=513, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 513 of [0-9]\\+ msglen 513" \
-            -c "waiting for more fragments (513 of [0-9]\\+"
+            -c "Prepare: waiting for more handshake fragments 513/" \
+            -c "Consume: waiting for more handshake fragments 513/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -13936,7 +13941,8 @@ run_test    "Handshake defragmentation on client: len=256, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 256 of [0-9]\\+ msglen 256" \
-            -c "waiting for more fragments (256 of [0-9]\\+"
+            -c "Prepare: waiting for more handshake fragments 256/" \
+            -c "Consume: waiting for more handshake fragments 256/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -13947,7 +13953,8 @@ run_test    "Handshake defragmentation on client: len=256, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 256 of [0-9]\\+ msglen 256" \
-            -c "waiting for more fragments (256 of [0-9]\\+"
+            -c "Prepare: waiting for more handshake fragments 256/" \
+            -c "Consume: waiting for more handshake fragments 256/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -13957,7 +13964,8 @@ run_test    "Handshake defragmentation on client: len=128, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 128 of [0-9]\\+ msglen 128" \
-            -c "waiting for more fragments (128"
+            -c "Prepare: waiting for more handshake fragments 128/" \
+            -c "Consume: waiting for more handshake fragments 128/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -13968,7 +13976,8 @@ run_test    "Handshake defragmentation on client: len=128, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 128 of [0-9]\\+ msglen 128" \
-            -c "waiting for more fragments (128"
+            -c "Prepare: waiting for more handshake fragments 128/" \
+            -c "Consume: waiting for more handshake fragments 128/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -13978,7 +13987,8 @@ run_test    "Handshake defragmentation on client: len=64, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 64 of [0-9]\\+ msglen 64" \
-            -c "waiting for more fragments (64"
+            -c "Prepare: waiting for more handshake fragments 64/" \
+            -c "Consume: waiting for more handshake fragments 64/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -13989,7 +13999,8 @@ run_test    "Handshake defragmentation on client: len=64, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 64 of [0-9]\\+ msglen 64" \
-            -c "waiting for more fragments (64"
+            -c "Prepare: waiting for more handshake fragments 64/" \
+            -c "Consume: waiting for more handshake fragments 64/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -13999,7 +14010,8 @@ run_test    "Handshake defragmentation on client: len=36, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 36 of [0-9]\\+ msglen 36" \
-            -c "waiting for more fragments (36"
+            -c "Prepare: waiting for more handshake fragments 36/" \
+            -c "Consume: waiting for more handshake fragments 36/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14010,7 +14022,8 @@ run_test    "Handshake defragmentation on client: len=36, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 36 of [0-9]\\+ msglen 36" \
-            -c "waiting for more fragments (36"
+            -c "Prepare: waiting for more handshake fragments 36/" \
+            -c "Consume: waiting for more handshake fragments 36/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14020,7 +14033,8 @@ run_test    "Handshake defragmentation on client: len=32, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 32 of [0-9]\\+ msglen 32" \
-            -c "waiting for more fragments (32"
+            -c "Prepare: waiting for more handshake fragments 32/" \
+            -c "Consume: waiting for more handshake fragments 32/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14031,7 +14045,8 @@ run_test    "Handshake defragmentation on client: len=32, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 32 of [0-9]\\+ msglen 32" \
-            -c "waiting for more fragments (32"
+            -c "Prepare: waiting for more handshake fragments 32/" \
+            -c "Consume: waiting for more handshake fragments 32/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14041,7 +14056,8 @@ run_test    "Handshake defragmentation on client: len=16, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 16 of [0-9]\\+ msglen 16" \
-            -c "waiting for more fragments (16"
+            -c "Prepare: waiting for more handshake fragments 16/" \
+            -c "Consume: waiting for more handshake fragments 16/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14052,7 +14068,8 @@ run_test    "Handshake defragmentation on client: len=16, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 16 of [0-9]\\+ msglen 16" \
-            -c "waiting for more fragments (16"
+            -c "Prepare: waiting for more handshake fragments 16/" \
+            -c "Consume: waiting for more handshake fragments 16/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14062,7 +14079,8 @@ run_test    "Handshake defragmentation on client: len=13, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 13 of [0-9]\\+ msglen 13" \
-            -c "waiting for more fragments (13"
+            -c "Prepare: waiting for more handshake fragments 13/" \
+            -c "Consume: waiting for more handshake fragments 13/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14072,7 +14090,8 @@ run_test    "Handshake defragmentation on client: len=13, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 13 of [0-9]\\+ msglen 13" \
-            -c "waiting for more fragments (13"
+            -c "Prepare: waiting for more handshake fragments 13/" \
+            -c "Consume: waiting for more handshake fragments 13/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14082,7 +14101,8 @@ run_test    "Handshake defragmentation on client: len=5, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 5 of [0-9]\\+ msglen 5" \
-            -c "waiting for more fragments (5"
+            -c "Prepare: waiting for more handshake fragments 5/" \
+            -c "Consume: waiting for more handshake fragments 5/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14092,7 +14112,8 @@ run_test    "Handshake defragmentation on client: len=5, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 5 of [0-9]\\+ msglen 5" \
-            -c "waiting for more fragments (5"
+            -c "Prepare: waiting for more handshake fragments 5/" \
+            -c "Consume: waiting for more handshake fragments 5/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14102,7 +14123,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.3" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14112,7 +14134,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2, null" \
             "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
@@ -14120,7 +14143,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, null" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2, ChachaPoly" \
             "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
@@ -14128,7 +14152,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, ChachaPoly" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2, GCM" \
             "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
@@ -14136,7 +14161,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, GCM" \
             0 \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=n" \
             "$O_NEXT_SRV -tls1_2 -split_send_frag 4 " \
@@ -14145,7 +14171,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=n" \
             -C "using encrypt then mac" \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_ENCRYPT_THEN_MAC
 run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=y" \
@@ -14155,7 +14182,8 @@ run_test    "Handshake defragmentation on client: len=4, TLS 1.2, CBC, etm=y" \
             -c "using encrypt then mac" \
             -c "reassembled record" \
             -c "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -c "waiting for more fragments (4"
+            -c "Prepare: waiting for more handshake fragments 4/" \
+            -c "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14181,7 +14209,8 @@ run_test    "Handshake defragmentation on server (no fragmentation, for referenc
             "$O_NEXT_CLI -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
             -S "reassembled record" \
-            -S "waiting for more fragments"
+            -S "Prepare: waiting for more handshake fragments" \
+            -S "Consume: waiting for more handshake fragments"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14191,7 +14220,8 @@ run_test    "Handshake defragmentation on server: len=512, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512" \
-            -s "waiting for more fragments (512"
+            -s "Prepare: waiting for more handshake fragments 512/" \
+            -s "Consume: waiting for more handshake fragments 512/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14201,7 +14231,8 @@ run_test    "Handshake defragmentation on server: len=512, TLS 1.2" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 512 of [0-9]\\+ msglen 512" \
-            -s "waiting for more fragments (512"
+            -s "Prepare: waiting for more handshake fragments 512/" \
+            -s "Consume: waiting for more handshake fragments 512/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14211,7 +14242,8 @@ run_test    "Handshake defragmentation on server: len=513, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 513 of [0-9]\\+ msglen 513" \
-            -s "waiting for more fragments (513"
+            -s "Prepare: waiting for more handshake fragments 513/" \
+            -s "Consume: waiting for more handshake fragments 513/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14221,7 +14253,8 @@ run_test    "Handshake defragmentation on server: len=513, TLS 1.2" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 513 of [0-9]\\+ msglen 513" \
-            -s "waiting for more fragments (513"
+            -s "Prepare: waiting for more handshake fragments 513/" \
+            -s "Consume: waiting for more handshake fragments 513/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14231,7 +14264,8 @@ run_test    "Handshake defragmentation on server: len=256, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 256 of [0-9]\\+ msglen 256" \
-            -s "waiting for more fragments (256"
+            -s "Prepare: waiting for more handshake fragments 256/" \
+            -s "Consume: waiting for more handshake fragments 256/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_certificate_authentication
@@ -14241,7 +14275,8 @@ run_test    "Handshake defragmentation on server: len=256, TLS 1.2" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 256 of [0-9]\\+ msglen 256" \
-            -s "waiting for more fragments (256"
+            -s "Prepare: waiting for more handshake fragments 256/" \
+            -s "Consume: waiting for more handshake fragments 256/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14251,7 +14286,8 @@ run_test    "Handshake defragmentation on server: len=128, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 128 of [0-9]\\+ msglen 128" \
-            -s "waiting for more fragments (128"
+            -s "Prepare: waiting for more handshake fragments 128/" \
+            -s "Consume: waiting for more handshake fragments 128/"
 
 # Server-side ClientHello defragmentation is only supported when
 # MBEDTLS_SSL_PROTO_TLS1_3. In that case, the TLS 1.3 handshake parser
@@ -14269,7 +14305,8 @@ run_test    "Handshake defragmentation on server: len=128, TLS 1.2 with 1.3 supp
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 128 of [0-9]\\+ msglen 128" \
-            -s "waiting for more fragments (128"
+            -s "Prepare: waiting for more handshake fragments 128/" \
+            -s "Consume: waiting for more handshake fragments 128/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14279,7 +14316,8 @@ run_test    "Handshake defragmentation on server: len=64, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 64 of [0-9]\\+ msglen 64" \
-            -s "waiting for more fragments (64"
+            -s "Prepare: waiting for more handshake fragments 64/" \
+            -s "Consume: waiting for more handshake fragments 64/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14290,7 +14328,8 @@ run_test    "Handshake defragmentation on server: len=64, TLS 1.2 with 1.3 suppo
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 64 of [0-9]\\+ msglen 64" \
-            -s "waiting for more fragments (64"
+            -s "Prepare: waiting for more handshake fragments 64/" \
+            -s "Consume: waiting for more handshake fragments 64/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14300,7 +14339,8 @@ run_test    "Handshake defragmentation on server: len=36, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 36 of [0-9]\\+ msglen 36" \
-            -s "waiting for more fragments (36"
+            -s "Prepare: waiting for more handshake fragments 36/" \
+            -s "Consume: waiting for more handshake fragments 36/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14311,7 +14351,8 @@ run_test    "Handshake defragmentation on server: len=36, TLS 1.2 with 1.3 suppo
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 36 of [0-9]\\+ msglen 36" \
-            -s "waiting for more fragments (36"
+            -s "Prepare: waiting for more handshake fragments 36/" \
+            -s "Consume: waiting for more handshake fragments 36/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14321,7 +14362,8 @@ run_test    "Handshake defragmentation on server: len=32, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 32 of [0-9]\\+ msglen 32" \
-            -s "waiting for more fragments (32"
+            -s "Prepare: waiting for more handshake fragments 32/" \
+            -s "Consume: waiting for more handshake fragments 32/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14332,7 +14374,8 @@ run_test    "Handshake defragmentation on server: len=32, TLS 1.2 with 1.3 suppo
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 32 of [0-9]\\+ msglen 32" \
-            -s "waiting for more fragments (32"
+            -s "Prepare: waiting for more handshake fragments 32/" \
+            -s "Consume: waiting for more handshake fragments 32/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14342,7 +14385,8 @@ run_test    "Handshake defragmentation on server: len=16, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 16 of [0-9]\\+ msglen 16" \
-            -s "waiting for more fragments (16"
+            -s "Prepare: waiting for more handshake fragments 16/" \
+            -s "Consume: waiting for more handshake fragments 16/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14353,7 +14397,8 @@ run_test    "Handshake defragmentation on server: len=16, TLS 1.2 with 1.3 suppo
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 16 of [0-9]\\+ msglen 16" \
-            -s "waiting for more fragments (16"
+            -s "Prepare: waiting for more handshake fragments 16/" \
+            -s "Consume: waiting for more handshake fragments 16/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14363,7 +14408,8 @@ run_test    "Handshake defragmentation on server: len=13, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 13 of [0-9]\\+ msglen 13" \
-            -s "waiting for more fragments (13"
+            -s "Prepare: waiting for more handshake fragments 13/" \
+            -s "Consume: waiting for more handshake fragments 13/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14374,7 +14420,8 @@ run_test    "Handshake defragmentation on server: len=13, TLS 1.2 with 1.3 suppo
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 13 of [0-9]\\+ msglen 13" \
-            -s "waiting for more fragments (13"
+            -s "Prepare: waiting for more handshake fragments 13/" \
+            -s "Consume: waiting for more handshake fragments 13/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14384,7 +14431,8 @@ run_test    "Handshake defragmentation on server: len=5, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 5 of [0-9]\\+ msglen 5" \
-            -s "waiting for more fragments (5"
+            -s "Prepare: waiting for more handshake fragments 5/" \
+            -s "Consume: waiting for more handshake fragments 5/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14395,7 +14443,8 @@ run_test    "Handshake defragmentation on server: len=5, TLS 1.2 with 1.3 suppor
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 5 of [0-9]\\+ msglen 5" \
-            -s "waiting for more fragments (5"
+            -s "Prepare: waiting for more handshake fragments 5/" \
+            -s "Consume: waiting for more handshake fragments 5/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
@@ -14405,7 +14454,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.3" \
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_2
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
@@ -14416,7 +14466,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-NULL-SHA
@@ -14426,7 +14477,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
@@ -14436,7 +14488,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256
@@ -14446,7 +14499,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-CCM-SHA256
@@ -14456,7 +14510,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             0 \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256
@@ -14467,7 +14522,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             -S "using encrypt then mac" \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_ciphersuite_enabled TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256
@@ -14479,7 +14535,8 @@ run_test    "Handshake defragmentation on server: len=4, TLS 1.2 with 1.3 suppor
             -s "using encrypt then mac" \
             -s "reassembled record" \
             -s "handshake fragment: 0 \\.\\. 4 of [0-9]\\+ msglen 4" \
-            -s "waiting for more fragments (4"
+            -s "Prepare: waiting for more handshake fragments 4/" \
+            -s "Consume: waiting for more handshake fragments 4/"
 
 requires_config_enabled MBEDTLS_SSL_PROTO_TLS1_3
 requires_certificate_authentication
