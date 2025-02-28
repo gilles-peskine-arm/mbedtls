@@ -98,10 +98,10 @@ if [ -z "${GNUTLS_NEXT_SERV:-}" ]; then
 fi
 
 if [ -n "${OPENSSL_NEXT:-}" ]; then
-    O_NEXT_SRV="$OPENSSL_NEXT s_server -www -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key"
+    O_NEXT_SRV="$OPENSSL_NEXT s_server -www -cipher ALL@SECLEVEL=0:COMPLEMENTOFALL@SECLEVEL=0 -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key"
     O_NEXT_SRV_EARLY_DATA="$OPENSSL_NEXT s_server -early_data -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key"
     O_NEXT_SRV_NO_CERT="$OPENSSL_NEXT s_server -www "
-    O_NEXT_CLI="echo 'GET / HTTP/1.0' | $OPENSSL_NEXT s_client -CAfile $DATA_FILES_PATH/test-ca_cat12.crt"
+    O_NEXT_CLI="echo 'GET / HTTP/1.0' | $OPENSSL_NEXT s_client -cipher ALL@SECLEVEL=0:COMPLEMENTOFALL@SECLEVEL=0 -CAfile $DATA_FILES_PATH/test-ca_cat12.crt"
     O_NEXT_CLI_NO_CERT="echo 'GET / HTTP/1.0' | $OPENSSL_NEXT s_client"
 else
     O_NEXT_SRV=false
@@ -2091,8 +2091,8 @@ if [ "$LIST_TESTS" -eq 0 ];then
     case $($OPENSSL version) in
         "OpenSSL 0"*|"OpenSSL 1.0"*) :;;
         *)
-            O_CLI="$O_CLI -cipher ALL@SECLEVEL=0"
-            O_SRV="$O_SRV -cipher ALL@SECLEVEL=0"
+            O_CLI="$O_CLI -cipher ALL@SECLEVEL=0:COMPLEMENTOFALL@SECLEVEL=0"
+            O_SRV="$O_SRV -cipher ALL@SECLEVEL=0:COMPLEMENTOFALL@SECLEVEL=0"
             ;;
     esac
 
