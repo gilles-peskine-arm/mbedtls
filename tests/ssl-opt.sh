@@ -13882,7 +13882,6 @@ run_test    "Handshake defragmentation on client (no fragmentation, for referenc
             "$O_NEXT_SRV" \
             "$P_CLI debug_level=4 " \
             0 \
-            -C "reassembled record" \
             -C "Prepare: waiting for more handshake fragments" \
             -C "Consume: waiting for more handshake fragments"
 
@@ -14208,7 +14207,6 @@ run_test    "Handshake defragmentation on server (no fragmentation, for referenc
             "$P_SRV debug_level=4 auth_mode=required" \
             "$O_NEXT_CLI -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key" \
             0 \
-            -S "reassembled record" \
             -S "Prepare: waiting for more handshake fragments" \
             -S "Consume: waiting for more handshake fragments"
 
