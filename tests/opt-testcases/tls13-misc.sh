@@ -28,7 +28,7 @@ requires_config_enabled MBEDTLS_DEBUG_C
 requires_config_enabled MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_PSK_ENABLED
 run_test    "TLS 1.3: PSK: No valid ciphersuite. O->m" \
             "$P_SRV tls13_kex_modes=all debug_level=5 $(get_srv_psk_list)" \
-            "$O_NEXT_CLI -tls1_3 -msg -allow_no_dhe_kex -ciphersuites TLS_AES_256_GCM_SHA384\
+            "$O_NEXT_CLI -tls1_3 -msg -ciphersuites TLS_AES_256_GCM_SHA384\
                          -psk_identity Client_identity -psk 6162636465666768696a6b6c6d6e6f70" \
             1 \
             -s "found psk key exchange modes extension" \
