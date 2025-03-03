@@ -98,16 +98,20 @@ if [ -z "${GNUTLS_NEXT_SERV:-}" ]; then
 fi
 
 if [ -n "${OPENSSL_NEXT:-}" ]; then
-    O_NEXT_SRV_NO_CERT="$OPENSSL_NEXT s_server -www -allow_no_dhe_kex"
+    O_NEXT_SRV_BASE="$OPENSSL_NEXT s_server -www"
+    O_NEXT_SRV_NO_CERT="$O_NEXT_SRV_BASE -allow_no_dhe_kex"
     O_NEXT_SRV="$O_NEXT_SRV_NO_CERT -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key"
+    O_NEXT_SRV_NO_PURE_PSK="$O_NEXT_SRV_BASE -cert $DATA_FILES_PATH/server5.crt -key $DATA_FILES_PATH/server5.key"
     O_NEXT_SRV_EARLY_DATA="$O_NEXT_SRV -early_data"
     O_NEXT_CLI_BASE="echo 'GET / HTTP/1.0' | $OPENSSL_NEXT s_client"
     O_NEXT_CLI_NO_CERT="$O_NEXT_CLI_BASE -allow_no_dhe_kex"
     O_NEXT_CLI="$O_NEXT_CLI_NO_CERT -CAfile $DATA_FILES_PATH/test-ca_cat12.crt"
     O_NEXT_CLI_NO_PURE_PSK="$O_NEXT_CLI_BASE -CAfile $DATA_FILES_PATH/test-ca_cat12.crt"
 else
+    O_NEXT_SRV_BASE=false
     O_NEXT_SRV=false
     O_NEXT_SRV_NO_CERT=false
+    O_NEXT_SRV_NO_PURE_PSK=false
     O_NEXT_SRV_EARLY_DATA=false
     O_NEXT_CLI_BASE=false
     O_NEXT_CLI_NO_CERT=false
@@ -2101,8 +2105,10 @@ if [ "$LIST_TESTS" -eq 0 ];then
     esac
 
     if [ -n "${OPENSSL_NEXT:-}" ]; then
+        O_NEXT_SRV_BASE="$O_NEXT_SRV_BASE -accept $SRV_PORT"
         O_NEXT_SRV="$O_NEXT_SRV -accept $SRV_PORT"
         O_NEXT_SRV_NO_CERT="$O_NEXT_SRV_NO_CERT -accept $SRV_PORT"
+        O_NEXT_SRV_NO_PURE_PSK="$O_NEXT_SRV_NO_PURE_PSK -accept $SRV_PORT"
         O_NEXT_SRV_EARLY_DATA="$O_NEXT_SRV_EARLY_DATA -accept $SRV_PORT"
         O_NEXT_CLI_BASE="$O_NEXT_CLI_BASE -connect 127.0.0.1:+SRV_PORT"
         O_NEXT_CLI="$O_NEXT_CLI -connect 127.0.0.1:+SRV_PORT"
