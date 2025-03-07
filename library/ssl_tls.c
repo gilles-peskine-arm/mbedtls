@@ -1417,7 +1417,7 @@ int mbedtls_ssl_session_reset_int(mbedtls_ssl_context *ssl, int partial)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
 
-    ssl->state = MBEDTLS_SSL_HELLO_REQUEST;
+    mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_HELLO_REQUEST);
     ssl->tls_version = ssl->conf->max_tls_version;
 
     mbedtls_ssl_session_reset_msg_layer(ssl, partial);
@@ -4279,7 +4279,7 @@ int mbedtls_ssl_handshake_step(mbedtls_ssl_context *ssl)
 
         switch (ssl->state) {
             case MBEDTLS_SSL_HELLO_REQUEST:
-                ssl->state = MBEDTLS_SSL_CLIENT_HELLO;
+                mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_CLIENT_HELLO);
                 ret = 0;
                 break;
 
@@ -4430,7 +4430,7 @@ int mbedtls_ssl_start_renegotiation(mbedtls_ssl_context *ssl)
     }
 #endif
 
-    ssl->state = MBEDTLS_SSL_HELLO_REQUEST;
+    mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_HELLO_REQUEST);
     ssl->renego_status = MBEDTLS_SSL_RENEGOTIATION_IN_PROGRESS;
 
     if ((ret = mbedtls_ssl_handshake(ssl)) != 0) {
@@ -5191,7 +5191,7 @@ static int ssl_context_load(mbedtls_ssl_context *ssl,
      * Most of them already set to the correct value by mbedtls_ssl_init() and
      * mbedtls_ssl_reset(), so we only need to set the remaining ones.
      */
-    ssl->state = MBEDTLS_SSL_HANDSHAKE_OVER;
+    mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_HANDSHAKE_OVER);
     ssl->tls_version = MBEDTLS_SSL_VERSION_TLS1_2;
 
     /* Adjust pointers for header fields of outgoing records to
@@ -6803,7 +6803,7 @@ int mbedtls_ssl_write_certificate(mbedtls_ssl_context *ssl)
 
     if (!mbedtls_ssl_ciphersuite_uses_srv_cert(ciphersuite_info)) {
         MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip write certificate"));
-        ssl->state++;
+        mbedtls_ssl_handshake_increment_state(ssl);
         return 0;
     }
 
@@ -6820,7 +6820,7 @@ int mbedtls_ssl_parse_certificate(mbedtls_ssl_context *ssl)
 
     if (!mbedtls_ssl_ciphersuite_uses_srv_cert(ciphersuite_info)) {
         MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip parse certificate"));
-        ssl->state++;
+        mbedtls_ssl_handshake_increment_state(ssl);
         return 0;
     }
 
@@ -6843,7 +6843,7 @@ int mbedtls_ssl_write_certificate(mbedtls_ssl_context *ssl)
 
     if (!mbedtls_ssl_ciphersuite_uses_srv_cert(ciphersuite_info)) {
         MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip write certificate"));
-        ssl->state++;
+        mbedtls_ssl_handshake_increment_state(ssl);
         return 0;
     }
 
@@ -6851,7 +6851,7 @@ int mbedtls_ssl_write_certificate(mbedtls_ssl_context *ssl)
     if (ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
         if (ssl->handshake->client_auth == 0) {
             MBEDTLS_SSL_DEBUG_MSG(2, ("<= skip write certificate"));
-            ssl->state++;
+            mbedtls_ssl_handshake_increment_state(ssl);
             return 0;
         }
     }
@@ -6905,7 +6905,7 @@ int mbedtls_ssl_write_certificate(mbedtls_ssl_context *ssl)
     ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
     ssl->out_msg[0]  = MBEDTLS_SSL_HS_CERTIFICATE;
 
-    ssl->state++;
+    mbedtls_ssl_handshake_increment_state(ssl);
 
     if ((ret = mbedtls_ssl_write_handshake_msg(ssl)) != 0) {
         MBEDTLS_SSL_DEBUG_RET(1, "mbedtls_ssl_write_handshake_msg", ret);
@@ -7359,7 +7359,7 @@ crt_verify:
 exit:
 
     if (ret == 0) {
-        ssl->state++;
+        mbedtls_ssl_handshake_increment_state(ssl);
     }
 
 #if defined(MBEDTLS_SSL_ECP_RESTARTABLE_ENABLED)
@@ -7537,7 +7537,7 @@ void mbedtls_ssl_handshake_wrapup(mbedtls_ssl_context *ssl)
 #endif
     mbedtls_ssl_handshake_wrapup_free_hs_transform(ssl);
 
-    ssl->state = MBEDTLS_SSL_HANDSHAKE_OVER;
+    mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_HANDSHAKE_OVER);
 
     MBEDTLS_SSL_DEBUG_MSG(3, ("<= handshake wrapup"));
 }
@@ -7580,16 +7580,16 @@ int mbedtls_ssl_write_finished(mbedtls_ssl_context *ssl)
     if (ssl->handshake->resume != 0) {
 #if defined(MBEDTLS_SSL_CLI_C)
         if (ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            ssl->state = MBEDTLS_SSL_HANDSHAKE_WRAPUP;
+            mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_HANDSHAKE_WRAPUP);
         }
 #endif
 #if defined(MBEDTLS_SSL_SRV_C)
         if (ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER) {
-            ssl->state = MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC;
+            mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC);
         }
 #endif
     } else {
-        ssl->state++;
+        mbedtls_ssl_handshake_increment_state(ssl);
     }
 
     /*
@@ -7714,16 +7714,16 @@ int mbedtls_ssl_parse_finished(mbedtls_ssl_context *ssl)
     if (ssl->handshake->resume != 0) {
 #if defined(MBEDTLS_SSL_CLI_C)
         if (ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            ssl->state = MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC;
+            mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC);
         }
 #endif
 #if defined(MBEDTLS_SSL_SRV_C)
         if (ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER) {
-            ssl->state = MBEDTLS_SSL_HANDSHAKE_WRAPUP;
+            mbedtls_ssl_handshake_set_state(ssl, MBEDTLS_SSL_HANDSHAKE_WRAPUP);
         }
 #endif
     } else {
-        ssl->state++;
+        mbedtls_ssl_handshake_increment_state(ssl);
     }
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
