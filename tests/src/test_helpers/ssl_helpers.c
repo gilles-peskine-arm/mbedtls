@@ -745,6 +745,8 @@ exit:
     return ret;
 }
 
+#endif  /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
+
 int mbedtls_test_ssl_endpoint_init(
     mbedtls_test_ssl_endpoint *ep, int endpoint_type,
     mbedtls_test_handshake_test_options *options,
@@ -891,11 +893,13 @@ int mbedtls_test_ssl_endpoint_init(
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
     ret = mbedtls_test_ssl_endpoint_certificate_init(ep, options->pk_alg,
                                                      options->opaque_alg,
                                                      options->opaque_alg2,
                                                      options->opaque_usage);
     TEST_EQUAL(ret, 0);
+#endif
 
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
     const char *const psk_identity = "Client_identity";
@@ -922,7 +926,9 @@ void mbedtls_test_ssl_endpoint_free(
     mbedtls_test_ssl_endpoint *ep,
     mbedtls_test_message_socket_context *context)
 {
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
     test_ssl_endpoint_certificate_free(ep);
+#endif
 
     mbedtls_ssl_free(&(ep->ssl));
     mbedtls_ssl_config_free(&(ep->conf));
@@ -969,8 +975,6 @@ int mbedtls_test_move_handshake_to_state(mbedtls_ssl_context *ssl,
 
     return (max_steps >= 0) ? ret : -1;
 }
-
-#endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
 
 /*
  * Write application data. Increase write counter if necessary.
