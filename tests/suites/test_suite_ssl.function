@@ -76,6 +76,7 @@ typedef enum {
     RECOMBINE_COALESCE,         /* param: min number of records */
     RECOMBINE_COALESCE_SPLIT_ONCE, /* param: offset of split (<=0 means from end) */
     RECOMBINE_COALESCE_SPLIT_ENDS, /* the hairiest one? param: offset, must be >0 */
+    RECOMBINE_OVERWRITE_MESSAGE_LENGTH, /* param: new length of the first message */
 } recombine_records_instruction_t;
 
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
@@ -280,6 +281,26 @@ exit:
     return -1;
 }
 
+/* Overwrite the message length in the first record.
+ * Assume the buffer starts with a valid handshake record.
+ */
+static int recombine_overwrite_message_length(mbedtls_test_ssl_buffer *buf,
+                                              int new_length)
+{
+    const size_t record_header_length = 5;
+    const size_t message_header_length = 4;
+    TEST_LE_U(record_header_length + message_header_length, buf->content_length);
+
+    MBEDTLS_PUT_UINT24_BE(new_length,
+                          buf->buffer,
+                          record_header_length + message_header_length - 3);
+
+    return 0;
+
+exit:
+    return -1;
+}
+
 static int recombine_records(mbedtls_test_ssl_endpoint *server,
                              recombine_records_instruction_t instruction,
                              int param)
@@ -347,6 +368,11 @@ static int recombine_records(mbedtls_test_ssl_endpoint *server,
             ret = recombine_split_first_record(buf, -param);
             TEST_LE_S(0, ret);
             ret = recombine_split_first_record(buf, param);
+            TEST_LE_S(0, ret);
+            break;
+
+        case RECOMBINE_OVERWRITE_MESSAGE_LENGTH:
+            ret = recombine_overwrite_message_length(buf, param);
             TEST_LE_S(0, ret);
             break;
 
@@ -3190,6 +3216,20 @@ void recombine_server_first_flight(int version,
     while (ret == 0 && !mbedtls_ssl_is_handshake_over(&client.ssl)) {
         mbedtls_test_set_step(client.ssl.state);
         ret = mbedtls_ssl_handshake_step(&client.ssl);
+        if (client.ssl.state != goal_state &&
+            instruction == RECOMBINE_OVERWRITE_MESSAGE_LENGTH &&
+            ret == MBEDTLS_ERR_SSL_WANT_READ)
+        {
+            /* Increasing the message length causes the client to want
+             * more data. Feed some garbage, one byte (wrapped in a
+             * handshake record) at a time. */
+            unsigned char record[] = {0x16, 0x03, 0x03, 0x00, 0x01, 0x65};
+            TEST_EQUAL(mbedtls_test_ssl_buffer_put(
+                           client.socket.input,
+                           record, sizeof(record)),
+                       sizeof(record));
+            continue;
+        }
         if (client.ssl.state == goal_state && ret != 0) {
             TEST_EQUAL(ret, expected_ret);
             goto goal_reached;
