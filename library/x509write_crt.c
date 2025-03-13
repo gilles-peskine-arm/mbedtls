@@ -395,7 +395,7 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
 
     size_t sub_len = 0, pub_len = 0, sig_and_oid_len = 0, sig_len;
     size_t len = 0;
-    mbedtls_pk_type_t pk_alg;
+    mbedtls_pk_sigalg_t pk_alg;
     int write_sig_null_par;
 
     /*
@@ -408,9 +408,9 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
     /* There's no direct way of extracting a signature algorithm
      * (represented as an element of mbedtls_pk_type_t) from a PK instance. */
     if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_RSA)) {
-        pk_alg = MBEDTLS_PK_RSA;
+        pk_alg = MBEDTLS_PK_SIGALG_RSA;
     } else if (mbedtls_pk_can_do(ctx->issuer_key, MBEDTLS_PK_ECDSA)) {
-        pk_alg = MBEDTLS_PK_ECDSA;
+        pk_alg = MBEDTLS_PK_SIGALG_ECDSA;
     } else {
         return MBEDTLS_ERR_X509_INVALID_ALG;
     }
@@ -488,7 +488,7 @@ int mbedtls_x509write_crt_der(mbedtls_x509write_cert *ctx,
     /*
      *  Signature   ::=  AlgorithmIdentifier
      */
-    if (pk_alg == MBEDTLS_PK_ECDSA) {
+    if (pk_alg == MBEDTLS_PK_SIGALG_ECDSA) {
         /*
          * The AlgorithmIdentifier's parameters field must be absent for DSA/ECDSA signature
          * algorithms, see https://www.rfc-editor.org/rfc/rfc5480#page-17 and
