@@ -11,7 +11,7 @@
 
 #include "mbedtls/build_info.h"
 
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #include "test_certs.h"
 

@@ -12,7 +12,7 @@
 #if defined(MBEDTLS_BIGNUM_C) && defined(MBEDTLS_PK_PARSE_C) && \
     defined(MBEDTLS_FS_IO) && defined(MBEDTLS_ENTROPY_C) && \
     defined(MBEDTLS_CTR_DRBG_C)
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 

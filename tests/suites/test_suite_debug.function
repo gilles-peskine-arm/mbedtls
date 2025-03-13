@@ -1,7 +1,7 @@
 /* BEGIN_HEADER */
 #include "debug_internal.h"
 #include "string.h"
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 #include <test/ssl_helpers.h>
 
 struct buffer_data {

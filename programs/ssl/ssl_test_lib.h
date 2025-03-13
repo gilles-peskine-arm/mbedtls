@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mbedtls/pk_private.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/ssl_ciphersuites.h"

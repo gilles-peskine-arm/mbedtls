@@ -38,7 +38,7 @@ extern const mbedtls_error_pair_t psa_to_ssl_errors[7];
 #include "mbedtls/sha512.h"
 #endif
 
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 #include "ssl_ciphersuites_internal.h"
 #include "x509_internal.h"
 #include "pk_internal.h"

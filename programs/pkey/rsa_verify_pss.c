@@ -27,7 +27,7 @@ int main(void)
 
 #include "mbedtls/md.h"
 #include "mbedtls/pem.h"
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #include <stdio.h>
 #include <string.h>

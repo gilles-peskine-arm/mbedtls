@@ -24,7 +24,7 @@ int main(void)
 }
 #else
 
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"

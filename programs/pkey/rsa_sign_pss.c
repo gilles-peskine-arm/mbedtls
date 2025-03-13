@@ -28,7 +28,7 @@ int main(void)
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/rsa.h"
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #include <stdio.h>
 #include <string.h>

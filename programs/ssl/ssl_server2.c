@@ -57,8 +57,6 @@ int main(void)
 #include "test/psa_crypto_helpers.h"
 #endif
 
-#include "mbedtls/pk.h"
-
 /* Size of memory to be allocated for the heap, when using the library's memory
  * management and MBEDTLS_MEMORY_BUFFER_ALLOC_C is enabled. */
 #define MEMORY_HEAP_SIZE        180000

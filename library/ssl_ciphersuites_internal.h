@@ -10,7 +10,7 @@
 #ifndef MBEDTLS_SSL_CIPHERSUITES_INTERNAL_H
 #define MBEDTLS_SSL_CIPHERSUITES_INTERNAL_H
 
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 
 #if defined(MBEDTLS_PK_C)
 mbedtls_pk_type_t mbedtls_ssl_get_ciphersuite_sig_pk_alg(const mbedtls_ssl_ciphersuite_t *info);

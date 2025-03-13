@@ -22,7 +22,7 @@ int main(void)
 }
 #else
 
-#include "mbedtls/pk.h"
+#include "mbedtls/pk_private.h"
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/entropy.h"
