@@ -897,6 +897,18 @@ int mbedtls_test_ssl_endpoint_init(
                                                      options->opaque_usage);
     TEST_EQUAL(ret, 0);
 
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
+    const char *const psk_identity = "Client_identity";
+    if (options->psk_str != NULL && options->psk_str->len > 0) {
+        TEST_EQUAL(mbedtls_ssl_conf_psk(&ep->conf,
+                                        options->psk_str->x,
+                                        options->psk_str->len,
+                                        (const unsigned char *) psk_identity,
+                                        strlen(psk_identity)),
+                   0);
+    }
+#endif
+
     TEST_EQUAL(mbedtls_ssl_conf_get_user_data_n(&ep->conf), user_data_n);
     mbedtls_ssl_conf_set_user_data_p(&ep->conf, ep);
     TEST_EQUAL(mbedtls_ssl_get_user_data_n(&ep->ssl), user_data_n);
@@ -2041,9 +2053,6 @@ void mbedtls_test_ssl_perform_handshake(
     int forced_ciphersuite[2];
     enum { BUFFSIZE = 17000 };
     mbedtls_test_ssl_endpoint client, server;
-#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
-    const char *psk_identity = "foo";
-#endif
 #if defined(MBEDTLS_TIMING_C)
     mbedtls_timing_delay_context timer_client, timer_server;
 #endif
@@ -2125,22 +2134,9 @@ void mbedtls_test_ssl_perform_handshake(
     TEST_EQUAL(MBEDTLS_SSL_MAX_FRAG_LEN_NONE, options->mfl);
 #endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
 
-#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED) && defined(MBEDTLS_SSL_SRV_C)
     if (options->psk_str != NULL && options->psk_str->len > 0) {
-        TEST_ASSERT(mbedtls_ssl_conf_psk(
-                        &client.conf, options->psk_str->x,
-                        options->psk_str->len,
-                        (const unsigned char *) psk_identity,
-                        strlen(psk_identity)) == 0);
-
-        TEST_ASSERT(mbedtls_ssl_conf_psk(
-                        &server.conf, options->psk_str->x,
-                        options->psk_str->len,
-                        (const unsigned char *) psk_identity,
-                        strlen(psk_identity)) == 0);
-#if defined(MBEDTLS_SSL_SRV_C)
         mbedtls_ssl_conf_psk_cb(&server.conf, psk_dummy_callback, NULL);
-#endif
     }
 #endif
 #if defined(MBEDTLS_SSL_RENEGOTIATION)
