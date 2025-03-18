@@ -895,7 +895,8 @@ int mbedtls_test_ssl_endpoint_init(
 
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
     if (options->pk_alg == MBEDTLS_PK_NONE) {
-#if defined(MBEDTLS_TEST_SSL_ENDPOINT_DEFAULT_CERT_ECDSA)
+#if defined(MBEDTLS_TEST_SSL_ENDPOINT_DEFAULT_CERT_ECDSA) && \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED)
         options->pk_alg = MBEDTLS_PK_ECDSA;
 #elif defined(MBEDTLS_TEST_SSL_ENDPOINT_DEFAULT_CERT_RSA)
         options->pk_alg = MBEDTLS_PK_RSA;
