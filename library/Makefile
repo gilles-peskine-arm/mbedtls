@@ -7,6 +7,8 @@ TF_PSA_CRYPTO_DRIVERS_BUILTIN_SRC_PATH = $(MBEDTLS_PATH)/tf-psa-crypto/drivers/b
 
 GENERATED_FILES := \
 	error.c \
+	mbedtls_config_check_after.h \
+	mbedtls_config_check_before.h \
 	version_features.c \
 	ssl_debug_helpers_generated.c \
 	$(TF_PSA_CRYPTO_CORE_PATH)/psa_crypto_driver_wrappers.h \
@@ -295,6 +297,13 @@ error.c: $(gen_file_dep) $(filter-out %config%,$(wildcard ../include/mbedtls/*.h
 error.c:
 	echo "  Gen   $@"
 	$(PERL) ../scripts/generate_errors.pl
+
+mbedtls_config_check_after.h mbedtls_config_check_before.h: $(gen_file_dep) \
+	../scripts/generate_config_checks.py \
+	../framework/scripts/mbedtls_framework/config_checks_generator.py
+mbedtls_config_check_after.h mbedtls_config_check_before.h:
+	echo "  Gen   $@"
+	$(PYTHON) ../scripts/generate_config_checks.py
 
 ssl_debug_helpers_generated.c: $(gen_file_dep) ../framework/scripts/generate_ssl_debug_helpers.py
 ssl_debug_helpers_generated.c: $(gen_file_dep) $(filter-out %config%,$(wildcard ../include/mbedtls/*.h))
