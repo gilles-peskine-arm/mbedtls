@@ -38,6 +38,24 @@ set(src_tls
 )
 
 if(GEN_FILES)
+    add_custom_command(
+        OUTPUT
+            ${CMAKE_CURRENT_BINARY_DIR}/mbedtls_config_check_after.h
+            ${CMAKE_CURRENT_BINARY_DIR}/mbedtls_config_check_before.h
+        COMMAND
+            ${MBEDTLS_PYTHON_EXECUTABLE}
+                ${MBEDTLS_DIR}/scripts/generate_config_checks.py
+                ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS
+            ${MBEDTLS_DIR}/scripts/generate_config_checks.py
+            ${MBEDTLS_FRAMEWORK_DIR}/scripts/mbedtls_framework/config_checks_generator.py
+    )
+else()
+    link_to_source(mbedtls_config_check_after.h)
+    link_to_source(mbedtls_config_check_before.h)
+endif()
+
+if(GEN_FILES)
     find_package(Perl REQUIRED)
 
     file(GLOB crypto_error_headers ${CMAKE_CURRENT_SOURCE_DIR}/include/mbedtls/*.h)
