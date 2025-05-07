@@ -19,9 +19,6 @@
 
 #include "mbedtls/md.h"
 
-/** OID is not found. */
-#define MBEDTLS_ERR_OID_NOT_FOUND                         -0x002E
-
 /*
  * Maximum number of OID components allowed
  */
@@ -302,7 +299,7 @@ typedef struct {
  * \param oid      OID to use
  * \param ext_type place to store the extension type
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_x509_ext_type(const mbedtls_asn1_buf *oid, int *ext_type);
 
@@ -313,7 +310,7 @@ int mbedtls_x509_oid_get_x509_ext_type(const mbedtls_asn1_buf *oid, int *ext_typ
  * \param oid      OID to use
  * \param short_name    place to store the string pointer
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_attr_short_name(const mbedtls_asn1_buf *oid, const char **short_name);
 
@@ -324,7 +321,7 @@ int mbedtls_x509_oid_get_attr_short_name(const mbedtls_asn1_buf *oid, const char
  * \param md_alg   place to store message digest algorithm
  * \param pk_alg   place to store public key algorithm
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_sig_alg(const mbedtls_asn1_buf *oid,
                             mbedtls_md_type_t *md_alg, mbedtls_pk_type_t *pk_alg);
@@ -335,7 +332,7 @@ int mbedtls_x509_oid_get_sig_alg(const mbedtls_asn1_buf *oid,
  * \param oid      OID to use
  * \param desc     place to store string pointer
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_sig_alg_desc(const mbedtls_asn1_buf *oid, const char **desc);
 
@@ -347,7 +344,7 @@ int mbedtls_x509_oid_get_sig_alg_desc(const mbedtls_asn1_buf *oid, const char **
  * \param oid      place to store ASN.1 OID string pointer
  * \param olen     length of the OID
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_type_t md_alg,
                                    const char **oid, size_t *olen);
@@ -358,7 +355,7 @@ int mbedtls_x509_oid_get_oid_by_sig_alg(mbedtls_pk_type_t pk_alg, mbedtls_md_typ
  * \param oid      OID to use
  * \param md_alg   place to store message digest algorithm
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_md_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *md_alg);
 
@@ -369,7 +366,7 @@ int mbedtls_x509_oid_get_md_alg(const mbedtls_asn1_buf *oid, mbedtls_md_type_t *
  * \param oid      OID to use
  * \param desc     place to store string pointer
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_extended_key_usage(const mbedtls_asn1_buf *oid, const char **desc);
 #endif
@@ -380,7 +377,7 @@ int mbedtls_x509_oid_get_extended_key_usage(const mbedtls_asn1_buf *oid, const c
  * \param oid      OID to use
  * \param desc     place to store string pointer
  *
- * \return         0 if successful, or MBEDTLS_ERR_OID_NOT_FOUND
+ * \return         0 if successful, or MBEDTLS_ERR_X509_UNKNOWN_OID
  */
 int mbedtls_x509_oid_get_certificate_policies(const mbedtls_asn1_buf *oid, const char **desc);
 
