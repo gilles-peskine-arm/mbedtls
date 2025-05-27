@@ -196,6 +196,7 @@ typedef struct mbedtls_test_ssl_endpoint {
     mbedtls_test_mock_socket socket;
 
     /* Objects owned by the endpoint */
+    int *ciphersuites;
     mbedtls_x509_crt *ca_chain;
     mbedtls_x509_crt *cert;
     mbedtls_pk_context *pkey;
