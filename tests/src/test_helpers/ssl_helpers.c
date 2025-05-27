@@ -800,6 +800,11 @@ int mbedtls_test_ssl_endpoint_init(
                             mbedtls_test_mock_tcp_send_msg,
                             mbedtls_test_mock_tcp_recv_msg,
                             NULL);
+#if defined(MBEDTLS_TIMING_C)
+        mbedtls_ssl_set_timer_cb(&ep->ssl, &ep->timer,
+                                 mbedtls_timing_set_delay,
+                                 mbedtls_timing_get_delay);
+#endif
     } else {
         mbedtls_ssl_set_bio(&(ep->ssl), &(ep->socket),
                             mbedtls_test_mock_tcp_send_nb,
@@ -2199,9 +2204,6 @@ void mbedtls_test_ssl_perform_handshake(
 #if defined(MBEDTLS_SSL_HANDSHAKE_WITH_PSK_ENABLED)
     const char *psk_identity = "foo";
 #endif
-#if defined(MBEDTLS_TIMING_C)
-    mbedtls_timing_delay_context timer_client, timer_server;
-#endif
 #if defined(MBEDTLS_SSL_CONTEXT_SERIALIZATION)
     unsigned char *context_buf = NULL;
     size_t context_buf_len;
@@ -2229,11 +2231,6 @@ void mbedtls_test_ssl_perform_handshake(
                                                   options, &client_context,
                                                   &client_queue,
                                                   &server_queue), 0);
-#if defined(MBEDTLS_TIMING_C)
-        mbedtls_ssl_set_timer_cb(&client.ssl, &timer_client,
-                                 mbedtls_timing_set_delay,
-                                 mbedtls_timing_get_delay);
-#endif
     } else {
         TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&client,
                                                   MBEDTLS_SSL_IS_CLIENT,
@@ -2250,11 +2247,6 @@ void mbedtls_test_ssl_perform_handshake(
                                                   options, &server_context,
                                                   &server_queue,
                                                   &client_queue), 0);
-#if defined(MBEDTLS_TIMING_C)
-        mbedtls_ssl_set_timer_cb(&server.ssl, &timer_server,
-                                 mbedtls_timing_set_delay,
-                                 mbedtls_timing_get_delay);
-#endif
     } else {
         TEST_EQUAL(mbedtls_test_ssl_endpoint_init(&server,
                                                   MBEDTLS_SSL_IS_SERVER,
@@ -2417,7 +2409,7 @@ void mbedtls_test_ssl_perform_handshake(
         mbedtls_ssl_set_user_data_p(&server.ssl, &server);
 
 #if defined(MBEDTLS_TIMING_C)
-        mbedtls_ssl_set_timer_cb(&server.ssl, &timer_server,
+        mbedtls_ssl_set_timer_cb(&server.ssl, &server.timer,
                                  mbedtls_timing_set_delay,
                                  mbedtls_timing_get_delay);
 #endif
