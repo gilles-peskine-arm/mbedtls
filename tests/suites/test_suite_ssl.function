@@ -2905,6 +2905,7 @@ void move_handshake_to_state(int endpoint_type, int tls_version, int state, int 
     mbedtls_test_init_handshake_options(&options);
 
     options.pk_alg = MBEDTLS_PK_RSA;
+    options.srv_auth_mode = MBEDTLS_SSL_VERIFY_REQUIRED;
 
     /*
      * If both TLS 1.2 and 1.3 are enabled and we want to do a TLS 1.2
@@ -2946,10 +2947,11 @@ void move_handshake_to_state(int endpoint_type, int tls_version, int state, int 
                                                &(second_ep.ssl),
                                                state);
     if (need_pass) {
-        TEST_ASSERT(ret == 0 ||
-                    ret == MBEDTLS_ERR_SSL_WANT_READ ||
-                    ret == MBEDTLS_ERR_SSL_WANT_WRITE);
         TEST_EQUAL(base_ep.ssl.state,  state);
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ &&
+            ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+            TEST_EQUAL(ret, 0);
+        }
     } else {
         TEST_ASSERT(ret != 0 &&
                     ret != MBEDTLS_ERR_SSL_WANT_READ &&
@@ -3208,9 +3210,12 @@ void recombine_server_first_flight(int version,
     mbedtls_debug_set_threshold(3);
 #endif
 
-    // Does't really matter but we want to know to declare dependencies.
+    // Doesn't really matter, but we want to know to declare dependencies.
     client_options.pk_alg = MBEDTLS_PK_ECDSA;
     server_options.pk_alg = MBEDTLS_PK_ECDSA;
+
+    // Doesn't really matter, but affects the expected state.
+    server_options.srv_auth_mode = MBEDTLS_SSL_VERIFY_REQUIRED;
 
     client_options.client_min_version = version;
     client_options.client_max_version = version;

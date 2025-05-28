@@ -890,7 +890,11 @@ int mbedtls_test_ssl_endpoint_init(
         mbedtls_ssl_conf_groups(&(ep->conf), options->group_list);
     }
 
-    mbedtls_ssl_conf_authmode(&(ep->conf), MBEDTLS_SSL_VERIFY_REQUIRED);
+    if (MBEDTLS_SSL_IS_SERVER == endpoint_type) {
+        mbedtls_ssl_conf_authmode(&(ep->conf), options->srv_auth_mode);
+    } else {
+        mbedtls_ssl_conf_authmode(&(ep->conf), MBEDTLS_SSL_VERIFY_REQUIRED);
+    }
 
 #if defined(MBEDTLS_SSL_EARLY_DATA)
     mbedtls_ssl_conf_early_data(&(ep->conf), options->early_data);
@@ -2454,7 +2458,6 @@ void mbedtls_test_ssl_perform_handshake(
     TEST_EQUAL(mbedtls_test_ssl_endpoint_init(server,
                                               MBEDTLS_SSL_IS_SERVER,
                                               options), 0);
-    mbedtls_ssl_conf_authmode(&server->conf, options->srv_auth_mode);
 
     if (options->dtls) {
         TEST_EQUAL(mbedtls_test_ssl_dtls_join_endpoints(client, server), 0);
