@@ -9,6 +9,7 @@ import unittest
 
 import scripts_path # pylint: disable=unused-import
 from mbedtls_framework import test_config_checks_generator
+import generate_config_checks
 
 
 class MbedtlsTestConfigChecks(test_config_checks_generator.TestConfigChecks):
@@ -53,6 +54,9 @@ class MbedtlsTestConfigChecks(test_config_checks_generator.TestConfigChecks):
     def test_crypto_exempt_undef_MBEDTLS_USE_PSA_CRYPTO(self) -> None:
         self.good_case('#undef MBEDTLS_USE_PSA_CRYPTO',
                        extra_options=['-DMBEDTLS_CONFIG_CHECK_ALLOW_REMOVED_OPTIONS'])
+
+    def test_up_to_date(self) -> None:
+        self.up_to_date_case(generate_config_checks.MBEDTLS_REMOVED_OPTIONS)
 
 
 if __name__ == '__main__':
