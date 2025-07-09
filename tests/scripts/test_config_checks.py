@@ -22,6 +22,22 @@ class MbedtlsTestConfigChecks(unittest_config_checks.TestConfigChecks):
         'tf-psa-crypto/drivers/builtin/include',
     ]
 
+    @unittest.skip("At this time, mbedtls does not go through crypto's check_config.h.")
+    def test_crypto_no_fs_io(self) -> None:
+        """A sample error expected from crypto's check_config.h."""
+        self.bad_case('#undef MBEDTLS_FS_IO',
+                      None,
+                      error=('MBEDTLS_PSA_ITS_FILE_C'))
+
+    def test_mbedtls_no_session_tickets_for_early_data(self) -> None:
+        """A sample error expected from check_config.h."""
+        self.bad_case(None,
+                      '''
+                      #define MBEDTLS_SSL_EARLY_DATA
+                      #undef MBEDTLS_SSL_SESSION_TICKETS
+                      ''',
+                      error=('MBEDTLS_SSL_EARLY_DATA'))
+
     def test_mbedtls_define_MBEDTLS_KEY_EXCHANGE_RSA_ENABLED(self) -> None:
         self.bad_case('#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED',
                       error=('MBEDTLS_KEY_EXCHANGE_RSA_ENABLED was removed'))
