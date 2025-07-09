@@ -22,6 +22,20 @@ class MbedtlsTestConfigChecks(test_config_checks_generator.TestConfigChecks):
         'tf-psa-crypto/drivers/builtin/include',
     ]
 
+    def test_crypto_no_fs_io(self) -> None:
+        """A sample error expected from crypto's check_config.h."""
+        self.bad_case('#undef MBEDTLS_FS_IO',
+                      error=('MBEDTLS_PSA_ITS_FILE_C'))
+
+    def test_mbedtls_no_tls12(self) -> None:
+        """A sample error expected from check_config.h."""
+        self.bad_case(None,
+                      '''
+                      #undef MBEDTLS_SSL_PROTO_TLS1_2
+                      #define MBEDTLS_SSL_RENEGOTIATION
+                      ''',
+                      error=('MBEDTLS_SSL_RENEGOTIATION'))
+
     def test_crypto_define_MBEDTLS_USE_PSA_CRYPTO(self) -> None:
         self.bad_case('#define MBEDTLS_USE_PSA_CRYPTO',
                       error=('MBEDTLS_USE_PSA_CRYPTO is no longer supported' +
