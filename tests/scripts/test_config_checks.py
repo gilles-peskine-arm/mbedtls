@@ -46,6 +46,32 @@ class MbedtlsTestConfigChecks(unittest_config_checks.TestConfigChecks):
         self.good_case('#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED',
                        extra_options=['-DMBEDTLS_CONFIG_CHECK_BYPASS'])
 
+    def test_define_MBEDTLS_MD5_C_redundant(self) -> None:
+        self.bad_case('#define PSA_WANT_ALG_MD5 1',
+                      '#define MBEDTLS_MD5_C',
+                      error=('MBEDTLS_MD5_C .*TF-PSA-Crypto'))
+
+    def test_define_MBEDTLS_MD5_C_added(self) -> None:
+        self.bad_case('''
+                      #undef PSA_WANT_ALG_MD5
+                      #undef MBEDTLS_MD5_C
+                      ''',
+                      '#define MBEDTLS_MD5_C',
+                      error=('MBEDTLS_MD5_C .*TF-PSA-Crypto'))
+
+    def test_define_MBEDTLS_BASE64_C_redundant(self) -> None:
+        self.good_case(None,
+                       '#define MBEDTLS_BASE64_C')
+
+    def test_define_MBEDTLS_BASE64_C_added(self) -> None:
+        self.bad_case('''
+                      #undef MBEDTLS_BASE64_C
+                      #undef MBEDTLS_PEM_PARSE_C
+                      #undef MBEDTLS_PEM_WRITE_C
+                      ''',
+                      '#define MBEDTLS_BASE64_C',
+                      error=('MBEDTLS_BASE64_C .*TF-PSA-Crypto'))
+
 
 if __name__ == '__main__':
     unittest.main()
