@@ -11,6 +11,8 @@ set(src_x509
     x509write.c
     x509write_crt.c
     x509write_csr.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mbedtls_config_check_after.h
+    ${CMAKE_CURRENT_BINARY_DIR}/mbedtls_config_check_before.h
 )
 
 set(src_tls
