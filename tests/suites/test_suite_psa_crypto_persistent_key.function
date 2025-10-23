@@ -118,6 +118,42 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE */
+void key_id_ranges()
+{
+    /* PSA Crypto API specification */
+    TEST_EQUAL(PSA_KEY_ID_NULL, 0x00000000);
+    TEST_EQUAL(PSA_KEY_ID_USER_MIN, 0x00000001);
+    TEST_EQUAL(PSA_KEY_ID_USER_MAX, 0x3fffffff);
+    TEST_EQUAL(PSA_KEY_ID_VENDOR_MIN, 0x40000000);
+    TEST_EQUAL(PSA_KEY_ID_VENDOR_MAX, 0x7fffffff);
+
+    /* Volatile key IDs */
+    TEST_LE_U(PSA_KEY_ID_VENDOR_MIN, PSA_KEY_ID_VOLATILE_MIN);
+    TEST_LE_U(PSA_KEY_ID_VOLATILE_MAX, PSA_KEY_ID_VENDOR_MAX);
+    TEST_LE_U(PSA_KEY_ID_VOLATILE_MIN, PSA_KEY_ID_VOLATILE_MAX);
+
+    /* Built-in key IDs */
+    /* Mbed TLS 2.27 reserved  0x7fff0000..0x7fffefff for built-in keys.
+     * Integrators may have hard-coded built-in key IDs in this range,
+     * so if this range starts conflicting with something else, it's
+     * an incompatible change. */
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+    TEST_LE_U(MBEDTLS_PSA_KEY_ID_BUILTIN_MIN, 0x7fff0000);
+    TEST_LE_U(MBEDTLS_PSA_KEY_ID_BUILTIN_MAX, 0x7fffefff);
+    TEST_LE_U(PSA_KEY_ID_VENDOR_MIN, MBEDTLS_PSA_KEY_ID_BUILTIN_MIN);
+    TEST_LE_U(MBEDTLS_PSA_KEY_ID_BUILTIN_MAX, PSA_KEY_ID_VENDOR_MAX);
+#endif /* MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS */
+    /* To avoid confusion, make sure we avoid the built-in key ID range
+     * even in builds without built-in keys.. */
+    if (PSA_KEY_ID_VOLATILE_MIN <= 0x7fff0000) {
+        TEST_LE_U(PSA_KEY_ID_VOLATILE_MAX + 1, 0x7fff0000);
+    } else {
+        TEST_LE_U(0x7fffefff + 1, PSA_KEY_ID_VOLATILE_MIN);
+    }
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
 void save_large_persistent_key(int data_length_arg, int expected_status)
 {
     mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(1, 42);
