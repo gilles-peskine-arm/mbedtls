@@ -140,6 +140,61 @@ destroy_nonexistent:0xffffffff:PSA_ERROR_INVALID_HANDLE
 Load key: owner=0 id=1, good, 1 byte
 load_primed_storage:0:1:"505341004b455900000000000100000001100800010000000000000000000000010000004c":PSA_SUCCESS:PSA_SUCCESS:PSA_SUCCESS
 
+Load key: owner=0 id=1, good, 3 bytes
+load_primed_storage:0:1:"505341004b455900000000000100000001101800010000000000000000000000010000004c6579":PSA_SUCCESS:PSA_SUCCESS:PSA_SUCCESS
+
+Load key: owner=0 id=1, non-exportable
+load_primed_storage:0:1:"505341004b455900000000000100000001100800000000000000000000000000010000004c":PSA_SUCCESS:PSA_ERROR_NOT_PERMITTED:PSA_SUCCESS
+
+# Key data inconsistent with bit-size, but usable.
+Load key: owner=0 id=1, truncated raw key data
+load_primed_storage:0:1:"505341004b455900000000000100000001101800010000000000000000000000010000004c65":PSA_SUCCESS:PSA_SUCCESS:PSA_SUCCESS
+
+Load key: owner=0 id=1, empty key data
+load_primed_storage:0:1:"505341004b45590000000000010000000110180001000000000000000000000001000000":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (all-1)
+load_primed_storage:0:1:"505341004b455900000000000100000001100800010000000000000000000000010000":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (version+1)
+load_primed_storage:0:1:"505341004b4559000000000001":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (version+0)
+load_primed_storage:0:1:"505341004b45590000000000":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (version-1)
+load_primed_storage:0:1:"505341004b455900000000":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (magic+1)
+load_primed_storage:0:1:"505341004b455900":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (magic+0)
+load_primed_storage:0:1:"505341004b4559":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (magic-1)
+load_primed_storage:0:1:"505341004b45":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, truncated key attributes (=1)
+load_primed_storage:0:1:"50":PSA_ERROR_DATA_INVALID:PSA_ERROR_DATA_INVALID:PSA_SUCCESS
+
+Load key: owner=0 id=1, empty file
+# Implementation detail: export bails out very early if output_size==0
+# (because we never support empty keys), hence the export status is
+# BUFFER_TOO_SMALL rather than DATA_INVALID.
+load_primed_storage:0:1:"":PSA_ERROR_DATA_INVALID:PSA_ERROR_BUFFER_TOO_SMALL:PSA_SUCCESS
+
+Load key: owner=0 id=1, unknown type 0
+load_primed_storage:0:1:"505341004b455900000000000100000000000800010000000000000000000000010000004c":PSA_SUCCESS:PSA_ERROR_NOT_SUPPORTED:PSA_SUCCESS
+
+Load key: owner=0 id=1, unknown type in raw category
+load_primed_storage:0:1:"505341004b455900000000000100000001fff800010000000000000000000000010000004c":PSA_SUCCESS:PSA_ERROR_NOT_SUPPORTED:PSA_SUCCESS
+
+Load key: owner=0 id=1, unknown type in public key category
+load_primed_storage:0:1:"505341004b455900000000000100000004fff800010000000000000000000000010000004c":PSA_SUCCESS:PSA_ERROR_NOT_SUPPORTED:PSA_SUCCESS
+
+Load key: owner=0 id=1, unknown type in key pair category
+load_primed_storage:0:1:"505341004b455900000000000100000007fff800010000000000000000000000010000004c":PSA_SUCCESS:PSA_ERROR_NOT_SUPPORTED:PSA_SUCCESS
+
 Load key: owner=0 id=2, good
 load_primed_storage:0:2:"505341004b455900000000000100000001100800010000000000000000000000010000004c":PSA_SUCCESS:PSA_SUCCESS:PSA_SUCCESS
 
