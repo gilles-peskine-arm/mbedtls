@@ -14,8 +14,31 @@
 
 #include <stdint.h>
 
+#include "mbedtls/ctr_drbg.h"
+#include "psa_crypto_its.h"
 #include "psa_crypto_slot_management.h"
 #include "psa_crypto_storage.h"
+
+#define KEY_ID_IN_USER_RANGE(id)                                        \
+    (PSA_KEY_ID_USER_MIN <= (id) && (id) <= PSA_KEY_ID_USER_MAX)
+
+#define KEY_ID_IN_VOLATILE_RANGE(id)                                    \
+    (PSA_KEY_ID_VOLATILE_MIN <= (id) && (id) <= PSA_KEY_ID_VOLATILE_MAX)
+
+#if defined(MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS)
+#define KEY_ID_IN_BUILTIN_RANGE(id)                                     \
+    (MBEDTLS_PSA_KEY_ID_BUILTIN_MIN <= (id) && (id) <= MBEDTLS_PSA_KEY_ID_BUILTIN_MAX)
+#else
+#define KEY_ID_IN_BUILTIN_RANGE(id) 0
+#endif
+
+/* Range of file UIDs reserved for uses other than storing a key.
+ * Defined by the TF-PSA-Crypto storage specification
+ * docs/architecture/mbed-crypto-storage-specification.md */
+#define KEY_ID_IN_RESERVED_FILE_ID_RANGE(id) (0xffff0000 <= ((id) & 0xffffffff))
+
+/* Define a key ID that is in none of the recognized ranges and not 0 */
+#define KEY_ID_OUTSIDE_DEFINED_RANGES 0x7fffffffu
 
 #define PSA_KEY_STORAGE_MAGIC_HEADER "PSA\0KEY"
 #define PSA_KEY_STORAGE_MAGIC_HEADER_LENGTH (sizeof(PSA_KEY_STORAGE_MAGIC_HEADER))
@@ -150,6 +173,12 @@ void key_id_ranges()
     } else {
         TEST_LE_U(0x7fffefff + 1, PSA_KEY_ID_VOLATILE_MIN);
     }
+
+    /* Sanity check on test data */
+    TEST_ASSERT(!KEY_ID_IN_USER_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+    TEST_ASSERT(!KEY_ID_IN_VOLATILE_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+    TEST_ASSERT(!KEY_ID_IN_BUILTIN_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
+    TEST_ASSERT(!KEY_ID_IN_RESERVED_FILE_ID_RANGE(KEY_ID_OUTSIDE_DEFINED_RANGES));
 }
 /* END_CASE */
 
@@ -372,5 +401,129 @@ void destroy_nonexistent(int id_arg, int expected_status_arg)
 
 exit:
     PSA_DONE();
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+/* Write content to the file that corresponds to the given key ID,
+ * then attempt to use a key with this ID.
+ * Depending on the validity of the key ID and storage content,
+ * this may or may not work.
+ */
+void load_primed_storage(int32_t owner_id,
+                         int64_t key_id_arg, /* 0..2^32-1 */
+                         data_t *content,
+                         int expected_attributes_status_arg,
+                         int expected_export_status_arg,
+                         int expected_destroy_status_arg)
+{
+    mbedtls_svc_key_id_t key_id = mbedtls_svc_key_id_make(owner_id, key_id_arg);
+    /* Storage UID (file name) for the given key ID, following the storage
+     * specification. */
+    psa_storage_uid_t uid = (uint64_t) owner_id << 32 | key_id_arg;
+    psa_status_t expected_attributes_status = expected_attributes_status_arg;
+    psa_status_t expected_export_status = expected_export_status_arg;
+    psa_status_t expected_destroy_status = expected_destroy_status_arg;
+    psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
+    uint8_t *key_data = NULL;
+    struct psa_storage_info_t info;
+
+    /* Sanity checks on the test data */
+    /* The test framework doesn't support unsigned types, so check that
+     * the key ID is in the actual valid range here. */
+    TEST_LE_U(0, key_id_arg);
+    TEST_LE_U(key_id_arg, 0xffffffff);
+#if !defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+    TEST_EQUAL(owner_id, 0);
+#endif
+
+    PSA_INIT();
+
+#if !defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG) && \
+    defined(MBEDTLS_CTR_DRBG_C) && \
+    defined(MBEDTLS_CTR_DRBG_USE_PSA_CRYPTO)
+    /* Skip this test if we happened to pick the volatile key used by the
+     * PSA RNG, if there is one. */
+    if (owner_id == 0 && psa_key_id_is_volatile(key_id)) {
+        if (psa_get_key_attributes(key_id, &attributes) == PSA_SUCCESS) {
+            mbedtls_test_skip("Volatile key already in use",
+                              __LINE__, __FILE__);
+            goto exit;
+        }
+    }
+#endif
+
+    /* Prime the storage. */
+    psa_status_t file_status = psa_its_get_info(uid, &info);
+    if (uid == 0) {
+        /* 0 is not a valid file ID, according to the PSA secure storage
+         * API specification. */
+        if (file_status == PSA_ERROR_DOES_NOT_EXIST) {
+            /* Our own partial storage implementation (psa_its_file.c)
+             * is not compliant, it returns the wrong error code here.
+             * That's not a problem, just let it go. */
+        } else {
+            TEST_EQUAL(file_status, PSA_ERROR_INVALID_ARGUMENT);
+        }
+    } else if (KEY_ID_IN_RESERVED_FILE_ID_RANGE(key_id_arg) &&
+        file_status == PSA_SUCCESS) {
+        /* The key ID corresponds to a reserved file (e.g. transaction
+         * log or entropy seed). Don't corrupt that file. */
+    } else {
+        TEST_EQUAL(file_status, PSA_ERROR_DOES_NOT_EXIST);
+        TEST_EQUAL(psa_its_set(uid, content->len, content->x, 0), PSA_SUCCESS);
+    }
+
+    /* Reading attributes should work for any valid key. */
+    TEST_EQUAL(psa_get_key_attributes(key_id, &attributes),
+               expected_attributes_status);
+    if (expected_attributes_status == PSA_SUCCESS) {
+        /* It's not our job here to validate the attributes, but do
+         * sanity-check the attributes related to persistence. */
+        TEST_ASSERT(mbedtls_svc_key_id_equal(key_id,
+                                             psa_get_key_id(&attributes)));
+        TEST_EQUAL(psa_get_key_lifetime(&attributes),
+                   PSA_KEY_LIFETIME_PERSISTENT);
+    }
+
+    /* Exporting should work for a valid key that has export permission. */
+    /* Allocate enough memory for the key data (assuming the key
+     * representation in storage is not compressed compared to the
+     * export format). */
+    size_t key_data_size = content->len;
+    size_t key_data_length = SIZE_MAX;
+    TEST_CALLOC(key_data, key_data_size);
+    TEST_EQUAL(psa_export_key(key_id,
+                              key_data, key_data_size, &key_data_length),
+               expected_export_status);
+    if (expected_export_status == PSA_SUCCESS) {
+        TEST_ASSERT(key_data_length != 0);
+    }
+    /* Assert that the data length is sensible even if export failed.
+     * This reduces the risk of memory corruption if an application
+     * doesn't check the return status of export(). */
+    TEST_LE_U(key_data_length, key_data_size);
+
+    /* Destroying the key should work even for malformed content.
+     * But it should not work for reserved file IDs. */
+    TEST_EQUAL(psa_destroy_key(key_id), expected_destroy_status);
+    if (uid == 0) {
+        /* Invalid file UID. No point in asserting anything about the file. */
+    } else if (expected_destroy_status == PSA_SUCCESS) {
+        file_status = psa_its_get_info(uid, &info);
+        if (key_id_arg == 0) {
+            /* psa_destroy_key(0) is defined as a no-op, so it should not
+             * affect the file. */
+            TEST_EQUAL(file_status, PSA_SUCCESS);
+        } else {
+            TEST_EQUAL(file_status, PSA_ERROR_DOES_NOT_EXIST);
+        }
+    }
+
+exit:
+    psa_reset_key_attributes(&attributes);
+    PSA_DONE();
+    psa_its_remove(uid);
+    mbedtls_free(key_data);
 }
 /* END_CASE */
