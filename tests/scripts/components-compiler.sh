@@ -9,6 +9,11 @@
 #### Compiler Testing
 ################################################################
 
+support_build_armcc () {
+    armc6_cc="$ARMC6_BIN_DIR/armclang"
+    (check_tools "$armc6_cc" > /dev/null 2>&1)
+}
+
 support_build_tfm_armcc () {
     support_build_armcc
 }
