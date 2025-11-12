@@ -27,6 +27,30 @@
 
 #include <stdio.h>
 
+#if defined(GCM_BREAK_PUT)
+typedef struct {
+    uint64_t x;
+} __attribute__((packed)) gcm_uint64_unaligned_t;
+__attribute__((always_inline))
+static inline void gcm_put_unaligned_uint64(void *p, uint64_t x)
+{
+    gcm_uint64_unaligned_t *p64 = (gcm_uint64_unaligned_t *) p;
+    p64->x = x;
+}
+#define GCM_PUT_UINT64_BE(n, data, offset)      \
+    {                                                                   \
+        if (MBEDTLS_IS_BIG_ENDIAN) {                                    \
+            gcm_put_unaligned_uint64((data) + (offset), (uint64_t) (n)); \
+        } else {                                                        \
+            gcm_put_unaligned_uint64((data) + (offset), MBEDTLS_BSWAP64((uint64_t) (n))); \
+        }                                                               \
+        /*printf("[%" PRIu64 "]", n);*/                                 \
+        /* printf("%02x%02x%02x%02x%02x%02x%02x%02x", ((uint8_t*)(data))[(offset)+0], ((uint8_t*)(data))[(offset)+1], ((uint8_t*)(data))[(offset)+2], ((uint8_t*)(data))[(offset)+3], ((uint8_t*)(data))[(offset)+4], ((uint8_t*)(data))[(offset)+5], ((uint8_t*)(data))[(offset)+6], ((uint8_t*)(data))[(offset)+7]); */ \
+    }
+#else
+#define GCM_PUT_UINT64_BE(n, data, offset) MBEDTLS_PUT_UINT64_BE(n, data, offset)
+#endif
+
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
 #include "block_cipher_internal.h"
 #endif
@@ -86,7 +110,7 @@ static inline void gcm_gen_table_rightshift(uint64_t dst[2], const uint64_t src[
 
     MBEDTLS_PUT_UINT64_BE(MBEDTLS_GET_UINT64_BE(&src[1], 0) >> 1, &dst[1], 0);
     u8Dst[8] |= (u8Src[7] & 0x01) << 7;
-    MBEDTLS_PUT_UINT64_BE(MBEDTLS_GET_UINT64_BE(&src[0], 0) >> 1, &dst[0], 0);
+    GCM_PUT_UINT64_BE(MBEDTLS_GET_UINT64_BE(&src[0], 0) >> 1, &dst[0], 0);
     u8Dst[0] ^= (u8Src[15] & 0x01) ? 0xE1 : 0;
 }
 
@@ -143,7 +167,7 @@ int gcm_gen_table(mbedtls_gcm_context *ctx)
 #if !defined(MBEDTLS_GCM_LARGE_TABLE)
             /* pack elements of H as 64-bits ints, big-endian */
             for (i = MBEDTLS_GCM_HTABLE_SIZE/2; i > 0; i >>= 1) {
-                MBEDTLS_PUT_UINT64_BE(ctx->H[i][0], &ctx->H[i][0], 0);
+                GCM_PUT_UINT64_BE(ctx->H[i][0], &ctx->H[i][0], 0);
                 MBEDTLS_PUT_UINT64_BE(ctx->H[i][1], &ctx->H[i][1], 0);
             }
 #endif
