@@ -25,6 +25,8 @@
 #include "mbedtls/error.h"
 #include "mbedtls/constant_time.h"
 
+#include <stdio.h>
+
 #if defined(MBEDTLS_BLOCK_CIPHER_C)
 #include "block_cipher_internal.h"
 #endif
@@ -96,7 +98,7 @@ static inline void gcm_gen_table_rightshift(uint64_t dst[2], const uint64_t src[
  * is the high-order bit of HH corresponds to P^0 and the low-order bit of HL
  * corresponds to P^127.
  */
-static int gcm_gen_table(mbedtls_gcm_context *ctx)
+int gcm_gen_table(mbedtls_gcm_context *ctx)
 {
     int ret, i, j;
     uint64_t u64h[2] = { 0 };
@@ -154,6 +156,16 @@ static int gcm_gen_table(mbedtls_gcm_context *ctx)
                                         16);
                 }
             }
+    }
+
+    FILE *file = fopen("gcm.txt", "a");
+    if (file) {
+        for (i = 0; i < MBEDTLS_GCM_HTABLE_SIZE; i++) {
+            fprintf(file, "%016" PRIx64 " %016" PRIx64 "\n",
+                    ctx->H[i][0], ctx->H[i][1]);
+        }
+        fprintf(file, "\n");
+        fclose(file);
     }
 
     return 0;
