@@ -34,7 +34,9 @@
  * specifies that on Windows-on-Arm64, unaligned access is safe (except for uncached
  * device memory).
  */
+#if !defined(MBEDTLS_ONLY_GENERIC_CODE)
 #define MBEDTLS_EFFICIENT_UNALIGNED_ACCESS
+#endif
 #endif
 
 #if defined(__IAR_SYSTEMS_ICC__) && \
