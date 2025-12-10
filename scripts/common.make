@@ -18,6 +18,8 @@ This is a fatal error
 endif
 include $(MBEDTLS_PATH)/framework/exported.make
 
+TF_PSA_CRYPTO_PATH = $(MBEDTLS_PATH)/tf-psa-crypto
+
 CFLAGS	?= -O2
 WARNING_CFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
 WARNING_CXXFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral -std=c++11 -pedantic
@@ -25,8 +27,8 @@ LDFLAGS ?=
 
 LOCAL_CFLAGS = $(WARNING_CFLAGS) -I$(MBEDTLS_TEST_PATH)/include \
                -I$(MBEDTLS_PATH)/framework/tests/include \
-               -I$(MBEDTLS_PATH)/include -I$(MBEDTLS_PATH)/tf-psa-crypto/include \
-               -I$(MBEDTLS_PATH)/tf-psa-crypto/drivers/builtin/include \
+               -I$(MBEDTLS_PATH)/include -I$(TF_PSA_CRYPTO_PATH)/include \
+               -I$(TF_PSA_CRYPTO_PATH)/drivers/builtin/include \
                -D_FILE_OFFSET_BITS=64
 LOCAL_CXXFLAGS = $(WARNING_CXXFLAGS) $(LOCAL_CFLAGS)
 
@@ -45,7 +47,7 @@ LOCAL_LDFLAGS = ${MBEDTLS_TEST_OBJS} 		\
 		-lmbedcrypto$(SHARED_SUFFIX)
 endif
 
-THIRDPARTY_DIR = $(MBEDTLS_PATH)/tf-psa-crypto/drivers
+THIRDPARTY_DIR = $(TF_PSA_CRYPTO_PATH)/drivers
 include $(THIRDPARTY_DIR)/everest/Makefile.inc
 include $(THIRDPARTY_DIR)/p256-m/Makefile.inc
 LOCAL_CFLAGS+=$(THIRDPARTY_INCLUDES)
