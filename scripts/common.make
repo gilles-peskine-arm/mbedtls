@@ -18,7 +18,7 @@ This is a fatal error
 endif
 include $(MBEDTLS_PATH)/framework/exported.make
 
-TF_PSA_CRYPTO_PATH = $(MBEDTLS_PATH)/tf-psa-crypto
+include $(MBEDTLS_PATH)/tf-psa-crypto/scripts/crypto.legacy.make
 
 CFLAGS	?= -O2
 WARNING_CFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
