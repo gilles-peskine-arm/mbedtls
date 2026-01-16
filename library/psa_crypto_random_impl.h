@@ -20,6 +20,11 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 
 #include "mbedtls/entropy.h"
 
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+/* For pid_t and getpid(), for fork protection */
+#include <unistd.h>
+#endif
+
 /* Choose a DRBG based on configuration and availability */
 #if defined(MBEDTLS_CTR_DRBG_C)
 
@@ -70,6 +75,9 @@ typedef struct {
     void (* entropy_free)(mbedtls_entropy_context *ctx);
     mbedtls_entropy_context entropy;
     mbedtls_psa_drbg_context_t drbg;
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+    pid_t pid; /* fork protection, see psa_generate_random_internal() */
+#endif
 } mbedtls_psa_random_context_t;
 
 /** Initialize the PSA DRBG.

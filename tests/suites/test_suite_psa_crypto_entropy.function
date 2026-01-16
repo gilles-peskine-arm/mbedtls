@@ -200,6 +200,10 @@ void psa_rng_fork(int parent_when)
             close(child[i].pipe[1]);
             child[i].pipe[1] = -1;
             TEST_EQUAL(read(child[i].pipe[0], child[i].rng_output, RNG_LEN), RNG_LEN);
+            /* At this point, we know the child has finished reseeding.
+             * In particular, if MBEDTLS_ENTROPY_NV_SEED is enabled,
+             * the child has finished rewriting the seed file, so there
+             * won't be a race condition when the next child reseeds. */
         }
     }
 

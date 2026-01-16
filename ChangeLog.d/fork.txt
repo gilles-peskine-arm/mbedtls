@@ -1,0 +1,5 @@
+Security
+   * If an application called psa_crypto_init() then fork() and continued to
+     use PSA cryptography APIs (possibly indirectly in TLS 1.3 or in other
+     places through MBEDTLS_USE_PSA_CRYPTO), the random generator states
+     were duplicated. Fix this by forcing a RNG reseed in the child process.
