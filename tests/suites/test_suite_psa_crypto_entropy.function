@@ -2,6 +2,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#endif
+
 #include <psa/crypto.h>
 
 #include "mbedtls/entropy.h"
@@ -143,6 +149,92 @@ exit:
     PSA_DONE();
     mbedtls_free(input);
     mbedtls_free(signature);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG:MBEDTLS_PLATFORM_IS_UNIXLIKE */
+void psa_rng_fork(int parent_when)
+{
+    /* Number of bytes that we read from the RNG. Large enough so that
+     * the probability of a coincidence is negligible. Small enough that
+     * the RNG won't decide reseed unless it has prediction resistance
+     * and that the output is less than the buffer of a pipe. */
+#define RNG_LEN 16
+
+    typedef struct {
+        pid_t pid;
+        int pipe[2];
+        unsigned char rng_output[RNG_LEN];
+    } child_t;
+    /* Safe initializer so that the cleanup code works if something
+     * went wrong midway. */
+#define CHILD_INIT { -1, { -1, -1 }, { 0 } }
+    child_t child[2] = { CHILD_INIT, CHILD_INIT };
+    pid_t pid = -1;             /* -1 or >0 in parent, 0 in child */
+    unsigned char parent_rng_output[RNG_LEN] = { 0 };
+
+    PSA_INIT();
+
+    /* Create some child processes, have them generate random data
+     * and report that data back to the original process. */
+    for (size_t i = 0; i < ARRAY_LENGTH(child); i++) {
+        mbedtls_test_set_step(i);
+        if ((size_t) parent_when == i) {
+            PSA_ASSERT(psa_generate_random(parent_rng_output, RNG_LEN));
+        }
+        TEST_EQUAL(pipe(child[i].pipe), 0);
+        pid = fork();
+        TEST_ASSERT(pid != -1);
+        if (pid == 0) {
+            /* Child */
+            close(child[i].pipe[0]);
+            PSA_ASSERT(psa_generate_random(child[i].rng_output, RNG_LEN));
+            TEST_EQUAL(write(child[i].pipe[1], child[i].rng_output, RNG_LEN), RNG_LEN);
+            /* We've done our job, now we exit. Note the use of _exit(),
+             * not exit(), because we must not do things like flush buffers
+             * of open files inherited from the parent process. */
+            _exit(0);
+        } else {
+            /* Parent */
+            child[i].pid = pid;
+            close(child[i].pipe[1]);
+            child[i].pipe[1] = -1;
+            TEST_EQUAL(read(child[i].pipe[0], child[i].rng_output, RNG_LEN), RNG_LEN);
+        }
+    }
+
+    if (parent_when == ARRAY_LENGTH(child)) {
+        PSA_ASSERT(psa_generate_random(parent_rng_output, RNG_LEN));
+    }
+
+    /* Did the children have different RNG states? */
+    TEST_ASSERT(memcmp(child[0].rng_output, child[1].rng_output, RNG_LEN) != 0);
+    for (size_t i = 0; i < ARRAY_LENGTH(child); i++) {
+        mbedtls_test_set_step(i);
+        TEST_ASSERT(memcmp(parent_rng_output, child[i].rng_output, RNG_LEN) != 0);
+    }
+
+exit:
+    if (pid == 0) {
+        /* Something went wrong here in a child process.
+         * Just let the parent know. */
+        _exit(1);
+    }
+    for (size_t i = 0; i < ARRAY_LENGTH(child); i++) {
+        mbedtls_test_set_step(i);
+        close(child[i].pipe[0]);
+        close(child[i].pipe[1]);
+        if (child[i].pid > 0) {
+            int status;
+            waitpid(child[i].pid, &status, 0);
+            /* This is like TEST_EQUAL(status, 0), but since we're already in
+             * cleanup code, we must not goto exit on failure. */
+            mbedtls_test_equal("status == 0", __LINE__, __FILE__, status, 0);
+        }
+    }
+    PSA_DONE();
+
+#undef RNG_LEN
 }
 /* END_CASE */
 
