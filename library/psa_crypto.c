@@ -4415,7 +4415,7 @@ static psa_status_t psa_generate_random_internal(uint8_t *output,
 
     while (output_size > 0) {
 #if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
-        pid_t pid = getpid();
+        mbedtls_platform_pid_t pid = getpid();
         if (pid != global_data.rng.pid) {
             /* This is a (grand...)child of the original process, but
              * we inherited the RNG state from our parent. We must reseed! */

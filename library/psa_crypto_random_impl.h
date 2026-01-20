@@ -23,6 +23,14 @@ typedef mbedtls_psa_external_random_context_t mbedtls_psa_random_context_t;
 #if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
 /* For pid_t and getpid(), for fork protection */
 #include <unistd.h>
+
+/** The return type of getpid().
+ *
+ * Hard-coded for now. This can become configurable if there's interest
+ * in ancient or misdetected Unix-like platforms where `getpid()` exists
+ * but `pid_t` isn't declared.
+ */
+typedef pid_t mbedtls_platform_pid_t;
 #endif
 
 /* Choose a DRBG based on configuration and availability */
@@ -76,7 +84,7 @@ typedef struct {
     mbedtls_entropy_context entropy;
     mbedtls_psa_drbg_context_t drbg;
 #if defined(MBEDTLS_PLATFORM_IS_UNIXLIKE)
-    pid_t pid; /* fork protection, see psa_generate_random_internal() */
+    mbedtls_platform_pid_t pid; /* fork protection, see psa_generate_random_internal() */
 #endif
 } mbedtls_psa_random_context_t;
 

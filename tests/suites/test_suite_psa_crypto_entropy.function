@@ -9,6 +9,7 @@
 #endif
 
 #include <psa/crypto.h>
+#include <psa_crypto_random_impl.h>
 
 #include "mbedtls/entropy.h"
 #include "entropy_poll.h"
@@ -162,7 +163,7 @@ void psa_rng_fork(int parent_when)
 #define RNG_LEN 16
 
     typedef struct {
-        pid_t pid;
+        mbedtls_platform_pid_t pid;
         int pipe[2];
         unsigned char rng_output[RNG_LEN];
     } child_t;
@@ -170,7 +171,7 @@ void psa_rng_fork(int parent_when)
      * went wrong midway. */
 #define CHILD_INIT { -1, { -1, -1 }, { 0 } }
     child_t child[2] = { CHILD_INIT, CHILD_INIT };
-    pid_t pid = -1;             /* -1 or >0 in parent, 0 in child */
+    mbedtls_platform_pid_t pid = -1; /* -1 or >0 in parent, 0 in child */
     unsigned char parent_rng_output[RNG_LEN] = { 0 };
 
     PSA_INIT();

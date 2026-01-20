@@ -11,6 +11,15 @@
 #ifndef MBEDTLS_LIBRARY_COMMON_H
 #define MBEDTLS_LIBRARY_COMMON_H
 
+/* On Unix-like platforms, we want <unistd.h> to provide #pid_t.
+ * So request a not-too-antique POSIX compliance level from system headers.
+ * Either `_POSIX_C_SOURCE >= 200112L` or any version of `_XOPEN_SOURCE`
+ * is enough.
+ */
+#if !defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)
+#define _POSIX_C_SOURCE 200112L
+#endif
+
 #include "mbedtls/build_info.h"
 #include "alignment.h"
 
