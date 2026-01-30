@@ -29,4 +29,18 @@
 #define _XOPEN_SOURCE 600
 #endif
 
+/* On Mingw-w64, force the use of a C99-compliant printf() and friends.
+ * This is necessary on older versions of Mingw and/or Windows runtimes
+ * where snprintf does not always zero-terminate the buffer, and does
+ * not support formats such as "%zu" for size_t and "%lld" for long long.
+ *
+ * Defining __USE_MINGW_ANSI_STDIO=0 may work and provide a small code size
+ * and performance benefit for some combinations of older Mingw and Windows
+ * versions. Do this at your own risk and make sure that least
+ * test_suite_debug passes.
+ */
+#if !defined(__USE_MINGW_ANSI_STDIO)
+#define __USE_MINGW_ANSI_STDIO 1
+#endif
+
 #endif /* MBEDTLS_MBEDTLS_PLATFORM_REQUIREMENTS_H */
