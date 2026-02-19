@@ -23,12 +23,19 @@ extern "C" {
 // Regular implementation
 //
 
+#if defined(MBEDTLS_HAVE_TIME)
 /**
  * \brief          timer structure
  */
 struct mbedtls_timing_hr_time {
     mbedtls_ms_time_t ms;
 };
+#else
+    /* Without MBEDTLS_HAVE_TIME, we expose the function declarations,
+     * but they aren't implemented. Give them an incomplete type
+     * as a parameter. */
+struct mbedtls_timing_hr_time;
+#endif
 
 /**
  * \brief          Context for mbedtls_timing_set/get_delay()
