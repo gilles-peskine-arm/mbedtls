@@ -6,7 +6,9 @@ This script can also run on outcomes from a partial run, but the results are
 less likely to be useful.
 """
 
+import importlib.util
 import re
+import sys
 import typing
 
 import scripts_path # pylint: disable=unused-import
@@ -209,6 +211,32 @@ class CoverageTask(outcome_analysis.CoverageTask):
             'TLS 1.3 m->O: resumption with early data',
         ],
     }
+
+    def _load_crypto_module(self) -> None:
+        """Try to load the tf-psa-crypto submodule's outcome analysis Python module."""
+        if 'tf_psa_crypto.analyze_outcomes' in sys.modules:
+            return
+        crypto_spec = importlib.util.spec_from_file_location(
+            'tf_psa_crypto.analyze_outcomes',
+            'tf-psa-crypto/tests/scripts/analyze_outcomes.py')
+        if crypto_spec is not None:
+            self.crypto_module = importlib.util.module_from_spec(crypto_spec)
+            sys.modules['tf_psa_crypto.analyze_outcomes'] = self.crypto_module
+            assert crypto_spec.loader is not None
+            crypto_spec.loader.exec_module(self.crypto_module)
+
+    def _load_crypto_instructions(self) -> None:
+        """Try to load instructions from the tf-psa-crypto submodule's outcome analysis."""
+        self._load_crypto_module()
+        if self.crypto_module is not None:
+            crypto_internal_test_cases = self.crypto_module.INTERNAL_TEST_CASES
+            self.ignored_tests.extend(crypto_internal_test_cases)
+
+    def __init__(self, options) -> None:
+        super().__init__(options)
+        self.crypto_module: typing.Optional[typing.Any] = None
+        self._load_crypto_instructions()
+
 
 # List of tasks with a function that can handle this task and additional arguments if required
 KNOWN_TASKS: typing.Dict[str, typing.Type[outcome_analysis.Task]] = {
