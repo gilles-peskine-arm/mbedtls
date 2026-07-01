@@ -21,6 +21,7 @@
 #define TEST_EARLY_DATA_DIFF_ALPN 5
 #define TEST_EARLY_DATA_NO_INITIAL_ALPN 6
 #define TEST_EARLY_DATA_NO_LATER_ALPN 7
+#define TEST_EARLY_DATA_STALE_TICKET_ALPN 8
 
 /* Mutations for ssl_tls13_session_load_rejects_bad_serialized_data */
 #define TEST_TLS13_SESSION_LOAD_TRAILING_DATA    0
@@ -145,6 +146,74 @@ static int write_early_data(mbedtls_ssl_context *ssl,
 exit:
     return ret;
 }
+
+#if defined(MBEDTLS_SSL_ALPN)
+static int get_tls13_ticket_after_cross_alpn_resumption(
+    mbedtls_test_handshake_test_options *client_options,
+    mbedtls_test_handshake_test_options *server_options,
+    mbedtls_ssl_session *saved_session)
+{
+    int ret = -1;
+    unsigned char discard_buf[64];
+    mbedtls_test_ssl_endpoint client_ep, server_ep;
+
+    memset(&client_ep, 0, sizeof(client_ep));
+    memset(&server_ep, 0, sizeof(server_ep));
+
+    client_options->alpn_list[0] = "ALPNExample2";
+    client_options->alpn_list[1] = NULL;
+    server_options->alpn_list[0] = "ALPNExample2";
+    server_options->alpn_list[1] = NULL;
+
+    ret = mbedtls_test_ssl_endpoint_init(&client_ep, MBEDTLS_SSL_IS_CLIENT,
+                                         client_options, NULL, NULL, NULL);
+    TEST_EQUAL(ret, 0);
+
+    mbedtls_ssl_conf_tls13_enable_signal_new_session_tickets(
+        &client_ep.conf,
+        MBEDTLS_SSL_TLS1_3_SIGNAL_NEW_SESSION_TICKETS_ENABLED);
+
+    ret = mbedtls_test_ssl_endpoint_init(&server_ep, MBEDTLS_SSL_IS_SERVER,
+                                         server_options, NULL, NULL, NULL);
+    TEST_EQUAL(ret, 0);
+
+    mbedtls_ssl_conf_session_tickets_cb(&server_ep.conf,
+                                        mbedtls_test_ticket_write,
+                                        mbedtls_test_ticket_parse,
+                                        NULL);
+
+    ret = mbedtls_test_mock_socket_connect(&(client_ep.socket),
+                                           &(server_ep.socket), 1024);
+    TEST_EQUAL(ret, 0);
+
+    ret = mbedtls_ssl_set_session(&(client_ep.ssl), saved_session);
+    TEST_EQUAL(ret, 0);
+
+    TEST_EQUAL(mbedtls_test_move_handshake_to_state(
+                   &(server_ep.ssl), &(client_ep.ssl),
+                   MBEDTLS_SSL_HANDSHAKE_OVER), 0);
+
+    TEST_EQUAL(server_ep.ssl.handshake->resume, 1);
+    TEST_EQUAL(strcmp(mbedtls_ssl_get_alpn_protocol(&server_ep.ssl),
+                      "ALPNExample2"), 0);
+    TEST_ASSERT(server_ep.ssl.session->ticket_alpn != NULL);
+    TEST_EQUAL(strcmp(server_ep.ssl.session->ticket_alpn,
+                      "ALPNExample2"), 0);
+
+    do {
+        ret = mbedtls_ssl_read(&(client_ep.ssl),
+                               discard_buf, sizeof(discard_buf));
+    } while (ret != MBEDTLS_ERR_SSL_RECEIVED_NEW_SESSION_TICKET);
+
+    ret = mbedtls_ssl_get_session(&(client_ep.ssl), saved_session);
+    TEST_EQUAL(ret, 0);
+
+exit:
+    mbedtls_test_ssl_endpoint_free(&client_ep, NULL);
+    mbedtls_test_ssl_endpoint_free(&server_ep, NULL);
+    return ret;
+}
+#endif
 #endif
 
 typedef enum {
@@ -4749,6 +4818,7 @@ void tls13_read_early_data(int scenario)
         case TEST_EARLY_DATA_SAME_ALPN:
         case TEST_EARLY_DATA_DIFF_ALPN:
         case TEST_EARLY_DATA_NO_LATER_ALPN:
+        case TEST_EARLY_DATA_STALE_TICKET_ALPN:
             client_options.alpn_list[0] = "ALPNExample";
             client_options.alpn_list[1] = NULL;
             server_options.alpn_list[0] = "ALPNExample";
@@ -4760,6 +4830,15 @@ void tls13_read_early_data(int scenario)
     ret = mbedtls_test_get_tls13_ticket(&client_options, &server_options,
                                         &saved_session);
     TEST_EQUAL(ret, 0);
+
+#if defined(MBEDTLS_SSL_ALPN)
+    if (scenario == TEST_EARLY_DATA_STALE_TICKET_ALPN) {
+        ret = get_tls13_ticket_after_cross_alpn_resumption(&client_options,
+                                                           &server_options,
+                                                           &saved_session);
+        TEST_EQUAL(ret, 0);
+    }
+#endif
 
     /*
      * Prepare for handshake with the ticket.
@@ -4806,6 +4885,16 @@ void tls13_read_early_data(int scenario)
         case TEST_EARLY_DATA_NO_LATER_ALPN:
             client_options.alpn_list[0] = NULL;
             server_options.alpn_list[0] = NULL;
+            mbedtls_debug_set_threshold(3);
+            server_pattern.pattern =
+                "EarlyData: rejected, the selected ALPN is different "
+                "from the one associated with the pre-shared key.";
+            break;
+        case TEST_EARLY_DATA_STALE_TICKET_ALPN:
+            client_options.alpn_list[0] = "ALPNExample";
+            client_options.alpn_list[1] = NULL;
+            server_options.alpn_list[0] = "ALPNExample";
+            server_options.alpn_list[1] = NULL;
             mbedtls_debug_set_threshold(3);
             server_pattern.pattern =
                 "EarlyData: rejected, the selected ALPN is different "
@@ -4884,6 +4973,7 @@ void tls13_read_early_data(int scenario)
         case TEST_EARLY_DATA_DIFF_ALPN:
         case TEST_EARLY_DATA_NO_INITIAL_ALPN:
         case TEST_EARLY_DATA_NO_LATER_ALPN:
+        case TEST_EARLY_DATA_STALE_TICKET_ALPN:
 #endif
             TEST_EQUAL(ret, 0);
             TEST_EQUAL(server_ep.ssl.handshake->early_data_accepted, 0);
