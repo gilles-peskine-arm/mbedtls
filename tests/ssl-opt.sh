@@ -861,6 +861,24 @@ requires_openssl_tls1_3() {
     fi
 }
 
+requires_openssl_tls1_3_early_data() {
+    requires_openssl_tls1_3
+    if [ "$OPENSSL_TLS1_3_AVAILABLE" = "NO" ]; then
+        OPENSSL_TLS1_3_EARLY_DATA_AVAILABLE="NO"
+    fi
+    if [ -z "${OPENSSL_TLS1_3_EARLY_DATA_AVAILABLE:-}" ]; then
+        if $OPENSSL_NEXT s_client -help 2>&1 | grep early_data >/dev/null
+        then
+            OPENSSL_TLS1_3_EARLY_DATA_AVAILABLE="YES"
+        else
+            OPENSSL_TLS1_3_EARLY_DATA_AVAILABLE="NO"
+        fi
+    fi
+    if [ "$OPENSSL_TLS1_3_EARLY_DATA_AVAILABLE" = "NO" ]; then
+        SKIP_NEXT="YES"
+    fi
+}
+
 # OpenSSL servers forbid client renegotiation by default since OpenSSL 3.0.
 # Older versions always allow it and have no command-line option.
 OPENSSL_S_SERVER_CLIENT_RENEGOTIATION=
@@ -13707,6 +13725,40 @@ run_test    "TLS 1.3: server alpn - gnutls" \
             -s "Protocol is TLSv1.3" \
             -s "HTTP/1.0 200 OK" \
             -s "Application Layer Protocol is h2"
+
+requires_openssl_tls1_3_with_compatible_ephemeral
+requires_openssl_tls1_3_early_data
+requires_config_enabled MBEDTLS_DEBUG_C
+requires_config_enabled MBEDTLS_SSL_SRV_C
+requires_config_enabled MBEDTLS_SSL_SESSION_TICKETS
+requires_config_enabled MBEDTLS_SSL_ALPN
+requires_config_enabled MBEDTLS_SSL_EARLY_DATA
+requires_config_enabled MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ENABLED
+run_test    "TLS 1.3: server early data, stale ticket ALPN - openssl" \
+            "$P_SRV debug_level=3 force_version=tls13 \
+                    tickets=1 early_data=1 max_early_data_size=1024 \
+                    alpn=h3,h2 exchanges=0" \
+            "( rm -f $SESSION.1 $SESSION.2; \
+               printf '\n' | $OPENSSL_NEXT s_client \
+                   -connect 127.0.0.1:+SRV_PORT \
+                   -CAfile $DATA_FILES_PATH/test-ca_cat12.crt \
+                   -tls1_3 -alpn h2 -sess_out $SESSION.1 -quiet && \
+               printf '\n' | $OPENSSL_NEXT s_client \
+                   -connect 127.0.0.1:+SRV_PORT \
+                   -CAfile $DATA_FILES_PATH/test-ca_cat12.crt \
+                   -tls1_3 -alpn h3 \
+                   -sess_in $SESSION.1 -sess_out $SESSION.2 -quiet && \
+               $OPENSSL_NEXT s_client \
+                   -connect 127.0.0.1:+SRV_PORT \
+                   -CAfile $DATA_FILES_PATH/test-ca_cat12.crt \
+                   -tls1_3 -alpn h2 \
+                   -sess_in $SESSION.2 -early_data $EARLY_DATA_INPUT -quiet; \
+               ret=\$?; rm -f $SESSION.1 $SESSION.2; exit \$ret )" \
+            0 \
+            -s "Application Layer Protocol is h2" \
+            -s "Application Layer Protocol is h3" \
+            -s "EarlyData: rejected, the selected ALPN is different from the one associated with the pre-shared key." \
+            -S "early data bytes read"
 
 requires_openssl_tls1_3_with_compatible_ephemeral
 requires_config_enabled MBEDTLS_DEBUG_C
