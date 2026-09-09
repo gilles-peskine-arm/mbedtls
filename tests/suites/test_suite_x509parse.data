@@ -707,6 +707,14 @@ X509 CRT verification #21 (domain matching wildcard certificate, case insensitiv
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_VERIFY
 x509_verify:"../framework/data_files/cert_example_wildcard.crt":"../framework/data_files/test-ca.crt":"../framework/data_files/crl.pem":"mail.ExAmPlE.com":0:0:"compat":"NULL"
 
+X509 CRT verification #21.1 (wildcard in non-ASCII domain)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_VERIFY
+x509_verify:"../framework/data_files/cert_example_wildcard_utf8.crt":"../framework/data_files/test-ca.crt":"../framework/data_files/crl.pem":"mail.accentué.com":0:0:"compat":"NULL"
+
+X509 CRT verification #21.2 (wildcard in non-ASCII domain missing the non-ASCII characters)
+depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_VERIFY
+x509_verify:"../framework/data_files/cert_example_wildcard_utf8.crt":"../framework/data_files/test-ca.crt":"../framework/data_files/crl.pem":"mail.accentu.com":MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:MBEDTLS_X509_BADCERT_CN_MISMATCH:"compat":"NULL"
+
 X509 CRT verification #22 (domain not matching wildcard certificate)
 depends_on:MBEDTLS_PEM_PARSE_C:PSA_WANT_ALG_SHA_1:PSA_HAVE_ALG_RSA_PKCS1V15_VERIFY
 x509_verify:"../framework/data_files/cert_example_wildcard.crt":"../framework/data_files/test-ca.crt":"../framework/data_files/crl.pem":"mail.example.net":MBEDTLS_ERR_X509_CERT_VERIFY_FAILED:MBEDTLS_X509_BADCERT_CN_MISMATCH:"compat":"NULL"
